@@ -3,3 +3,4 @@
 /* eslint-disable */
 export type { CapTable } from "./CapTable";
 export type { ChainEquityToken } from "./ChainEquityToken";
+export type { ITokenReplacement } from "./ITokenReplacement";

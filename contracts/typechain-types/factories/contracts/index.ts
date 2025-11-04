@@ -3,3 +3,4 @@
 /* eslint-disable */
 export { CapTable__factory } from "./CapTable__factory";
 export { ChainEquityToken__factory } from "./ChainEquityToken__factory";
+export { ITokenReplacement__factory } from "./ITokenReplacement__factory";

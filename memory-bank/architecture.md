@@ -1,6 +1,6 @@
 # ChainEquity Architecture
 
-## 🏗️ High-Level Architecture — *"ChainEquity"*
+## 🏗️ High-Level Architecture — *"ChainEquity"* (Single-Company Model)
 
 ```
                       ┌────────────────────────┐
@@ -14,21 +14,23 @@ User  ⇄  Browser ⇄──▶ │  Wagmi + Viem Client   │
                     ┌────────────────────────┐
                     │      Backend (Fastify) │
                     │  ────────────────────  │
-                    │  REST / GraphQL APIs   │
-                    │  Event Indexer (Viem)  │
-                    │  DB Cache (e.g. SQLite │
-                    │  or Postgres via Prisma)│
+                    │  REST APIs             │
+                    │  Event Indexer (Viem) │
+                    │  DB Cache (SQLite/     │
+                    │  Postgres via Prisma)  │
                     └────────┬───────────────┘
                                │
+                               │ (hard-coded addresses)
                                ▼
                  ┌──────────────────────────┐
                  │   Smart Contracts (L1/L2)│
                  │  ──────────────────────  │
-                 │  Orchestrator.sol        │
-                 │  CapTable.sol (per co.)  │
-                 │  ChainEquityToken.sol   │
+                 │  CapTable ↔ ChainEquityToken│
+                 │  (single deployed pair)   │
                  └──────────────────────────┘
 ```
+
+**Note:** This architecture assumes exactly one company (e.g., Acme Inc.) with one CapTable and one ChainEquityToken contract. Contract addresses are loaded from `contracts/exports/deployments.json` and hard-coded in backend/frontend configuration.
 
 ---
 
@@ -46,10 +48,11 @@ User  ⇄  Browser ⇄──▶ │  Wagmi + Viem Client   │
   - Corporate actions (splits, symbol changes)
   - Transfer restrictions toggle
 
-#### Planned Architecture (Multi-Company)
+#### Current Architecture (Single-Company Model)
 - **ChainEquityToken.sol** — ERC-20-like share token (✅ COMPLETE)
 - **CapTable.sol** — Tracks company metadata and corporate actions (✅ COMPLETE)
-- **Orchestrator.sol** — Creates and links new company cap tables (⏳ TODO)
+- **Single Deployment** — One fixed pair of contracts (CapTable ↔ ChainEquityToken)
+- **Hard-Coded Addresses** — Contract addresses loaded from deployment JSON, no dynamic discovery
 
 #### Deployment & Exports
 - **Hardhat Ignition** handles deployment and artifact export
@@ -59,10 +62,12 @@ User  ⇄  Browser ⇄──▶ │  Wagmi + Viem Client   │
 `contracts/exports/deployments.json`
 ```json
 {
-  "orchestrator": "0x...",
-  "AcmeInc": { "capTable": "0x...", "token": "0x..." }
+  "capTableAddress": "0x...",
+  "tokenAddress": "0x..."
 }
 ```
+
+**Note:** Addresses are loaded once at startup by backend and frontend. No dynamic discovery or multi-tenant logic needed.
 
 #### Key Events
 - `Transfer` - Standard ERC20 transfer events
@@ -70,7 +75,8 @@ User  ⇄  Browser ⇄──▶ │  Wagmi + Viem Client   │
 - `WalletApproved` / `WalletRevoked` - Allowlist changes
 - `SplitExecuted` - Corporate action for stock splits
 - `SymbolChanged` - Corporate action for symbol updates
-- `CompanyCreated` - New company cap table (from Orchestrator)
+- `CapTableCreated` - New cap table deployment
+- `TokenLinked` - Token linked to cap table
 
 ---
 
@@ -91,27 +97,41 @@ See `authentication.md` for complete authentication architecture and middleware 
 
 #### Responsibilities
 - **Event Indexing:**
-  - Read events from Orchestrator/CapTable contracts
+  - Read events from the single CapTable/Token contract pair (hard-coded addresses)
   - Cache results in a lightweight DB for quick queries
   - Real-time event processing via WebSocket RPC
+- **Configuration:**
+  - Load contract addresses from `contracts/exports/deployments.json`
+  - Store in `backend/src/config/contracts.ts`
+  - No dynamic discovery or company registry needed
 
 - **API Exposure:**
-  - REST/GraphQL APIs (all protected by unified auth middleware):
-    - `/api/companies` - List all companies
-    - `/api/companies/:id/shareholders` - Cap table for a company
-    - `/api/companies/:id/transactions` - Transaction history
-    - `/api/companies/:id/corporate-actions` - Splits, symbol changes
-    - `/api/companies/:id/snapshot/:block` - Historical cap table
-    - `/api/wallet/link` - Link wallet to user account
+  - REST APIs (all protected by unified auth middleware):
+    - `GET /api/company` - Get single company info
+    - `GET /api/shareholders` - Cap table (single company)
+    - `GET /api/shareholders/:address` - Shareholder details
+    - `GET /api/transactions` - Transaction history (single company)
+    - `GET /api/corporate-actions` - Corporate actions (single company)
+    - `GET /api/snapshots/:block` - Historical cap table
+    - `POST /api/wallet/link` - Link wallet to user account
   - Push updates to frontend via WebSockets or SSE
 
 #### Simplified Indexer Loop
 ```ts
+import { capTableAddress, tokenAddress } from './config/contracts';
+
 const client = createPublicClient({ chain: mainnet, transport: http() });
 
+// Watch events from the single CapTable/Token pair
 client.watchEvent({
-  address: orchestratorAddress,
-  event: parseAbiItem("event CompanyCreated(address capTable, string name)"),
+  address: tokenAddress,
+  event: parseAbiItem("event Issued(address indexed to, uint256 amount)"),
+  onLogs: (logs) => saveToDb(logs)
+});
+
+client.watchEvent({
+  address: tokenAddress,
+  event: parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 value)"),
   onLogs: (logs) => saveToDb(logs)
 });
 ```
@@ -143,11 +163,13 @@ backend/
 
 #### Database Schema (SQLite/Postgres)
 - `users` table: uid (PK), email, display_name, wallet_address, role, created_at
-- `companies` table: id, name, symbol, orchestrator_address, cap_table_address, token_address
-- `holders` table: address, company_id, balance, effective_balance (after split factor)
-- `corporate_actions` table: company_id, type, block_number, data (JSON)
-- `snapshots` table: company_id, block_number, snapshot_data (JSON)
-- `events` table: company_id, event_type, block_number, transaction_hash, data (JSON)
+- `shareholders` table: address, balance, effective_balance (after split factor)
+- `transactions` table: transaction_hash, from_address, to_address, amount, block_number, timestamp
+- `corporate_actions` table: action_id, type, block_number, data (JSON)
+- `snapshots` table: block_number, snapshot_data (JSON)
+- `events` table: event_type, block_number, transaction_hash, data (JSON)
+
+**Note:** No `companies` table needed. Contract addresses are hard-coded in configuration. Future multi-company support would require a registry table, but for now we assume a single fixed company.
 
 ---
 
@@ -173,10 +195,10 @@ See `frontendWalletConnector.md` for complete wallet integration implementation.
   - Auto-reconnect on page refresh
   - Chain switching for multi-chain support
 
-- **Company Management:**
-  - View all companies
-  - Create new companies (via Orchestrator)
-  - View company cap tables
+- **Company Dashboard:**
+  - View single company info (from backend API)
+  - View cap table (single company)
+  - No company selection or creation flows
 
 - **Admin Dashboard:**
   - Approve/revoke wallets (`approveWallet`, `revokeWallet`)
@@ -228,19 +250,34 @@ frontend/
 
 #### Deployment Flow
 1. **Deployments:**
-   - Hardhat → `deployments.json` → copied to backend + frontend
+   - Hardhat Ignition → Deploy single CapTable + Token pair (Acme Inc.)
+   - Call `capTable.linkToken(tokenAddress)` after deployment
+   - Export addresses to `deployments.json`:
+     ```json
+     { "capTableAddress": "0x...", "tokenAddress": "0x..." }
+     ```
+   - Backend and frontend load addresses from config (hard-coded)
    - Contracts export ABIs to `/contracts/exports/`
 
 #### Event Indexing Flow
 2. **Event Indexing:**
-   - Backend listens for `Transfer`, `Issued`, `Split`, `CompanyCreated`, etc.
+   - Backend loads contract addresses from config (single pair)
+   - Backend listens for events from the single CapTable/Token pair:
+     - `TokenLinked` (from CapTable)
+     - `Transfer`, `Issued`, `SplitExecuted` (from Token)
+     - `CorporateActionRecorded` (from CapTable)
    - Events processed and stored in database
    - Real-time updates via WebSocket subscription
 
 #### API Exposure Flow
 3. **API Exposure:**
-   - Backend exposes `/company/:symbol/captable` from DB or direct contract read
+   - Backend exposes routes for single company:
+     - `GET /api/company` - Company info
+     - `GET /api/shareholders` - Cap table
+     - `GET /api/transactions` - Transaction history
+     - `GET /api/corporate-actions` - Corporate actions
    - Frontend queries backend for enriched data (metadata, historical snapshots)
+   - No company selection or multi-tenant logic
 
 #### User Interaction Flow
 4. **User Interaction:**
@@ -269,8 +306,7 @@ chain-equity/
 ├── contracts/
 │   ├── contracts/
 │   │   ├── ChainEquityToken.sol  ✅
-│   │   ├── CapTable.sol          ⏳
-│   │   └── Orchestrator.sol      ⏳
+│   │   └── CapTable.sol          ✅
 │   ├── ignition/
 │   ├── exports/                  ⏳ (to be created)
 │   ├── test/
@@ -313,7 +349,7 @@ chain-equity/
    - Backend = indexing & query optimization
    - Frontend = user interface & wallet interaction
 5. **Real-Time Updates**: WebSocket subscription ensures low-latency event processing
-6. **Multi-Company Support**: Orchestrator pattern enables multiple companies on one platform
+6. **Single-Company Model**: One fixed CapTable/Token pair with hard-coded addresses. Future multi-company support would require a registry table and dynamic discovery, but is out of scope for MVP.
 
 ---
 
@@ -338,13 +374,12 @@ chain-equity/
 6. **Memory Bank** - Documentation and architecture docs
 
 ### ⏳ In Progress / Planned
-1. **Orchestrator.sol** - Multi-company factory contract (Task 1.3)
-2. **Backend Indexer** - Event listener and database sync
-4. **Backend API** - REST endpoints for frontend
-5. **Frontend Admin Dashboard** - Issuer operations UI
-6. **Frontend Shareholder Dashboard** - Investor view
-7. **Contract Exports** - `/contracts/exports/` directory for deployment artifacts
-8. **Integration Testing** - End-to-end workflow testing
+1. **Deployment Workflow** - Hardhat Ignition module for single Acme Inc. deployment (Task 1.3)
+2. **Backend Indexer** - Event listener for single CapTable/Token pair (hard-coded addresses)
+3. **Backend API** - REST endpoints for single company (no multi-tenant logic)
+4. **Frontend Dashboard** - Single company view (no company selection)
+5. **Contract Exports** - `/contracts/exports/` directory for deployment artifacts
+6. **Integration Testing** - End-to-end workflow testing for single company
 
 ---
 

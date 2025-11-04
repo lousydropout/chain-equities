@@ -11,12 +11,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @dev This contract serves as a company registry that links to a ChainEquityToken contract and
  * records corporate actions (splits, symbol changes, etc.). It uses OpenZeppelin's Ownable pattern
  * for access control, where the issuer (owner) is the only address that can link tokens and record
- * corporate actions. The contract is designed to be used by the Orchestrator contract (Task 1.3)
- * for managing multiple companies on a single platform.
+ * corporate actions.
  * 
- * @custom:interaction The Orchestrator contract will deploy CapTable instances and link them to
- * ChainEquityToken instances when creating new companies. The issuer should call recordCorporateAction()
- * after executing corporate actions on the linked token contract.
+ * @custom:interaction The CapTable is deployed alongside a ChainEquityToken instance and linked via
+ * linkToken(). The issuer should call recordCorporateAction() after executing corporate actions on
+ * the linked token contract.
  */
 contract CapTable is Ownable {
     // State variables
@@ -123,8 +122,22 @@ contract CapTable is Ownable {
      * or changeSymbol()). The data parameter should contain encoded action-specific
      * information for off-chain indexing and analysis.
      * 
-     * @param _actionType Type of corporate action (e.g., "SPLIT", "SYMBOL_CHANGE")
-     * @param _data Encoded action-specific data (e.g., split multiplier, new symbol)
+     * @custom:future Token Replacement: In the future, token replacement can be recorded
+     * using action type "TOKEN_REPLACED" with encoded data containing:
+     * - oldTokenAddress (address)
+     * - newTokenAddress (address)
+     * - migrationBlockNumber (uint256)
+     * 
+     * Example:
+     * ```solidity
+     * bytes memory data = abi.encode(oldToken, newToken, block.number);
+     * recordCorporateAction("TOKEN_REPLACED", data);
+     * ```
+     * 
+     * See TokenReplacement.md for complete design documentation.
+     * 
+     * @param _actionType Type of corporate action (e.g., "SPLIT", "SYMBOL_CHANGE", "TOKEN_REPLACED")
+     * @param _data Encoded action-specific data (e.g., split multiplier, new symbol, token addresses)
      */
     function recordCorporateAction(
         string memory _actionType,

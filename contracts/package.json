@@ -2,7 +2,8 @@
   "name": "chain-equity",
   "version": "1.0.0",
   "scripts": {
-    "local:node": "anvil"
+    "local:node": "anvil",
+    "deploy:acme": "bunx hardhat ignition deploy ignition/modules/AcmeCompany.ts && bun run scripts/export-addresses.ts && bun run scripts/verify-link.ts"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
