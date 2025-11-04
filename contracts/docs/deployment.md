@@ -33,9 +33,11 @@ npx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network sepolia
 
 **Note:** Use `npx hardhat` (or `bunx hardhat` if using Bun) with the path relative to the contracts directory.
 
-### 3. Deployment Module
+### 3. Deployment Modules
 
-The `AcmeCompany.ts` Ignition module:
+#### AcmeCompany Module
+
+The `AcmeCompany.ts` Ignition module is a specific instance for Acme Inc.:
 
 1. Deploys `ChainEquityToken("Acme Inc. Equity", "ACME", 1_000_000 ether)` with `1_000_000n * 10n ** 18n`
    > Note: bigint syntax is used instead of `parseEther()` for portability and consistency with other modules.
@@ -43,6 +45,24 @@ The `AcmeCompany.ts` Ignition module:
 3. Calls `capTable.linkToken(tokenAddress)` to link the contracts (deterministic order: token → capTable → link)
 
 The module ensures deterministic deployment order to prevent linking failures.
+
+#### CompanyModule (Generic)
+
+The `CompanyModule.ts` provides a generic deployment module that can be customized by modifying the configuration values directly in the module file:
+
+```typescript
+// Configuration - customize these values for your deployment
+const companyName = "Your Company Inc.";
+const companySymbol = "YOUR";
+const tokenName = "Your Company Inc. Equity";
+const totalAuthorized = 1_000_000n * 10n ** 18n;
+```
+
+To deploy a different company, you can either:
+1. Copy `CompanyModule.ts` and modify the configuration values
+2. Create a new module file following the same pattern as `AcmeCompany.ts`
+
+The `CompanyModule.ts` serves as a template that can be customized for different deployments. The `AcmeCompany.ts` module is a specific instance for Acme Inc.
 
 ### 4. Export Deployment Addresses
 
@@ -79,20 +99,40 @@ This format supports multiple networks and companies. Backend and frontend servi
 
 ### 6. Verify Deployment
 
-#### Option 1: Using Verification Script
+#### Option 1: Using Comprehensive Verification Script (Recommended)
+
+```bash
+npx hardhat run scripts/verify-deployment.ts --network localhost
+```
+
+This comprehensive script verifies:
+
+- Network connectivity
+- Deployment artifacts exist
+- Both contracts are deployed and accessible (bytecode verification)
+- Token linkage is correct
+- Contract state matches expected values (name, symbol, totalAuthorized)
+- Exported addresses match deployed addresses
+- JSON structure is correct
+
+The script provides detailed output for each verification step and clearly indicates success or failure.
+
+#### Option 2: Using Link Verification Script
 
 ```bash
 npx hardhat run scripts/verify-link.ts --network localhost
 ```
 
-This script:
+This script performs basic linkage verification:
 
 - Loads addresses from `exports/deployments.json`
 - Verifies `capTable.isTokenLinked()` returns `true`
 - Confirms token address matches
 - Validates token contract is accessible
 
-#### Option 2: Using Hardhat Console
+> **Note:** For comprehensive verification, use `verify-deployment.ts` instead.
+
+#### Option 3: Using Hardhat Console
 
 ```bash
 npx hardhat console --network localhost
@@ -124,18 +164,52 @@ await tokenContract.symbol(); // Should return "ACME"
 
 ### Local Development (Anvil)
 
+Hardhat is configured with two network options for local development:
+
+- **`localhost`** - Connects to Anvil on port 8545
+- **`anvil`** - Explicit Anvil network configuration (also connects to port 8545)
+
+Both networks use the same configuration and can be used interchangeably.
+
+#### Using npm Scripts (Recommended)
+
+```bash
+# Start Anvil in one terminal
+bun run local:node
+
+# In another terminal, deploy using localhost network
+bun run deploy:acme
+
+# Or deploy using explicit anvil network
+bun run deploy:anvil
+```
+
+The `deploy:acme` and `deploy:anvil` scripts automatically:
+1. Deploy contracts using Hardhat Ignition
+2. Export addresses to `exports/deployments.json`
+3. Run comprehensive deployment verification
+
+#### Manual Deployment Steps
+
 ```bash
 # Start Anvil
 anvil
 
-# Deploy to local network
-npx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network localhost
+# Deploy to localhost network
+bunx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network localhost
+
+# Or deploy to explicit anvil network
+bunx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network anvil
 
 # Export addresses after deployment
-npx hardhat run scripts/export-addresses.ts --network localhost
+bunx hardhat run scripts/export-addresses.ts --network localhost
+# or
+bunx hardhat run scripts/export-addresses.ts --network anvil
 
-# Verify linkage
-npx hardhat run scripts/verify-link.ts --network localhost
+# Verify deployment (comprehensive)
+bunx hardhat run scripts/verify-deployment.ts --network localhost
+# or
+bunx hardhat run scripts/verify-deployment.ts --network anvil
 ```
 
 ### Testnet (Sepolia)
@@ -151,8 +225,8 @@ npx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network sepolia
 # Export addresses after deployment
 npx hardhat run scripts/export-addresses.ts --network sepolia
 
-# Verify linkage
-npx hardhat run scripts/verify-link.ts --network sepolia
+# Verify deployment
+npx hardhat run scripts/verify-deployment.ts --network sepolia
 ```
 
 ### Mainnet
@@ -168,8 +242,8 @@ npx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network mainnet
 # Export addresses after deployment
 npx hardhat run scripts/export-addresses.ts --network mainnet
 
-# Verify linkage
-npx hardhat run scripts/verify-link.ts --network mainnet
+# Verify deployment
+npx hardhat run scripts/verify-deployment.ts --network mainnet
 ```
 
 ## Post-Deployment Setup
@@ -295,7 +369,19 @@ See `TokenReplacement.md` for complete design documentation.
 
 ### Developer Notes
 
-> **Note:** Bun may throw module resolution errors for Hardhat Ignition imports. Use Node for deployments or ensure Bun's module resolution is configured properly. If you encounter `Cannot find module '@nomicfoundation/hardhat-ignition/modules'` errors, try using `npx` instead of `bunx` for Hardhat commands.
+> **Important:** Hardhat Ignition has known compatibility issues with Bun's module resolution system. The `@nomicfoundation/hardhat-ignition/modules` import cannot be resolved when dependencies are installed via Bun.
+>
+> **Solution:** The contracts directory uses npm/npx for Hardhat commands. All deployment scripts use `npx hardhat` instead of `bunx hardhat`. If you encounter module resolution errors, ensure dependencies are installed via npm:
+>
+> ```bash
+> cd contracts
+> rm -rf node_modules bun.lockb package-lock.json
+> npm install --no-workspaces --legacy-peer-deps
+> ```
+>
+> The `--no-workspaces` flag is required because this is a workspace project, and npm's workspace resolution can conflict with Hardhat's dependency requirements.
+>
+> This is a known limitation - Hardhat's TypeScript module loading requires npm's standard node_modules structure, which differs from Bun's hash-based storage.
 
 ### Common Gotchas
 
@@ -347,6 +433,9 @@ See `TokenReplacement.md` for complete design documentation.
 - Check that `exports/deployments.json` exists and contains the correct chainId
 - Verify the network flag matches the deployment network
 - Confirm CapTable contract is accessible at the deployed address
+- For comprehensive verification, use `verify-deployment.ts` which checks all aspects of the deployment
+- Check that both contracts have bytecode deployed (not just addresses)
+- Verify contract state values match expected values (name, symbol, totalAuthorized)
 
 ## Related Documentation
 

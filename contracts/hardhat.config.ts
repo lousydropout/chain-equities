@@ -30,6 +30,11 @@ const config: HardhatUserConfig = {
       chainId: 31337,
       accounts: [LOCAL_PRIVATE_KEY],
     },
+    anvil: {
+      url: "http://localhost:8545", // Default Anvil port
+      chainId: 31337,
+      accounts: [LOCAL_PRIVATE_KEY],
+    },
   },
   coverage: {
     enabled: true,

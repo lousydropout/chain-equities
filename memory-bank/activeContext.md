@@ -55,21 +55,30 @@
 
 ### Deployment Configuration ✅
 
-- **Location**: `contracts/ignition/modules/AcmeCompany.ts`
-- **Purpose**: Deterministic deployment module for single company (Acme Inc.)
+- **Location**: `contracts/ignition/modules/AcmeCompany.ts`, `contracts/ignition/modules/CompanyModule.ts`
+- **Purpose**: Deterministic deployment modules for single company deployment
 - **Features**:
+  - `AcmeCompany.ts` - Specific deployment module for Acme Inc.
+  - `CompanyModule.ts` - Generic deployment module template (customizable)
   - Deploys ChainEquityToken and CapTable contracts
   - Links contracts automatically after deployment
   - Exports addresses to `contracts/exports/deployments.json` in nested format
-  - Verification scripts for post-deployment validation
+  - Comprehensive verification scripts for post-deployment validation
   - Dual-mode support (Hardhat runtime and standalone execution)
+- **Network Configuration**:
+  - `localhost` network - Connects to Anvil on port 8545
+  - `anvil` network - Explicit Anvil network configuration (same as localhost)
 - **Scripts**:
   - `scripts/export-addresses.ts` - Exports deployed addresses with network detection
-  - `scripts/verify-link.ts` - Verifies token linkage after deployment
-  - `package.json` - `deploy:acme` script for one-command deployment
-- **Status**: Complete - All code and scripts implemented
-- **Documentation**: `docs/deployment.md` - Complete deployment guide with troubleshooting
-- **Note**: Deployment testing blocked by Bun/Hardhat module resolution issue (environment problem, not code-related)
+  - `scripts/verify-link.ts` - Basic token linkage verification
+  - `scripts/verify-deployment.ts` - Comprehensive deployment verification (new)
+  - `package.json` - `deploy:acme` and `deploy:anvil` scripts for one-command deployment
+- **Package Management**: 
+  - **Important**: Contracts directory uses **npm** (not Bun) due to Hardhat Ignition module resolution compatibility
+  - All scripts use `npx` instead of `bunx`
+  - Install dependencies with: `npm install --no-workspaces --legacy-peer-deps`
+- **Status**: Complete - Task 1.8 ✅
+- **Documentation**: `docs/deployment.md` - Complete deployment guide with troubleshooting and npm installation instructions
 
 ### Design Decisions
 
@@ -87,9 +96,13 @@
 1. **Smart Contracts** - On-chain cap table ✅ COMPLETE
    - `ChainEquityToken.sol` - Token contract with compliance gating ✅
    - `CapTable.sol` - Company registry and corporate actions tracking ✅
-2. **Deployment Configuration** - Single company deployment ✅ COMPLETE
+2. **Deployment Configuration** - Single company deployment ✅ COMPLETE (Task 1.8)
    - `AcmeCompany.ts` - Hardhat Ignition deployment module ✅
+   - `CompanyModule.ts` - Generic deployment module template ✅
    - Export and verification scripts ✅
+   - Comprehensive deployment verification script ✅
+   - Anvil network configuration ✅
+   - npm/npx usage (Bun incompatible with Hardhat Ignition) ✅
    - Deployment documentation ✅
 3. **Role System** - Role-based access control ✅ COMPLETE
    - `Roles.sol` - Role constant definitions (library) ✅
@@ -142,15 +155,16 @@
 3. ✅ Build CapTable.sol for per-company management (Task 1.2 - COMPLETE)
 4. ✅ Design token replacement logic (Task 1.6 - COMPLETE)
 5. ✅ Comprehensive test suite (Task 1.7 - COMPLETE)
-6. ⏳ Set up backend indexer with viem event watching
-7. ⏳ Implement backend REST API endpoints
-8. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
-9. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
-10. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
-11. ⏳ Implement frontend wallet connector components (`config.ts`, `provider.tsx`, `Connect.tsx`)
-12. ⏳ Integrate Firebase Auth in frontend
-13. ⏳ Create frontend admin dashboard UI
-14. ⏳ Create frontend shareholder dashboard UI
+6. ✅ Contract deployment setup (Task 1.8 - COMPLETE)
+7. ⏳ Set up backend indexer with viem event watching
+8. ⏳ Implement backend REST API endpoints
+9. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
+10. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
+11. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
+12. ⏳ Implement frontend wallet connector components (`config.ts`, `provider.tsx`, `Connect.tsx`)
+13. ⏳ Integrate Firebase Auth in frontend
+14. ⏳ Create frontend admin dashboard UI
+15. ⏳ Create frontend shareholder dashboard UI
 
 ### Role System ✅
 
@@ -240,9 +254,9 @@
   - Gas Analysis: Detailed gas cost measurements for deployment, minting, transfers, splits, corporate actions, and full workflows
   - Integration: End-to-end workflow tests, multiple shareholders, complex corporate action sequences, state consistency
 - **Test Commands**:
-  - Run all: `cd contracts && bunx hardhat test`
-  - Run specific: `cd contracts && bunx hardhat test test/ChainEquityToken.ts`
-  - Gas analysis: `cd contracts && bunx hardhat test test/GasAnalysis.ts`
+  - Run all: `cd contracts && npx hardhat test`
+  - Run specific: `cd contracts && npx hardhat test test/ChainEquityToken.ts`
+  - Gas analysis: `cd contracts && npx hardhat test test/GasAnalysis.ts`
 - **Coverage Tool**: solidity-coverage plugin installed (note: known conflict with Hardhat v2, but test suite is comprehensive)
 - **Files Created/Modified**:
   - `contracts/test/ChainEquityToken.ts` (enhanced) - Added 30+ new test cases
@@ -255,12 +269,15 @@
 
 ### Testing
 
-- **Contract Tests**: Use Hardhat test framework
-  - Run all: `cd contracts && bunx hardhat test` (137 tests passing)
-  - Run specific: `cd contracts && bunx hardhat test test/ChainEquityToken.ts`
+- **Contract Tests**: Use Hardhat test framework (npm/npx required)
+  - Run all: `cd contracts && npx hardhat test` (137 tests passing)
+  - Run specific: `cd contracts && npx hardhat test test/ChainEquityToken.ts`
 - **Backend Tests**: Use Bun's built-in test runner
   - Run all: `cd backend && bun test`
   - Run specific: `cd backend && bun test src/__tests__/middleware/auth.test.ts`
+- **Deployment**: Use npm scripts
+  - Deploy: `cd contracts && npm run deploy:acme` or `npm run deploy:anvil`
+  - Manual: `cd contracts && npx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network localhost`
 - **Test Coverage**:
   - ChainEquityToken: 35+ tests (comprehensive coverage)
   - CapTable: 35+ tests (comprehensive coverage)

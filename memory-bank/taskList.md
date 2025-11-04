@@ -12,7 +12,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~2 weeks
 
-**Status:** ⏳ In Progress (Task 1.2, 1.3, 1.4, 1.5, 1.5a, 1.6, and 1.7 complete)
+**Status:** ⏳ In Progress (Task 1.2, 1.3, 1.4, 1.5, 1.5a, 1.6, 1.7, and 1.8 complete)
 
 ### Task 1.1: Finalize ChainEquityToken Contract
 
@@ -209,14 +209,31 @@ This document provides a detailed breakdown of all implementation tasks organize
   - `contracts/hardhat.config.ts` (modified) - Added coverage configuration
   - `contracts/package.json` (modified) - Added coverage script and solidity-coverage dependency
 
-### Task 1.8: Contract Deployment Setup
+### Task 1.8: Contract Deployment Setup ✅
 
-- [ ] Configure Hardhat Ignition deployment module:
-  - [ ] `CompanyModule.ts` (deploys CapTable + Token pair)
-- [ ] Set up deployment scripts for:
-  - [ ] Local Anvil network
-- [ ] Create deployment verification script
-- **Deliverable:** Deployment scripts ready
+- [x] Configure Hardhat Ignition deployment module:
+  - [x] `CompanyModule.ts` (deploys CapTable + Token pair)
+- [x] Set up deployment scripts for:
+  - [x] Local Anvil network
+- [x] Create deployment verification script
+- **Deliverable:** Deployment scripts ready ✅
+- **Status:** Complete - Generic CompanyModule created, Anvil network configured, comprehensive verification script implemented
+- **Summary:**
+  - Created generic `CompanyModule.ts` deployment module (customizable template)
+  - Added explicit `anvil` network configuration in Hardhat config
+  - Created comprehensive `verify-deployment.ts` script verifying contracts, linkage, state, and exported addresses
+  - Updated all deployment scripts to use `npx` instead of `bunx` (npm required for Hardhat Ignition module resolution)
+  - Switched contracts directory from Bun to npm due to Hardhat Ignition compatibility issues
+- **Files Created/Modified:**
+  - `contracts/ignition/modules/CompanyModule.ts` (new) - Generic deployment module template
+  - `contracts/scripts/verify-deployment.ts` (new) - Comprehensive deployment verification
+  - `contracts/hardhat.config.ts` (modified) - Added `anvil` network configuration
+  - `contracts/package.json` (modified) - Updated scripts to use `npx`, fixed chai version, added TypeScript dependencies
+  - `contracts/docs/deployment.md` (modified) - Updated with CompanyModule, Anvil network, and npm installation instructions
+- **Important Note:** Hardhat Ignition requires npm (not Bun) due to module resolution compatibility. Use `npm install --no-workspaces --legacy-peer-deps` for dependencies.
+- **Test Commands:**
+  - Deploy: `npm run deploy:acme` or `npm run deploy:anvil`
+  - Manual: `npx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network localhost`
 
 ### Task 1.9: Export ABIs and Deployment Artifacts
 
@@ -238,7 +255,7 @@ This document provides a detailed breakdown of all implementation tasks organize
     }
   }
   ```
-- [ ] Add npm script: `bun run export`
+- [ ] Add npm script: `npm run export`
 - [ ] Document export format for backend/frontend consumption
 - **Deliverable:** `contracts/exports/` with ABIs and deployment JSONs
 
