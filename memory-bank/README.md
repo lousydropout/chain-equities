@@ -5,9 +5,11 @@ This directory contains the project's memory and knowledge base for ChainEquity.
 ## Structure
 
 - `activeContext.md` - Current active context and ongoing work
+- `taskList.md` - Detailed implementation task list by phase
 - `projectBrief.md` - Project overview and goals
 - `requirements.md` - Detailed project requirements and specifications
 - `architecture.md` - Complete three-layer architecture overview
+- `authentication.md` - Firebase Auth + Unified Middleware architecture
 - `contractDesign.md` - Smart contract design and walkthrough
 - `frontendWalletConnector.md` - Wallet connection implementation reference
 - `systemPatterns.md` - System architecture and design patterns
