@@ -6,12 +6,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title ChainEquityToken
- * @dev Tokenized equity contract with compliance gating via allowlist
+ * @notice Tokenized equity contract representing company shares on-chain with compliance gating.
  * 
- * This contract implements a tokenized security with:
- * - Transfer restrictions based on allowlist
- * - Corporate actions (stock splits, symbol changes)
- * - Issuer-controlled minting and approvals
+ * @dev This contract implements a tokenized security instrument that enables on-chain cap-table
+ * management for private companies. It uses an allowlist-based transfer restriction system to
+ * enforce compliance (KYC/AML) requirements. The contract supports corporate actions including
+ * virtual stock splits and symbol changes, with issuer-controlled minting and wallet approvals.
+ * Built on OpenZeppelin v5's ERC20 and Ownable patterns for security and standardization.
  */
 contract ChainEquityToken is ERC20, Ownable {
     // State variables
@@ -23,16 +24,31 @@ contract ChainEquityToken is ERC20, Ownable {
     mapping(address => bool) public allowlist;
     
     // Events
+    /// @notice Emitted when a wallet is approved for transfers (KYC completion)
     event WalletApproved(address indexed issuer, address indexed wallet);
+    
+    /// @notice Emitted when a wallet's approval is revoked
     event WalletRevoked(address indexed issuer, address indexed wallet);
+    
+    /// @notice Emitted when new tokens are minted to a shareholder
     event Issued(address indexed to, uint256 amount);
+    
+    /// @notice Emitted when a stock split is executed
     event SplitExecuted(uint256 oldFactor, uint256 newFactor, uint256 blockNumber);
+    
+    /// @notice Emitted when the token symbol is changed (via event, actual symbol requires redeployment)
     event SymbolChanged(string oldSymbol, string newSymbol);
+    
+    /// @notice Emitted upon contract deployment
     event Deployed(string name, string symbol, uint256 totalAuthorized);
+    
+    /// @notice Emitted when transfer restrictions are enabled or disabled
     event TransfersRestrictedChanged(bool restricted);
     
     /**
-     * @dev Constructor
+     * @notice Deploys a new tokenized equity contract for a company
+     * @dev Initializes the contract with company metadata and sets the deployer as owner.
+     * Transfer restrictions are enabled by default, and split factor is set to 1x (1e18).
      * @param name Token name (e.g., "Acme Inc. Equity")
      * @param symbol Token symbol (e.g., "ACME")
      * @param _totalAuthorized Total authorized shares (in token units, e.g., 1_000_000 * 1e18)
@@ -52,8 +68,14 @@ contract ChainEquityToken is ERC20, Ownable {
     }
     
     /**
-     * @dev Approve a wallet for transfers (KYC approval)
-     * @param wallet Address to approve
+     * @notice Approves a wallet for token transfers (KYC/AML compliance)
+     * @dev Adds the wallet to the allowlist, enabling it to receive and send tokens.
+     * Only the contract owner (issuer) can approve wallets. This function is idempotent-safe
+     * and will revert if the wallet is already approved.
+     * @custom:security This function enforces compliance by requiring issuer approval before
+     * any wallet can participate in transfers. The allowlist mechanism is the core compliance
+     * gating system for this tokenized security.
+     * @param wallet Address to approve for transfers
      */
     function approveWallet(address wallet) external onlyOwner {
         require(wallet != address(0), "ChainEquityToken: cannot approve zero address");
@@ -64,8 +86,10 @@ contract ChainEquityToken is ERC20, Ownable {
     }
     
     /**
-     * @dev Revoke approval for a wallet
-     * @param wallet Address to revoke
+     * @notice Revokes a wallet's approval, preventing future transfers
+     * @dev Removes the wallet from the allowlist. The wallet retains its current balance
+     * but cannot send or receive tokens until re-approved. Only the contract owner can revoke.
+     * @param wallet Address to revoke approval from
      */
     function revokeWallet(address wallet) external onlyOwner {
         require(allowlist[wallet], "ChainEquityToken: wallet not approved");
@@ -75,18 +99,22 @@ contract ChainEquityToken is ERC20, Ownable {
     }
     
     /**
-     * @dev Check if a wallet is approved
-     * @param wallet Address to check
-     * @return bool True if approved
+     * @notice Checks if a wallet is approved for transfers
+     * @dev Queries the allowlist mapping to determine if a wallet can participate in transfers.
+     * @param wallet Address to check approval status for
+     * @return bool True if the wallet is approved, false otherwise
      */
     function isApproved(address wallet) external view returns (bool) {
         return allowlist[wallet];
     }
     
     /**
-     * @dev Mint tokens to an approved wallet
-     * @param to Address to mint to
-     * @param amount Amount to mint (in base token units)
+     * @notice Mints new tokens to an approved wallet (share issuance)
+     * @dev Creates new tokens and assigns them to a wallet that must be pre-approved.
+     * The total supply cannot exceed the authorized amount set at deployment.
+     * Only the contract owner can mint tokens.
+     * @param to Address to mint tokens to (must be approved)
+     * @param amount Amount of tokens to mint (in base token units with 18 decimals)
      */
     function mint(address to, uint256 amount) external onlyOwner {
         require(to != address(0), "ChainEquityToken: cannot mint to zero address");
@@ -98,11 +126,15 @@ contract ChainEquityToken is ERC20, Ownable {
     }
     
     /**
-     * @dev Override _update hook to enforce allowlist restrictions
-     * 
-     * This hook is called for all token movements (mint, burn, transfer).
-     * Using this pattern is the recommended approach in OpenZeppelin v5.
-     * 
+     * @notice Internal hook that enforces allowlist restrictions on all token movements
+     * @dev Overrides OpenZeppelin v5's _update hook to add compliance gating. This hook
+     * is called for all token movements (mints, burns, transfers). When transfers are
+     * restricted, it validates that both sender and recipient are on the allowlist for
+     * transfers, or just the recipient for mints. This pattern is the recommended approach
+     * in OpenZeppelin v5 for adding custom transfer logic.
+     * @custom:security This is the core security mechanism enforcing compliance. The allowlist
+     * check ensures only KYC-approved wallets can participate in transfers, preventing
+     * unauthorized trading of tokenized securities.
      * @param from Sender address (address(0) for mints)
      * @param to Recipient address (address(0) for burns)
      * @param value Amount being transferred
@@ -129,12 +161,12 @@ contract ChainEquityToken is ERC20, Ownable {
     }
     
     /**
-     * @dev Execute a stock split (e.g., 7-for-1)
-     * @param multiplier Split multiplier (e.g., 7e18 for 7-for-1 split)
-     * 
-     * Note: This implementation uses Option C (virtual split) - balances remain unchanged
-     * but splitFactor is updated. The indexer will multiply balances by splitFactor/1e18
-     * when displaying cap-table. This is gas-efficient for large holder lists.
+     * @notice Executes a stock split (e.g., 7-for-1 split)
+     * @dev Updates the split factor to reflect a stock split without modifying actual balances.
+     * This virtual split approach is gas-efficient for large shareholder lists. The effective
+     * balance (visible via effectiveBalanceOf) is calculated by multiplying the base balance
+     * by splitFactor/1e18. Only the contract owner can execute splits.
+     * @param multiplier Split multiplier in 1e18 precision (e.g., 7e18 for 7-for-1 split, must be >= 1e18)
      */
     function executeSplit(uint256 multiplier) external onlyOwner {
         require(multiplier >= 1e18, "ChainEquityToken: split multiplier must be >= 1");
@@ -147,20 +179,25 @@ contract ChainEquityToken is ERC20, Ownable {
     }
     
     /**
-     * @dev Get effective balance after split factor
-     * @param account Address to query
-     * @return uint256 Effective balance (balance * splitFactor / 1e18)
+     * @notice Returns the effective balance after applying the split factor
+     * @dev Calculates the effective number of shares after accounting for stock splits.
+     * This is the balance that should be displayed to users and used in cap-table calculations.
+     * The base balance remains unchanged (gas-efficient), while this view function applies
+     * the split factor for display purposes.
+     * @param account Address to query effective balance for
+     * @return uint256 Effective balance (base balance * splitFactor / 1e18)
      */
     function effectiveBalanceOf(address account) external view returns (uint256) {
         return (balanceOf(account) * splitFactor) / 1e18;
     }
     
     /**
-     * @dev Change token symbol
-     * 
-     * Note: ERC20 symbol() is immutable in OpenZeppelin's implementation.
-     * This emits an event that indexers can track. For full symbol change,
-     * would need to deploy new contract or use proxy pattern.
+     * @notice Signals a symbol change via event (for indexer tracking)
+     * @dev Emits a SymbolChanged event that indexers can track. The actual ERC20 symbol()
+     * is immutable in OpenZeppelin's implementation, so this event serves as a signal for
+     * off-chain systems. A full symbol change would require contract redeployment or a proxy
+     * upgrade pattern. Only the contract owner can trigger this event.
+     * @param newSymbol The new symbol to be tracked (for indexer purposes)
      */
     function changeSymbol(string memory newSymbol) external onlyOwner {
         string memory oldSymbol = symbol();
@@ -170,8 +207,12 @@ contract ChainEquityToken is ERC20, Ownable {
     }
     
     /**
-     * @dev Enable/disable transfer restrictions
-     * @param restricted New restriction state
+     * @notice Enables or disables transfer restrictions globally
+     * @dev When restrictions are enabled, only allowlisted wallets can transfer tokens.
+     * When disabled, any wallet can transfer (standard ERC20 behavior). This toggle allows
+     * the issuer to control compliance requirements over time. Only the contract owner can
+     * modify this setting.
+     * @param restricted True to enable restrictions, false to disable
      */
     function setTransfersRestricted(bool restricted) external onlyOwner {
         transfersRestricted = restricted;

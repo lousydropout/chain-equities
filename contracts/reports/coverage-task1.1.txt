@@ -1,0 +1,23 @@
+
+
+  ChainEquityToken
+    Deployment
+      ✔ initializes correctly (376ms)
+    Allowlist + Minting
+      ✔ allows owner to approve and mint to a wallet
+      ✔ reverts when minting to unapproved wallet
+    Transfers (restricted)
+      ✔ reverts transfer between unapproved wallets when restricted
+      ✔ allows transfer between approved wallets
+    Virtual Split
+      ✔ executes a 7-for-1 stock split virtually
+      ✔ reverts when split multiplier is less than 1
+    Restriction toggle
+      ✔ toggles transfer restriction on and off
+      ✔ reverts when non-owner tries to set transfer restrictions
+    End-to-End Scenario
+      ✔ runs through complete workflow: approve → mint → transfer → split → verify balances
+
+
+  10 passing (452ms)
+
