@@ -1,0 +1,17 @@
+{
+  "folders": [
+    { "path": "contracts" },
+    { "path": "frontend" },
+    { "path": "backend" }
+  ],
+  "settings": {
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "eslint.workingDirectories": ["contracts", "frontend", "backend"],
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/artifacts": true
+    }
+  }
+}

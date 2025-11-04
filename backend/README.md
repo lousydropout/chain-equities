@@ -1,4 +1,4 @@
-# chain-equity
+# backend
 
 To install dependencies:
 

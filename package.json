@@ -1,16 +1,14 @@
 {
   "name": "chain-equity",
-  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "contracts",
+    "frontend",
+    "backend"
+  ],
   "scripts": {
-    "local:node": "anvil"
-  },
-  "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "@wagmi/cli": "^2.1.15",
-    "hardhat": "2.26.5",
-    "@types/node": "^22.5.1"
-  },
-  "dependencies": {
-    "@openzeppelin/contracts": "^5.4.0"
+    "dev": "bun run --filter @chain-equity/frontend dev",
+    "build": "bun run --filter ./contracts compile && bun run --filter @chain-equity/backend build && bun run --filter @chain-equity/frontend build",
+    "test": "bun run --filter ./contracts test"
   }
 }
