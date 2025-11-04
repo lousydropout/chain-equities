@@ -130,11 +130,11 @@ contract CapTable is Ownable {
      * or changeSymbol()). The data parameter should contain encoded action-specific
      * information for off-chain indexing and analysis.
      * 
-     * @custom:future Token Replacement: In the future, token replacement can be recorded
-     * using action type "TOKEN_REPLACED" with encoded data containing:
-     * - oldTokenAddress (address)
-     * - newTokenAddress (address)
-     * - migrationBlockNumber (uint256)
+     * @custom:token-replacement Token Replacement: Token replacement is recorded using
+     * action type "TOKEN_REPLACED" with encoded data containing:
+     * - oldTokenAddress (address): Address of the old token contract being replaced
+     * - newTokenAddress (address): Address of the new token contract
+     * - migrationBlockNumber (uint256): Block number when migration snapshot was taken
      * 
      * Example:
      * ```solidity
@@ -142,7 +142,12 @@ contract CapTable is Ownable {
      * recordCorporateAction("TOKEN_REPLACED", data);
      * ```
      * 
-     * See TokenReplacement.md for complete design documentation.
+     * This emits a CorporateActionRecorded event that indexers can process to track
+     * token replacements. The old token contract remains on-chain for historical queries,
+     * while the new token becomes the active token for current operations.
+     * 
+     * See docs/token-replacement.md for complete replacement guide and
+     * docs/migration-workflow.md for step-by-step migration instructions.
      * 
      * @param _actionType Type of corporate action (e.g., "SPLIT", "SYMBOL_CHANGE", "TOKEN_REPLACED")
      * @param _data Encoded action-specific data (e.g., split multiplier, new symbol, token addresses)

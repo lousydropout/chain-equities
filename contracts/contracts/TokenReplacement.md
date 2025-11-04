@@ -4,6 +4,16 @@
 
 This document describes the architecture and design for safe token replacement between ChainEquityToken instances. **This is a design-only placeholder — no implementation exists yet.** The actual implementation is deferred until after Phase 2 (Backend API + Event Indexer) is complete.
 
+**📚 For comprehensive documentation, see:**
+- **Token Replacement Guide**: `docs/token-replacement.md` - Complete guide with scenarios, decisions, and migration approach
+- **Migration Workflow Guide**: `docs/migration-workflow.md` - Step-by-step migration process with examples
+
+## Design Decision: Virtual Stock Splits
+
+**Decision: Keep Virtual Stock Splits (No Replacement Needed)**
+
+The system uses virtual stock splits via the `splitFactor` mechanism. Token replacement is **not needed** for stock splits. See `docs/token-replacement.md` for detailed rationale.
+
 ## Scenarios Requiring Token Replacement
 
 Token replacement may be necessary in the following scenarios:
@@ -20,7 +30,8 @@ Token replacement may be necessary in the following scenarios:
 ### 3. Non-Virtual Stock Split
 - **Scenario**: Company wants to execute a "real" split that changes token balances (not just the virtual `splitFactor`)
 - **Current Approach**: Virtual splits via `splitFactor` multiplier (1e18 = 1x, 7e18 = 7x)
-- **Future Need**: If actual balance changes are required, deploy new token with adjusted balances
+- **Decision**: **Keep virtual splits** - Token replacement is not needed for stock splits. Virtual splits are gas-efficient and already implemented. See `docs/token-replacement.md` for rationale.
+- **Future Need**: If regulatory or integration requirements mandate actual balance changes, deploy new token with adjusted balances (rare scenario)
 
 ### 4. Regulatory Compliance
 - **Scenario**: New regulations require contract changes that cannot be implemented via upgradeable proxy
@@ -226,4 +237,20 @@ Token replacement is a complex operation that requires careful design and testin
 - Learn from real-world usage patterns
 
 The placeholder interface and documentation provide a clear path forward when implementation begins.
+
+## Documentation Status
+
+✅ **Design Complete**: This document provides the architectural design for token replacement.
+
+✅ **Comprehensive Guides Created**:
+- `docs/token-replacement.md` - Complete token replacement guide with scenarios and decisions
+- `docs/migration-workflow.md` - Step-by-step migration workflow with examples and verification checklist
+
+✅ **Implementation Status**: Design finalized, implementation deferred until Phase 2 (Backend API + Event Indexer)
+
+**Next Steps**: 
+1. Complete Phase 2 (Backend API + Event Indexer)
+2. Implement migration helper scripts using workflow guide
+3. Test migration on testnet
+4. Consider on-chain migration interface for future enhancement
 

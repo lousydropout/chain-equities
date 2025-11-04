@@ -12,7 +12,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~2 weeks
 
-**Status:** ⏳ In Progress (Task 1.2, 1.3, 1.4, 1.5, and 1.5a complete)
+**Status:** ⏳ In Progress (Task 1.2, 1.3, 1.4, 1.5, 1.5a, and 1.6 complete)
 
 ### Task 1.1: Finalize ChainEquityToken Contract
 
@@ -144,15 +144,34 @@ This document provides a detailed breakdown of all implementation tasks organize
   - `contracts/test/EventSystem.ts` - Added indexed parameter verification test
 - **Test Command:** `cd contracts && bunx hardhat test`
 
-### Task 1.6: Token Replacement Logic
+### Task 1.6: Token Replacement Logic ✅
 
-- [ ] Design token replacement strategy for:
-  - [ ] Symbol changes (deploy new token, migrate balances)
-  - [ ] Stock splits (virtual split already implemented)
-  - [ ] Contract upgrades
-- [ ] Implement migration functions if needed
-- [ ] Document replacement workflow
-- **Deliverable:** Token replacement logic (or decision to keep virtual splits)
+- [x] Design token replacement strategy for:
+  - [x] Symbol changes (deploy new token, migrate balances)
+  - [x] Stock splits (virtual split already implemented)
+  - [x] Contract upgrades
+- [x] Implement migration functions if needed
+- [x] Document replacement workflow
+- **Deliverable:** Token replacement logic (or decision to keep virtual splits) ✅
+- **Status:** Complete - Design finalized, comprehensive documentation created
+- **Summary:**
+  - Decision: Keep virtual stock splits (no replacement needed) - gas-efficient and already implemented
+  - Off-chain migration workflow designed for symbol changes and contract upgrades
+  - Complete documentation created with migration guides and helper script template
+- **Files Created/Modified:**
+  - `contracts/docs/token-replacement.md` (new) - Comprehensive token replacement guide
+  - `contracts/docs/migration-workflow.md` (new) - Step-by-step migration workflow with examples
+  - `contracts/contracts/TokenReplacement.md` (modified) - Updated with finalized design and documentation references
+  - `contracts/contracts/CapTable.sol` (modified) - Enhanced NatSpec comments for TOKEN_REPLACED action type
+  - `contracts/scripts/migration-helper.ts` (new) - Template script for Phase 2 implementation
+- **Key Decisions:**
+  - Virtual stock splits via `splitFactor` are kept (no replacement needed)
+  - Off-chain migration workflow with on-chain verification for symbol changes and upgrades
+  - Implementation deferred until Phase 2 (Backend API + Event Indexer)
+- **Documentation:**
+  - Complete token replacement guide with scenarios, design principles, and security considerations
+  - Detailed migration workflow with 11-step process, verification checklist, and code examples
+  - Migration helper script template ready for Phase 2 implementation
 
 ### Task 1.7: Comprehensive Test Suite
 

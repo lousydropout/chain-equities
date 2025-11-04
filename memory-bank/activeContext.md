@@ -102,12 +102,20 @@
    - Comprehensive test suite (17 tests passing) ✅
    - Enhanced SplitExecuted event with indexed oldFactor/newFactor (Task 1.5a) ✅
    - All 72 tests passing including event system tests ✅
-5. **Backend Foundation** - Database schema and auth middleware ✅ PARTIAL
+5. **Token Replacement Logic** - Design and documentation ✅ COMPLETE
+   - Design decision: Keep virtual stock splits (no replacement needed) ✅
+   - Off-chain migration workflow designed for symbol changes and upgrades ✅
+   - Comprehensive documentation created (`docs/token-replacement.md`) ✅
+   - Migration workflow guide (`docs/migration-workflow.md`) with step-by-step instructions ✅
+   - Migration helper script template (`scripts/migration-helper.ts`) for Phase 2 ✅
+   - CapTable NatSpec enhanced for TOKEN_REPLACED action type ✅
+   - Implementation deferred until Phase 2 (as planned) ✅
+6. **Backend Foundation** - Database schema and auth middleware ✅ PARTIAL
    - Database schema with users table ✅
    - Auth middleware with role-based access control ✅
    - Server entry point (index.ts) ⏳ TODO (needs Fastify server setup)
-6. **Backend** (Bun + Fastify) - Event indexer + REST API ⏳ TODO
-7. **Frontend** (React + wagmi) - Admin & Shareholder dashboards ⏳ TODO
+7. **Backend** (Bun + Fastify) - Event indexer + REST API ⏳ TODO
+8. **Frontend** (React + wagmi) - Admin & Shareholder dashboards ⏳ TODO
 
 ### Planned Enhancements
 
@@ -126,15 +134,16 @@
 1. ✅ Create `/contracts/exports/` directory structure (Task 1.3 - COMPLETE)
 2. ✅ Build deployment configuration for single company (Task 1.3 - COMPLETE)
 3. ✅ Build CapTable.sol for per-company management (Task 1.2 - COMPLETE)
-4. ⏳ Set up backend indexer with viem event watching
-5. ⏳ Implement backend REST API endpoints
-6. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
-7. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
-8. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
-9. ⏳ Implement frontend wallet connector components (`config.ts`, `provider.tsx`, `Connect.tsx`)
-10. ⏳ Integrate Firebase Auth in frontend
-11. ⏳ Create frontend admin dashboard UI
-12. ⏳ Create frontend shareholder dashboard UI
+4. ✅ Design token replacement logic (Task 1.6 - COMPLETE)
+5. ⏳ Set up backend indexer with viem event watching
+6. ⏳ Implement backend REST API endpoints
+7. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
+8. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
+9. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
+10. ⏳ Implement frontend wallet connector components (`config.ts`, `provider.tsx`, `Connect.tsx`)
+11. ⏳ Integrate Firebase Auth in frontend
+12. ⏳ Create frontend admin dashboard UI
+13. ⏳ Create frontend shareholder dashboard UI
 
 ### Role System ✅
 
@@ -181,6 +190,32 @@
   - Event System tests: `cd contracts && bunx hardhat test test/EventSystem.ts`
   - All tests: `cd contracts && bunx hardhat test` (72 tests passing)
 - **Status**: Complete - Task 1.5 and Task 1.5a ✅
+
+### Token Replacement Logic ✅
+
+- **Location**: `contracts/docs/token-replacement.md`, `contracts/docs/migration-workflow.md`, `contracts/contracts/TokenReplacement.md`, `contracts/scripts/migration-helper.ts`, `contracts/contracts/CapTable.sol`
+- **Design Decisions**:
+  - **Virtual Stock Splits**: Keep virtual splits via `splitFactor` (no replacement needed) - gas-efficient and already implemented
+  - **Symbol Changes**: Off-chain migration workflow with on-chain verification
+  - **Contract Upgrades**: Off-chain migration workflow with on-chain verification
+- **Documentation Created**:
+  - `contracts/docs/token-replacement.md` - Comprehensive guide with scenarios, design principles, security considerations
+  - `contracts/docs/migration-workflow.md` - Step-by-step migration workflow with 11-step process, verification checklist, and code examples
+  - Migration helper script template ready for Phase 2 implementation
+- **Files Created/Modified**:
+  - `contracts/docs/token-replacement.md` (new) - Complete token replacement guide
+  - `contracts/docs/migration-workflow.md` (new) - Detailed migration workflow guide
+  - `contracts/contracts/TokenReplacement.md` (modified) - Updated with finalized design and documentation references
+  - `contracts/contracts/CapTable.sol` (modified) - Enhanced NatSpec comments for TOKEN_REPLACED action type
+  - `contracts/scripts/migration-helper.ts` (new) - Template script for Phase 2 implementation
+- **Key Features**:
+  - Complete design for token replacement scenarios
+  - Off-chain migration workflow with on-chain verification
+  - Corporate action recording via CapTable `recordCorporateAction("TOKEN_REPLACED", data)`
+  - Comprehensive security considerations and verification steps
+  - Integration guidance for Phase 2 backend indexer
+- **Implementation Status**: Design complete, implementation deferred until Phase 2 (Backend API + Event Indexer) as planned
+- **Status**: Complete - Task 1.6 ✅
 
 ### Testing
 
