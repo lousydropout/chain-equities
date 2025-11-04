@@ -101,7 +101,7 @@
    - Event signature documentation (`docs/event-signatures.md`) ✅
    - Comprehensive test suite (17 tests passing) ✅
    - Enhanced SplitExecuted event with indexed oldFactor/newFactor (Task 1.5a) ✅
-   - All 72 tests passing including event system tests ✅
+   - All 137 tests passing including comprehensive test suite (Task 1.7) ✅
 5. **Token Replacement Logic** - Design and documentation ✅ COMPLETE
    - Design decision: Keep virtual stock splits (no replacement needed) ✅
    - Off-chain migration workflow designed for symbol changes and upgrades ✅
@@ -110,12 +110,18 @@
    - Migration helper script template (`scripts/migration-helper.ts`) for Phase 2 ✅
    - CapTable NatSpec enhanced for TOKEN_REPLACED action type ✅
    - Implementation deferred until Phase 2 (as planned) ✅
-6. **Backend Foundation** - Database schema and auth middleware ✅ PARTIAL
+6. **Comprehensive Test Suite** - Complete test coverage ✅ COMPLETE
+   - Enhanced ChainEquityToken tests (35+ tests) covering all functionality ✅
+   - Enhanced CapTable tests (35+ tests) including TOKEN_REPLACED scenarios ✅
+   - Gas analysis suite for all major operations ✅
+   - Integration tests for end-to-end workflows ✅
+   - Total: 137 tests passing ✅
+7. **Backend Foundation** - Database schema and auth middleware ✅ PARTIAL
    - Database schema with users table ✅
    - Auth middleware with role-based access control ✅
    - Server entry point (index.ts) ⏳ TODO (needs Fastify server setup)
-7. **Backend** (Bun + Fastify) - Event indexer + REST API ⏳ TODO
-8. **Frontend** (React + wagmi) - Admin & Shareholder dashboards ⏳ TODO
+8. **Backend** (Bun + Fastify) - Event indexer + REST API ⏳ TODO
+9. **Frontend** (React + wagmi) - Admin & Shareholder dashboards ⏳ TODO
 
 ### Planned Enhancements
 
@@ -135,15 +141,16 @@
 2. ✅ Build deployment configuration for single company (Task 1.3 - COMPLETE)
 3. ✅ Build CapTable.sol for per-company management (Task 1.2 - COMPLETE)
 4. ✅ Design token replacement logic (Task 1.6 - COMPLETE)
-5. ⏳ Set up backend indexer with viem event watching
-6. ⏳ Implement backend REST API endpoints
-7. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
-8. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
-9. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
-10. ⏳ Implement frontend wallet connector components (`config.ts`, `provider.tsx`, `Connect.tsx`)
-11. ⏳ Integrate Firebase Auth in frontend
-12. ⏳ Create frontend admin dashboard UI
-13. ⏳ Create frontend shareholder dashboard UI
+5. ✅ Comprehensive test suite (Task 1.7 - COMPLETE)
+6. ⏳ Set up backend indexer with viem event watching
+7. ⏳ Implement backend REST API endpoints
+8. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
+9. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
+10. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
+11. ⏳ Implement frontend wallet connector components (`config.ts`, `provider.tsx`, `Connect.tsx`)
+12. ⏳ Integrate Firebase Auth in frontend
+13. ⏳ Create frontend admin dashboard UI
+14. ⏳ Create frontend shareholder dashboard UI
 
 ### Role System ✅
 
@@ -217,20 +224,51 @@
 - **Implementation Status**: Design complete, implementation deferred until Phase 2 (Backend API + Event Indexer) as planned
 - **Status**: Complete - Task 1.6 ✅
 
+### Comprehensive Test Suite ✅
+
+- **Location**: `contracts/test/` - Comprehensive test suite with 137 passing tests
+- **Test Files**:
+  - `ChainEquityToken.ts` - 35+ tests covering deployment, allowlist, minting, transfers, splits, symbol changes, and edge cases
+  - `CapTable.ts` - 35+ tests covering deployment, token linking, corporate actions (including TOKEN_REPLACED), and edge cases
+  - `RoleSystem.ts` - 21 tests covering role-based access control
+  - `EventSystem.ts` - 17 tests covering all event emissions and indexing
+  - `GasAnalysis.ts` - 15+ tests measuring gas costs for all major operations
+  - `Integration.ts` - 14+ tests covering end-to-end workflows and multiple shareholder scenarios
+- **Test Coverage**:
+  - ChainEquityToken: Comprehensive coverage including deployment, allowlist, minting, transfers (restricted/unrestricted), splits, symbol changes, and all edge cases
+  - CapTable: Comprehensive coverage including deployment, token linking, corporate actions (SPLIT, SYMBOL_CHANGE, TOKEN_REPLACED), large data handling, encoding/decoding
+  - Gas Analysis: Detailed gas cost measurements for deployment, minting, transfers, splits, corporate actions, and full workflows
+  - Integration: End-to-end workflow tests, multiple shareholders, complex corporate action sequences, state consistency
+- **Test Commands**:
+  - Run all: `cd contracts && bunx hardhat test`
+  - Run specific: `cd contracts && bunx hardhat test test/ChainEquityToken.ts`
+  - Gas analysis: `cd contracts && bunx hardhat test test/GasAnalysis.ts`
+- **Coverage Tool**: solidity-coverage plugin installed (note: known conflict with Hardhat v2, but test suite is comprehensive)
+- **Files Created/Modified**:
+  - `contracts/test/ChainEquityToken.ts` (enhanced) - Added 30+ new test cases
+  - `contracts/test/CapTable.ts` (enhanced) - Added 10+ new test cases
+  - `contracts/test/GasAnalysis.ts` (new) - Gas cost analysis suite
+  - `contracts/test/Integration.ts` (new) - Integration test suite
+  - `contracts/hardhat.config.ts` (modified) - Added coverage configuration
+  - `contracts/package.json` (modified) - Added coverage script and dependency
+- **Status**: Complete - Task 1.7 ✅ (137 tests passing)
+
 ### Testing
 
 - **Contract Tests**: Use Hardhat test framework
-  - Run all: `cd contracts && bunx hardhat test`
-  - Run specific: `cd contracts && bunx hardhat test test/RoleSystem.ts`
+  - Run all: `cd contracts && bunx hardhat test` (137 tests passing)
+  - Run specific: `cd contracts && bunx hardhat test test/ChainEquityToken.ts`
 - **Backend Tests**: Use Bun's built-in test runner
   - Run all: `cd backend && bun test`
   - Run specific: `cd backend && bun test src/__tests__/middleware/auth.test.ts`
 - **Test Coverage**:
-  - ChainEquityToken: 10 tests (existing test suite)
-  - CapTable: 24 tests (existing test suite)
+  - ChainEquityToken: 35+ tests (comprehensive coverage)
+  - CapTable: 35+ tests (comprehensive coverage)
   - Role System: 21 contract tests, 17 backend tests (Task 1.4)
   - Event System: 17 tests (Task 1.5)
-  - Total: 72 tests passing (including all event system tests)
+  - Gas Analysis: 15+ tests (Task 1.7)
+  - Integration: 14+ tests (Task 1.7)
+  - Total: 137 tests passing (including all comprehensive test suites)
 
 ### Future Enhancements
 

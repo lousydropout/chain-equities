@@ -68,6 +68,19 @@ describe("CapTable", function () {
       expect(actionCount).to.equal(0n);
     });
 
+    it("createdAt timestamp is valid and reasonable", async function () {
+      const { capTable } = await loadFixture(deployCapTableFixture);
+
+      const createdAt = await capTable.createdAt();
+      const currentBlock = await hre.ethers.provider.getBlock("latest");
+      const currentTimestamp = BigInt(currentBlock!.timestamp);
+
+      // createdAt should be within last minute (allowing for test execution time)
+      expect(createdAt).to.be.gt(0);
+      expect(createdAt).to.be.lte(currentTimestamp);
+      expect(currentTimestamp - createdAt).to.be.lt(60n); // Less than 60 seconds
+    });
+
     it("emits CapTableCreated event on deployment", async function () {
       const [owner] = await hre.ethers.getSigners();
       const CapTable = await hre.ethers.getContractFactory("CapTable");
@@ -161,6 +174,54 @@ describe("CapTable", function () {
       await expect(
         capTableAsAlice.linkToken(await token.getAddress())
       ).to.be.revertedWithCustomError(capTable, "OwnableUnauthorizedAccount");
+    });
+
+    it("allows linking with different token contracts", async function () {
+      const { capTable } = await loadFixture(deployCapTableFixture);
+
+      const ChainEquityToken = await hre.ethers.getContractFactory(
+        "ChainEquityToken"
+      );
+      const token1 = await ChainEquityToken.deploy(
+        "Token 1",
+        "T1",
+        hre.ethers.parseEther("1000000")
+      );
+      const token2 = await ChainEquityToken.deploy(
+        "Token 2",
+        "T2",
+        hre.ethers.parseEther("2000000")
+      );
+
+      // Link first token
+      await capTable.linkToken(await token1.getAddress());
+      expect(await capTable.token()).to.equal(await token1.getAddress());
+
+      // Can't link second token (already linked)
+      await expect(
+        capTable.linkToken(await token2.getAddress())
+      ).to.be.revertedWith("CapTable: token already linked");
+    });
+
+    it("token address persists after linking", async function () {
+      const { capTable } = await loadFixture(deployCapTableFixture);
+
+      const ChainEquityToken = await hre.ethers.getContractFactory(
+        "ChainEquityToken"
+      );
+      const token = await ChainEquityToken.deploy(
+        "Test Token",
+        "TEST",
+        hre.ethers.parseEther("1000000")
+      );
+
+      await capTable.linkToken(await token.getAddress());
+      const linkedToken = await capTable.token();
+      expect(linkedToken).to.equal(await token.getAddress());
+
+      // Verify it persists across multiple calls
+      expect(await capTable.token()).to.equal(await token.getAddress());
+      expect(await capTable.token()).to.equal(linkedToken);
     });
   });
 
@@ -344,6 +405,232 @@ describe("CapTable", function () {
       await expect(capTable.getCorporateAction(1)).to.be.revertedWith(
         "CapTable: invalid action ID"
       );
+    });
+
+    it("allows recording TOKEN_REPLACED action type", async function () {
+      const { capTable } = await loadFixture(deployCapTableFixture);
+
+      const ChainEquityToken = await hre.ethers.getContractFactory(
+        "ChainEquityToken"
+      );
+      const oldToken = await ChainEquityToken.deploy(
+        "Old Token",
+        "OLD",
+        hre.ethers.parseEther("1000000")
+      );
+      const newToken = await ChainEquityToken.deploy(
+        "New Token",
+        "NEW",
+        hre.ethers.parseEther("1000000")
+      );
+
+      await capTable.linkToken(await oldToken.getAddress());
+
+      // Encode TOKEN_REPLACED data: (address oldToken, address newToken, uint256 migrationBlockNumber)
+      const replacementData = hre.ethers.AbiCoder.defaultAbiCoder().encode(
+        ["address", "address", "uint256"],
+        [
+          await oldToken.getAddress(),
+          await newToken.getAddress(),
+          await hre.ethers.provider.getBlockNumber(),
+        ]
+      );
+
+      const tx = await capTable.recordCorporateAction(
+        "TOKEN_REPLACED",
+        replacementData
+      );
+      const receipt = await tx.wait();
+
+      await expect(tx)
+        .to.emit(capTable, "CorporateActionRecorded")
+        .withArgs(1n, "TOKEN_REPLACED", receipt!.blockNumber);
+
+      const action = await capTable.getCorporateAction(1);
+      expect(action.actionType).to.equal("TOKEN_REPLACED");
+      expect(action.data).to.equal(replacementData);
+    });
+
+    it("allows recording corporate action with empty data", async function () {
+      const { capTable } = await loadFixture(deployCapTableFixture);
+
+      const ChainEquityToken = await hre.ethers.getContractFactory(
+        "ChainEquityToken"
+      );
+      const token = await ChainEquityToken.deploy(
+        "Test Token",
+        "TEST",
+        hre.ethers.parseEther("1000000")
+      );
+      await capTable.linkToken(await token.getAddress());
+
+      const emptyData = "0x";
+      const tx = await capTable.recordCorporateAction("CUSTOM", emptyData);
+      const receipt = await tx.wait();
+
+      await expect(tx)
+        .to.emit(capTable, "CorporateActionRecorded")
+        .withArgs(1n, "CUSTOM", receipt!.blockNumber);
+
+      const action = await capTable.getCorporateAction(1);
+      expect(action.data).to.equal(emptyData);
+    });
+
+    it("allows recording corporate action with very large data", async function () {
+      const { capTable } = await loadFixture(deployCapTableFixture);
+
+      const ChainEquityToken = await hre.ethers.getContractFactory(
+        "ChainEquityToken"
+      );
+      const token = await ChainEquityToken.deploy(
+        "Test Token",
+        "TEST",
+        hre.ethers.parseEther("1000000")
+      );
+      await capTable.linkToken(await token.getAddress());
+
+      // Create large data (array of 100 uint256 values)
+      const largeArray = Array(100).fill(hre.ethers.parseEther("1"));
+      const largeData = hre.ethers.AbiCoder.defaultAbiCoder().encode(
+        ["uint256[]"],
+        [largeArray]
+      );
+
+      const tx = await capTable.recordCorporateAction("LARGE_DATA", largeData);
+      const receipt = await tx.wait();
+
+      await expect(tx)
+        .to.emit(capTable, "CorporateActionRecorded")
+        .withArgs(1n, "LARGE_DATA", receipt!.blockNumber);
+
+      const action = await capTable.getCorporateAction(1);
+      expect(action.data).to.equal(largeData);
+    });
+
+    it("allows recording multiple actions with same type", async function () {
+      const { capTable } = await loadFixture(deployCapTableFixture);
+
+      const ChainEquityToken = await hre.ethers.getContractFactory(
+        "ChainEquityToken"
+      );
+      const token = await ChainEquityToken.deploy(
+        "Test Token",
+        "TEST",
+        hre.ethers.parseEther("1000000")
+      );
+      await capTable.linkToken(await token.getAddress());
+
+      const splitData1 = hre.ethers.AbiCoder.defaultAbiCoder().encode(
+        ["uint256"],
+        [hre.ethers.parseEther("2")]
+      );
+      const splitData2 = hre.ethers.AbiCoder.defaultAbiCoder().encode(
+        ["uint256"],
+        [hre.ethers.parseEther("3")]
+      );
+
+      await capTable.recordCorporateAction("SPLIT", splitData1);
+      await capTable.recordCorporateAction("SPLIT", splitData2);
+
+      const action1 = await capTable.getCorporateAction(1);
+      const action2 = await capTable.getCorporateAction(2);
+
+      expect(action1.actionType).to.equal("SPLIT");
+      expect(action2.actionType).to.equal("SPLIT");
+      expect(action1.id).to.equal(1n);
+      expect(action2.id).to.equal(2n);
+    });
+
+    it("can retrieve all action IDs correctly", async function () {
+      const { capTable } = await loadFixture(deployCapTableFixture);
+
+      const ChainEquityToken = await hre.ethers.getContractFactory(
+        "ChainEquityToken"
+      );
+      const token = await ChainEquityToken.deploy(
+        "Test Token",
+        "TEST",
+        hre.ethers.parseEther("1000000")
+      );
+      await capTable.linkToken(await token.getAddress());
+
+      const splitData = hre.ethers.AbiCoder.defaultAbiCoder().encode(
+        ["uint256"],
+        [hre.ethers.parseEther("7")]
+      );
+
+      // Record 5 actions
+      for (let i = 0; i < 5; i++) {
+        await capTable.recordCorporateAction("SPLIT", splitData);
+      }
+
+      // Retrieve all actions
+      for (let i = 1; i <= 5; i++) {
+        const action = await capTable.getCorporateAction(i);
+        expect(action.id).to.equal(BigInt(i));
+        expect(action.actionType).to.equal("SPLIT");
+      }
+
+      expect(await capTable.corporateActionCount()).to.equal(5n);
+      expect(await capTable.nextActionId()).to.equal(6n);
+    });
+
+    it("timestamp and blockNumber are correct for actions", async function () {
+      const { capTable } = await loadFixture(deployCapTableFixture);
+
+      const ChainEquityToken = await hre.ethers.getContractFactory(
+        "ChainEquityToken"
+      );
+      const token = await ChainEquityToken.deploy(
+        "Test Token",
+        "TEST",
+        hre.ethers.parseEther("1000000")
+      );
+      await capTable.linkToken(await token.getAddress());
+
+      const splitData = hre.ethers.AbiCoder.defaultAbiCoder().encode(
+        ["uint256"],
+        [hre.ethers.parseEther("7")]
+      );
+
+      const tx = await capTable.recordCorporateAction("SPLIT", splitData);
+      const receipt = await tx.wait();
+      const block = await hre.ethers.provider.getBlock(receipt!.blockNumber!);
+
+      const action = await capTable.getCorporateAction(1);
+      expect(action.blockNumber).to.equal(receipt!.blockNumber);
+      expect(action.timestamp).to.equal(block!.timestamp);
+    });
+
+    it("correctly encodes and decodes action data", async function () {
+      const { capTable } = await loadFixture(deployCapTableFixture);
+
+      const ChainEquityToken = await hre.ethers.getContractFactory(
+        "ChainEquityToken"
+      );
+      const token = await ChainEquityToken.deploy(
+        "Test Token",
+        "TEST",
+        hre.ethers.parseEther("1000000")
+      );
+      await capTable.linkToken(await token.getAddress());
+
+      // Test encoding/decoding split data
+      const splitMultiplier = hre.ethers.parseEther("7");
+      const splitData = hre.ethers.AbiCoder.defaultAbiCoder().encode(
+        ["uint256"],
+        [splitMultiplier]
+      );
+
+      await capTable.recordCorporateAction("SPLIT", splitData);
+      const action = await capTable.getCorporateAction(1);
+
+      // Decode the data
+      const decoded = hre.ethers.AbiCoder.defaultAbiCoder().decode(
+        ["uint256"],
+        action.data
+      );
+      expect(decoded[0]).to.equal(splitMultiplier);
     });
   });
 
