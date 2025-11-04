@@ -2,7 +2,7 @@ import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 /**
  * Deployment module for Acme Inc. Company
- * 
+ *
  * Deploys both ChainEquityToken and CapTable contracts, then links them together.
  * This module ensures deterministic deployment order: token → capTable → link.
  */
@@ -27,4 +27,3 @@ export default buildModule("AcmeCompany", (m) => {
 
   return { token, capTable };
 });
-

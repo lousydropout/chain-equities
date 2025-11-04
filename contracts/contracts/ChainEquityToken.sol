@@ -13,6 +13,16 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * enforce compliance (KYC/AML) requirements. The contract supports corporate actions including
  * virtual stock splits and symbol changes, with issuer-controlled minting and wallet approvals.
  * Built on OpenZeppelin v5's ERC20 and Ownable patterns for security and standardization.
+ * 
+ * @custom:roles Role-based access control:
+ * - Owner (issuer role): The contract owner represents the ISSUER role and has exclusive access to
+ *   mint tokens, approve/revoke wallets, execute splits, change symbols, and manage transfer restrictions.
+ *   See IRoles.sol for role constant definitions.
+ * - Investor role: Investor role validation is handled off-chain via the backend. On-chain, investors
+ *   are represented by approved wallets in the allowlist. The backend validates investor permissions
+ *   for API access and enforces role-based restrictions on business logic.
+ * - Admin role: Admin role is enforced off-chain only (backend). Contracts use simple ownership model
+ *   where owner = issuer. Admin vs issuer granularity is managed in the backend database.
  */
 contract ChainEquityToken is ERC20, Ownable {
     // State variables
@@ -70,11 +80,12 @@ contract ChainEquityToken is ERC20, Ownable {
     /**
      * @notice Approves a wallet for token transfers (KYC/AML compliance)
      * @dev Adds the wallet to the allowlist, enabling it to receive and send tokens.
-     * Only the contract owner (issuer) can approve wallets. This function is idempotent-safe
+     * Only the contract owner (issuer role) can approve wallets. This function is idempotent-safe
      * and will revert if the wallet is already approved.
      * @custom:security This function enforces compliance by requiring issuer approval before
      * any wallet can participate in transfers. The allowlist mechanism is the core compliance
      * gating system for this tokenized security.
+     * @custom:roles Requires issuer role (enforced via onlyOwner modifier). Owner = issuer role.
      * @param wallet Address to approve for transfers
      */
     function approveWallet(address wallet) external onlyOwner {
@@ -88,7 +99,8 @@ contract ChainEquityToken is ERC20, Ownable {
     /**
      * @notice Revokes a wallet's approval, preventing future transfers
      * @dev Removes the wallet from the allowlist. The wallet retains its current balance
-     * but cannot send or receive tokens until re-approved. Only the contract owner can revoke.
+     * but cannot send or receive tokens until re-approved. Only the contract owner (issuer role) can revoke.
+     * @custom:roles Requires issuer role (enforced via onlyOwner modifier). Owner = issuer role.
      * @param wallet Address to revoke approval from
      */
     function revokeWallet(address wallet) external onlyOwner {
@@ -112,7 +124,8 @@ contract ChainEquityToken is ERC20, Ownable {
      * @notice Mints new tokens to an approved wallet (share issuance)
      * @dev Creates new tokens and assigns them to a wallet that must be pre-approved.
      * The total supply cannot exceed the authorized amount set at deployment.
-     * Only the contract owner can mint tokens.
+     * Only the contract owner (issuer role) can mint tokens.
+     * @custom:roles Requires issuer role (enforced via onlyOwner modifier). Owner = issuer role.
      * @param to Address to mint tokens to (must be approved)
      * @param amount Amount of tokens to mint (in base token units with 18 decimals)
      */
@@ -165,7 +178,8 @@ contract ChainEquityToken is ERC20, Ownable {
      * @dev Updates the split factor to reflect a stock split without modifying actual balances.
      * This virtual split approach is gas-efficient for large shareholder lists. The effective
      * balance (visible via effectiveBalanceOf) is calculated by multiplying the base balance
-     * by splitFactor/1e18. Only the contract owner can execute splits.
+     * by splitFactor/1e18. Only the contract owner (issuer role) can execute splits.
+     * @custom:roles Requires issuer role (enforced via onlyOwner modifier). Owner = issuer role.
      * @param multiplier Split multiplier in 1e18 precision (e.g., 7e18 for 7-for-1 split, must be >= 1e18)
      */
     function executeSplit(uint256 multiplier) external onlyOwner {
@@ -196,7 +210,8 @@ contract ChainEquityToken is ERC20, Ownable {
      * @dev Emits a SymbolChanged event that indexers can track. The actual ERC20 symbol()
      * is immutable in OpenZeppelin's implementation, so this event serves as a signal for
      * off-chain systems. A full symbol change would require contract redeployment or a proxy
-     * upgrade pattern. Only the contract owner can trigger this event.
+     * upgrade pattern. Only the contract owner (issuer role) can trigger this event.
+     * @custom:roles Requires issuer role (enforced via onlyOwner modifier). Owner = issuer role.
      * @param newSymbol The new symbol to be tracked (for indexer purposes)
      */
     function changeSymbol(string memory newSymbol) external onlyOwner {
@@ -210,8 +225,9 @@ contract ChainEquityToken is ERC20, Ownable {
      * @notice Enables or disables transfer restrictions globally
      * @dev When restrictions are enabled, only allowlisted wallets can transfer tokens.
      * When disabled, any wallet can transfer (standard ERC20 behavior). This toggle allows
-     * the issuer to control compliance requirements over time. Only the contract owner can
-     * modify this setting.
+     * the issuer to control compliance requirements over time. Only the contract owner (issuer role)
+     * can modify this setting.
+     * @custom:roles Requires issuer role (enforced via onlyOwner modifier). Owner = issuer role.
      * @param restricted True to enable restrictions, false to disable
      */
     function setTransfersRestricted(bool restricted) external onlyOwner {

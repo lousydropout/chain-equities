@@ -13,6 +13,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * for access control, where the issuer (owner) is the only address that can link tokens and record
  * corporate actions.
  * 
+ * @custom:roles Role-based access control:
+ * - Owner (issuer role): The contract owner represents the ISSUER role and has exclusive access to
+ *   link tokens and record corporate actions. See IRoles.sol for role constant definitions.
+ * - Admin role: Admin role is enforced off-chain only (backend). Contracts use simple ownership model
+ *   where owner = issuer. Admin vs issuer granularity is managed in the backend database.
+ * 
  * @custom:interaction The CapTable is deployed alongside a ChainEquityToken instance and linked via
  * linkToken(). The issuer should call recordCorporateAction() after executing corporate actions on
  * the linked token contract.
@@ -93,10 +99,11 @@ contract CapTable is Ownable {
      * @notice Links a ChainEquityToken contract to this cap table
      * @dev Sets the token address and emits an event. This creates a one-way link from
      * CapTable to Token. The token address can only be set once to prevent accidental changes.
-     * Only the contract owner (issuer) can call this function.
+     * Only the contract owner (issuer role) can call this function.
      * 
      * @custom:security Only the issuer (owner) can link tokens. The token address must be
      * non-zero and cannot be changed after initial linking to prevent unauthorized modifications.
+     * @custom:roles Requires issuer role (enforced via onlyOwner modifier). Owner = issuer role.
      * 
      * @param _token Address of the ChainEquityToken contract to link
      */
@@ -112,10 +119,11 @@ contract CapTable is Ownable {
      * @notice Records a corporate action in the cap table history
      * @dev Creates a new CorporateAction record with an incremental ID and stores it in
      * the mapping. The action ID is assigned before incrementing nextActionId to ensure
-     * consistent indexing. Only the contract owner (issuer) can record actions.
+     * consistent indexing. Only the contract owner (issuer role) can record actions.
      * 
      * @custom:security Only the issuer (owner) can record corporate actions. This ensures
      * that only authorized corporate actions are tracked in the cap table history.
+     * @custom:roles Requires issuer role (enforced via onlyOwner modifier). Owner = issuer role.
      * 
      * @custom:interaction The issuer should call this function after executing corporate
      * actions on the linked ChainEquityToken contract (e.g., after calling executeSplit()

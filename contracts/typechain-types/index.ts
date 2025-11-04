@@ -24,5 +24,7 @@ export type { CapTable } from "./contracts/CapTable";
 export { CapTable__factory } from "./factories/contracts/CapTable__factory";
 export type { ChainEquityToken } from "./contracts/ChainEquityToken";
 export { ChainEquityToken__factory } from "./factories/contracts/ChainEquityToken__factory";
+export type { Roles } from "./contracts/IRoles.sol/Roles";
+export { Roles__factory } from "./factories/contracts/IRoles.sol/Roles__factory";
 export type { ITokenReplacement } from "./contracts/ITokenReplacement";
 export { ITokenReplacement__factory } from "./factories/contracts/ITokenReplacement__factory";
