@@ -12,7 +12,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~2 weeks
 
-**Status:** ⏳ In Progress (Task 1.2, 1.3, and 1.4 complete)
+**Status:** ⏳ In Progress (Task 1.2, 1.3, 1.4, 1.5, and 1.5a complete)
 
 ### Task 1.1: Finalize ChainEquityToken Contract
 
@@ -98,17 +98,51 @@ This document provides a detailed breakdown of all implementation tasks organize
   - Contract: `cd contracts && bunx hardhat test test/RoleSystem.ts`
   - Backend: `cd backend && bun test src/__tests__/middleware/auth.test.ts`
 
-### Task 1.5: Implement Event System
+### Task 1.5: Implement Event System ✅
 
-- [ ] Ensure all required events are emitted:
-  - [ ] `Issued(address indexed to, uint256 amount)`
-  - [ ] `Transferred(address indexed from, address indexed to, uint256 value)`
-  - [ ] `SplitExecuted(uint256 oldFactor, uint256 newFactor, uint256 blockNumber)`
-  - [ ] `CapTableCreated(address indexed capTable, string name)`
-  - [ ] `TokenLinked(address indexed capTable, address indexed token)`
-- [ ] Add indexed parameters for efficient filtering
-- [ ] Verify event signatures match backend expectations
-- **Deliverable:** Complete event system with proper indexing
+- [x] Ensure all required events are emitted:
+  - [x] `Issued(address indexed to, uint256 amount)`
+  - [x] `Transferred(address indexed from, address indexed to, uint256 value)` - Standard ERC20 Transfer event
+  - [x] `SplitExecuted(uint256 indexed oldFactor, uint256 indexed newFactor, uint256 blockNumber)`
+  - [x] `CapTableCreated(address indexed capTable, string name, string symbol, address indexed issuer)`
+  - [x] `TokenLinked(address indexed capTable, address indexed token)`
+- [x] Add indexed parameters for efficient filtering
+- [x] Verify event signatures match backend expectations
+- **Deliverable:** Complete event system with proper indexing ✅
+- **Status:** Complete - All required events implemented with proper indexing, comprehensive documentation and tests
+- **Summary:**
+  - Verified all required events are emitted with correct signatures
+  - Standard ERC20 Transfer event used (matches Transferred requirement)
+  - CapTableCreated includes additional indexed parameters (capTable, issuer) for better filtering
+  - All indexed parameters verified for efficient backend filtering
+  - Created comprehensive event signature documentation
+  - Added comprehensive test suite (17 tests passing)
+- **Files Created/Modified:**
+  - `contracts/docs/event-signatures.md` (new) - Complete event signature documentation
+  - `contracts/test/EventSystem.ts` (new) - Comprehensive event system tests
+  - `contracts/contracts/ChainEquityToken.sol` (verified) - Events confirmed
+  - `contracts/contracts/CapTable.sol` (verified) - Events confirmed
+- **Test Command:** `cd contracts && bunx hardhat test test/EventSystem.ts`
+
+### Task 1.5a: Enhance Event Indexing for Backend Efficiency ✅
+
+- [x] Update `SplitExecuted` event to add indexed parameters to `oldFactor` and `newFactor`
+- [x] Update documentation to reflect new indexed parameters
+- [x] Update tests to verify indexed parameters (topics[1] and topics[2])
+- [x] Verify all tests pass with updated event signature
+- **Deliverable:** Enhanced event indexing for efficient backend filtering ✅
+- **Status:** Complete - SplitExecuted event now includes indexed oldFactor and newFactor parameters
+- **Summary:**
+  - Modified `SplitExecuted` event signature: `SplitExecuted(uint256 indexed oldFactor, uint256 indexed newFactor, uint256 blockNumber)`
+  - Updated documentation to reflect indexed parameters and filtering strategies
+  - Added test to verify indexed parameters exist in topics array
+  - All 72 tests passing (including new indexed parameter verification test)
+  - Event signature hash remains unchanged (backward compatible)
+- **Files Modified:**
+  - `contracts/contracts/ChainEquityToken.sol` - Added indexed keywords to SplitExecuted event
+  - `contracts/docs/event-signatures.md` - Updated with indexed parameters and filtering notes
+  - `contracts/test/EventSystem.ts` - Added indexed parameter verification test
+- **Test Command:** `cd contracts && bunx hardhat test`
 
 ### Task 1.6: Token Replacement Logic
 

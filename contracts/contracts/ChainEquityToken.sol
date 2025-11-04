@@ -44,7 +44,11 @@ contract ChainEquityToken is ERC20, Ownable {
     event Issued(address indexed to, uint256 amount);
     
     /// @notice Emitted when a stock split is executed
-    event SplitExecuted(uint256 oldFactor, uint256 newFactor, uint256 blockNumber);
+    event SplitExecuted(
+        uint256 indexed oldFactor,
+        uint256 indexed newFactor,
+        uint256 blockNumber
+    );
     
     /// @notice Emitted when the token symbol is changed (via event, actual symbol requires redeployment)
     event SymbolChanged(string oldSymbol, string newSymbol);

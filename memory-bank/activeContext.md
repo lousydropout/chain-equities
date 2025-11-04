@@ -96,12 +96,18 @@
    - Backend database schema with users table ✅
    - Auth middleware with role fetching from database ✅
    - Comprehensive tests (21 contract tests, 17 backend tests) ✅
-4. **Backend Foundation** - Database schema and auth middleware ✅ PARTIAL
+4. **Event System** - Complete event system with proper indexing ✅ COMPLETE
+   - All required events implemented with indexed parameters ✅
+   - Event signature documentation (`docs/event-signatures.md`) ✅
+   - Comprehensive test suite (17 tests passing) ✅
+   - Enhanced SplitExecuted event with indexed oldFactor/newFactor (Task 1.5a) ✅
+   - All 72 tests passing including event system tests ✅
+5. **Backend Foundation** - Database schema and auth middleware ✅ PARTIAL
    - Database schema with users table ✅
    - Auth middleware with role-based access control ✅
    - Server entry point (index.ts) ⏳ TODO (needs Fastify server setup)
-5. **Backend** (Bun + Fastify) - Event indexer + REST API ⏳ TODO
-6. **Frontend** (React + wagmi) - Admin & Shareholder dashboards ⏳ TODO
+6. **Backend** (Bun + Fastify) - Event indexer + REST API ⏳ TODO
+7. **Frontend** (React + wagmi) - Admin & Shareholder dashboards ⏳ TODO
 
 ### Planned Enhancements
 
@@ -154,6 +160,28 @@
   - Backend tests: `cd backend && bun test src/__tests__/middleware/auth.test.ts`
 - **Status**: Complete - Task 1.4 ✅
 
+### Event System ✅
+
+- **Location**: `contracts/contracts/ChainEquityToken.sol`, `contracts/contracts/CapTable.sol`, `contracts/docs/event-signatures.md`, `contracts/test/EventSystem.ts`
+- **Events Implemented**:
+  - `Issued(address indexed to, uint256 amount)` - Token minting events
+  - `Transfer(address indexed from, address indexed to, uint256 value)` - Standard ERC20 transfer events
+  - `SplitExecuted(uint256 indexed oldFactor, uint256 indexed newFactor, uint256 blockNumber)` - Stock split events with indexed parameters
+  - `CapTableCreated(address indexed capTable, string name, string symbol, address indexed issuer)` - Cap table creation events
+  - `TokenLinked(address indexed capTable, address indexed token)` - Token linking events
+  - `CorporateActionRecorded(uint256 indexed actionId, string indexed actionType, uint256 blockNumber)` - Corporate action tracking
+- **Indexed Parameters**: All key filtering parameters are indexed for efficient backend querying
+- **Documentation**: Complete event signature documentation with backend integration notes
+- **Tests**: Comprehensive test suite (17 tests) verifying all events are emitted correctly with proper indexing
+- **Files Created/Modified**:
+  - `contracts/docs/event-signatures.md` - Complete event signature documentation
+  - `contracts/test/EventSystem.ts` - Comprehensive event system tests
+  - `contracts/contracts/ChainEquityToken.sol` - SplitExecuted event enhanced with indexed parameters (Task 1.5a)
+- **Test Commands**:
+  - Event System tests: `cd contracts && bunx hardhat test test/EventSystem.ts`
+  - All tests: `cd contracts && bunx hardhat test` (72 tests passing)
+- **Status**: Complete - Task 1.5 and Task 1.5a ✅
+
 ### Testing
 
 - **Contract Tests**: Use Hardhat test framework
@@ -166,6 +194,8 @@
   - ChainEquityToken: 10 tests (existing test suite)
   - CapTable: 24 tests (existing test suite)
   - Role System: 21 contract tests, 17 backend tests (Task 1.4)
+  - Event System: 17 tests (Task 1.5)
+  - Total: 72 tests passing (including all event system tests)
 
 ### Future Enhancements
 
