@@ -12,7 +12,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~2 weeks
 
-**Status:** ⏳ In Progress
+**Status:** ⏳ In Progress (Task 1.2 complete)
 
 ### Task 1.1: Finalize ChainEquityToken Contract
 
@@ -27,20 +27,22 @@ This document provides a detailed breakdown of all implementation tasks organize
 - [ ] Verify OpenZeppelin v5 compatibility
 - **Deliverable:** Production-ready `ChainEquityToken.sol`
 
-### Task 1.2: Design and Implement CapTable Contract
+### Task 1.2: Design and Implement CapTable Contract ✅
 
-- [ ] Design CapTable contract structure
-  - [ ] Track company metadata (name, symbol, issuer)
-  - [ ] Link to ChainEquityToken instance
-  - [ ] Store corporate actions history
-  - [ ] Manage shareholder registry
-- [ ] Implement CapTable.sol with:
-  - [ ] `createCapTable()` function
-  - [ ] `linkToken()` function
-  - [ ] `recordCorporateAction()` function
-  - [ ] Events: `CapTableCreated`, `CorporateActionRecorded`
-- [ ] Write unit tests
-- **Deliverable:** `contracts/contracts/CapTable.sol` with tests
+- [x] Design CapTable contract structure
+  - [x] Track company metadata (name, symbol, issuer)
+  - [x] Link to ChainEquityToken instance
+  - [x] Store corporate actions history
+  - [x] Manage shareholder registry
+- [x] Implement CapTable.sol with:
+  - [x] Constructor for initialization (replaces `createCapTable()`)
+  - [x] `linkToken()` function
+  - [x] `recordCorporateAction()` function
+  - [x] Events: `CapTableCreated`, `TokenLinked`, `CorporateActionRecorded`
+- [x] Write unit tests (24 tests, all passing)
+- **Deliverable:** `contracts/contracts/CapTable.sol` with tests ✅
+- **Status:** Complete - Contract deployed, tested, and documented
+- **Summary:** See `docs/phase-1-task1.2-summary.md`
 
 ### Task 1.3: Design and Implement Orchestrator Contract
 

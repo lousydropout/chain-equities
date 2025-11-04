@@ -17,7 +17,7 @@
 
 ### Architecture Blueprint ✅
 - New three-layer architecture documented:
-  - **Contracts Layer**: ChainEquityToken (✅), CapTable (⏳), Orchestrator (⏳)
+  - **Contracts Layer**: ChainEquityToken (✅), CapTable (✅), Orchestrator (⏳)
   - **Backend Layer**: Fastify API + Event Indexer + Database
   - **Frontend Layer**: React + wagmi + viem for wallet interaction
 - Communication patterns defined (HTTP, JSON-RPC, WebSocket)
@@ -36,6 +36,19 @@
   - All required events for cap-table indexing
 - **Status**: Complete and tested
 
+### CapTable Contract ✅
+- **Location**: `contracts/contracts/CapTable.sol`
+- **Base**: OpenZeppelin Ownable
+- **Features**:
+  - Company metadata tracking (name, symbol, issuer, createdAt)
+  - Token linking to ChainEquityToken instances
+  - Corporate actions history with incremental IDs
+  - View functions for company info and action retrieval
+  - Event-driven design for backend indexing
+- **Status**: Complete and tested (24 tests passing)
+- **Test Suite**: `contracts/test/CapTable.ts` - Comprehensive test coverage
+- **Documentation**: `docs/phase-1-task1.2-summary.md`
+
 ### Design Decisions
 - **Stock Split**: Option C (virtual split) - uses splitFactor multiplier, indexer handles display
   - Gas efficient for large holder lists
@@ -47,13 +60,14 @@
 ## Architecture Summary
 
 ### Current State
-1. **Smart Contract** (`ChainEquityToken`) - On-chain cap table ✅ COMPLETE
+1. **Smart Contracts** - On-chain cap table ✅ COMPLETE
+   - `ChainEquityToken.sol` - Token contract with compliance gating ✅
+   - `CapTable.sol` - Company registry and corporate actions tracking ✅
 2. **Backend** (Bun + Fastify) - Event indexer + REST API ⏳ TODO
 3. **Frontend** (React + wagmi) - Admin & Shareholder dashboards ⏳ TODO
 
 ### Planned Enhancements
-- **Orchestrator.sol** - Factory contract for creating new companies
-- **CapTable.sol** - Per-company cap table management contract
+- **Orchestrator.sol** - Factory contract for creating new companies (Task 1.3)
 - **Backend Indexer** - Real-time event processing and database sync
 - **Contract Exports** - `/contracts/exports/` directory for deployment artifacts
 - **Backend API** - REST endpoints for companies, shareholders, transactions
@@ -65,8 +79,8 @@
 
 ### Immediate Priorities
 1. ⏳ Create `/contracts/exports/` directory structure
-2. ⏳ Build Orchestrator.sol for multi-company support
-3. ⏳ Build CapTable.sol for per-company management
+2. ⏳ Build Orchestrator.sol for multi-company support (Task 1.3)
+3. ✅ Build CapTable.sol for per-company management (Task 1.2 - COMPLETE)
 4. ⏳ Set up backend indexer with viem event watching
 5. ⏳ Implement backend REST API endpoints
 6. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)

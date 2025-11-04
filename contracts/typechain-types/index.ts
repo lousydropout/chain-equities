@@ -20,5 +20,7 @@ export type { IERC20Metadata } from "./@openzeppelin/contracts/token/ERC20/exten
 export { IERC20Metadata__factory } from "./factories/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata__factory";
 export type { IERC20 } from "./@openzeppelin/contracts/token/ERC20/IERC20";
 export { IERC20__factory } from "./factories/@openzeppelin/contracts/token/ERC20/IERC20__factory";
+export type { CapTable } from "./contracts/CapTable";
+export { CapTable__factory } from "./factories/contracts/CapTable__factory";
 export type { ChainEquityToken } from "./contracts/ChainEquityToken";
 export { ChainEquityToken__factory } from "./factories/contracts/ChainEquityToken__factory";

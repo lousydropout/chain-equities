@@ -48,8 +48,8 @@ User  ⇄  Browser ⇄──▶ │  Wagmi + Viem Client   │
 
 #### Planned Architecture (Multi-Company)
 - **ChainEquityToken.sol** — ERC-20-like share token (✅ COMPLETE)
-- **CapTable.sol** — Tracks shareholders, issuances, transfers per company
-- **Orchestrator.sol** — Creates and links new company cap tables
+- **CapTable.sol** — Tracks company metadata and corporate actions (✅ COMPLETE)
+- **Orchestrator.sol** — Creates and links new company cap tables (⏳ TODO)
 
 #### Deployment & Exports
 - **Hardhat Ignition** handles deployment and artifact export
@@ -331,15 +331,15 @@ chain-equity/
 
 ### ✅ Complete
 1. **ChainEquityToken.sol** - Core token contract with compliance gating
-2. **Test Suite** - Comprehensive test coverage
-3. **Deployment Module** - Hardhat Ignition deployment
-4. **Workspace Structure** - Monorepo with contracts, frontend, backend
-5. **Memory Bank** - Documentation and architecture docs
+2. **CapTable.sol** - Company registry and corporate actions tracking
+3. **Test Suites** - Comprehensive test coverage (ChainEquityToken: 10 tests, CapTable: 24 tests)
+4. **Deployment Module** - Hardhat Ignition deployment
+5. **Workspace Structure** - Monorepo with contracts, frontend, backend
+6. **Memory Bank** - Documentation and architecture docs
 
 ### ⏳ In Progress / Planned
-1. **Orchestrator.sol** - Multi-company factory contract
-2. **CapTable.sol** - Per-company cap table management
-3. **Backend Indexer** - Event listener and database sync
+1. **Orchestrator.sol** - Multi-company factory contract (Task 1.3)
+2. **Backend Indexer** - Event listener and database sync
 4. **Backend API** - REST endpoints for frontend
 5. **Frontend Admin Dashboard** - Issuer operations UI
 6. **Frontend Shareholder Dashboard** - Investor view
