@@ -170,6 +170,15 @@
      - Comprehensive end-to-end testing verified (7 events indexed, all types working)
      - Test scripts: `generate-test-events.ts`, `verify-indexed-data.ts`, `test-indexer.ts`
      - Complete testing guide: `E2E_TESTING_GUIDE.md`
+   - REST API routes - Company Info complete (Task 2.6) ✅
+     - Shared `safeRead()` utility for consistent contract read error handling
+     - `GET /api/company` endpoint using `getCompanyInfo()` for efficient retrieval
+     - `GET /api/company/metadata` endpoint with individual field queries
+     - Fastify response schema validation for type safety
+     - Graceful handling of unlinked tokens (null token address)
+     - Flat JSON response structure for frontend consistency
+     - Comprehensive test suite (9 tests passing)
+     - All routes registered with `/api` prefix
 9. **Frontend** (React + wagmi) - Admin & Shareholder dashboards ⏳ TODO
 
 ### Planned Enhancements
@@ -196,7 +205,8 @@
 8. ✅ Database setup and migrations (Task 2.3 - COMPLETE)
 9. ✅ Viem client configuration with WebSocket/HTTP fallback (Task 2.4 - COMPLETE)
 10. ✅ Set up backend indexer with viem event watching (Task 2.5 - COMPLETE)
-11. ⏳ Implement backend REST API endpoints (Tasks 2.6-2.9)
+11. ✅ Implement company info REST API endpoints (Task 2.6 - COMPLETE)
+12. ⏳ Implement remaining REST API endpoints (Tasks 2.7-2.9)
 12. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
 13. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
 14. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
@@ -312,9 +322,10 @@
   - Run all: `cd contracts && npx hardhat test` (137 tests passing)
   - Run specific: `cd contracts && npx hardhat test test/ChainEquityToken.ts`
 - **Backend Tests**: Use Bun's built-in test runner
-  - Run all: `cd backend && bun test` (37 tests passing: 17 auth middleware + 20 client configuration)
+  - Run all: `cd backend && bun test` (46 tests passing: 17 auth middleware + 20 client configuration + 9 company routes)
   - Run specific: `cd backend && bun test src/__tests__/middleware/auth.test.ts`
   - Client tests: `cd backend && bun test src/services/chain/__tests__/client.test.ts`
+  - Company route tests: `cd backend && bun test src/routes/__tests__/company.test.ts`
   - Manual connection test: `cd backend && bun run test:client`
 - **Deployment**: Use npm scripts
   - Deploy: `cd contracts && npm run deploy:acme` or `npm run deploy:anvil`
@@ -381,7 +392,8 @@
 - Backend database setup and migrations (Task 2.3) ✅ COMPLETE
 - Backend Viem client configuration (Task 2.4) ✅ COMPLETE
 - Backend event indexer implementation (Task 2.5) ✅ COMPLETE
-- Backend REST API routes (Tasks 2.6-2.9) ⏳ NEXT
+- Backend REST API routes - Company Info (Task 2.6) ✅ COMPLETE
+- Backend REST API routes - Shareholders, Transactions, Corporate Actions (Tasks 2.7-2.9) ⏳ NEXT
 - Frontend admin dashboard for issuer operations
 - Frontend shareholder dashboard for investors
 - Integration testing across all layers

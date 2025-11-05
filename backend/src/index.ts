@@ -9,6 +9,7 @@ import helmet from '@fastify/helmet';
 import { connect, close } from './db/index';
 import { migrate } from './db/migrations';
 import { Indexer } from './services/chain/indexer';
+import { companyRoutes } from './routes/company';
 
 // Get port from environment variable, default to 4000
 const PORT = Number(process.env.PORT) || 4000;
@@ -64,6 +65,9 @@ const start = async () => {
     // Register security plugins
     await fastify.register(helmet);
     await fastify.register(cors);
+
+    // Register API routes
+    await fastify.register(companyRoutes, { prefix: '/api' });
 
     // Health check endpoint
     fastify.get('/ping', async (request, reply) => {

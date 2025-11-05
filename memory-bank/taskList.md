@@ -295,7 +295,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~2 weeks
 
-**Status:** ⏳ In Progress (Task 2.1, 2.2, 2.3, 2.4, 2.5 complete)
+**Status: ⏳ In Progress (Task 2.1, 2.2, 2.3, 2.4, 2.5, 2.6 complete)
 
 **Dependencies:** Phase 1 complete
 
@@ -540,57 +540,79 @@ This document provides a detailed breakdown of all implementation tasks organize
   - Verify data: `bun run scripts/verify-indexed-data.ts`
   - Full E2E: See `E2E_TESTING_GUIDE.md`
 
-### Task 2.6: REST API Routes - Company Info
+### Task 2.6: REST API Routes - Company Info ✅
 
-- [ ] Create `backend/src/routes/company.ts` (singular, single company)
-- [ ] Implement endpoints:
-  - [ ] `GET /api/company` - Get company details (single company)
-  - [ ] `GET /api/company/metadata` - Get company metadata
-- [ ] Read contract addresses from config
-- [ ] Query CapTable contract for name, symbol, issuer
-- [ ] Add error handling
-- [ ] Write route tests
-- **Deliverable:** Company info API endpoints (single company)
+- [x] Create `backend/src/routes/company.ts` (singular, single company)
+- [x] Implement endpoints:
+  - [x] `GET /api/company` - Get company details (single company)
+  - [x] `GET /api/company/metadata` - Get company metadata
+- [x] Read contract addresses from config
+- [x] Query CapTable contract for name, symbol, issuer
+- [x] Add error handling
+- [x] Write route tests
+- **Deliverable:** Company info API endpoints (single company) ✅
+- **Status:** Complete - REST API routes for company information implemented with comprehensive error handling and tests
+- **Summary:**
+  - Created shared `safeRead()` utility in `services/chain/utils.ts` for consistent contract read error handling
+  - Implemented `GET /api/company` endpoint using `getCompanyInfo()` for efficient single-call retrieval
+  - Implemented `GET /api/company/metadata` endpoint with individual field queries
+  - Added Fastify response schema validation for type safety
+  - Graceful handling of unlinked tokens (null token address with `isTokenLinked: false`)
+  - Flat JSON response structure (no nesting) for frontend consistency
+  - Comprehensive error handling using `safeRead()` utility
+  - All routes registered with `/api` prefix in server
+  - Complete test suite with 9 tests covering all scenarios
+- **Files Created/Modified:**
+  - `backend/src/services/chain/utils.ts` (new) - Shared utility for safe contract reads
+  - `backend/src/routes/company.ts` (new) - Company routes module with Fastify plugin pattern
+  - `backend/src/routes/__tests__/company.test.ts` (new) - Comprehensive test suite (9 tests)
+  - `backend/src/index.ts` (modified) - Registered company routes with `/api` prefix
+- **Test Results:**
+  - 9 tests passing (all success cases, error scenarios, and unlinked token handling)
+  - Tests cover both endpoints with mocked viem client
+  - Response schema validation tested
+- **Test Commands:**
+  - Run company route tests: `cd backend && bun test src/routes/__tests__/company.test.ts`
 
 ### Task 2.7: REST API Routes - Shareholders
 
 - [ ] Create `backend/src/routes/shareholders.ts`
-- [ ] Implement endpoints:
+- [x] Implement endpoints:
   - [ ] `GET /api/shareholders` - Get cap table (single company)
   - [ ] `GET /api/shareholders/:address` - Get shareholder details
 - [ ] Query Token contract for balances
 - [ ] Add pagination support
 - [ ] Calculate ownership percentages
 - [ ] Include effective balances (after split factor)
-- [ ] Add error handling
-- [ ] Write route tests
+- [x] Add error handling
+- [x] Write route tests
 - **Deliverable:** Shareholders API endpoints (single company)
 
 ### Task 2.8: REST API Routes - Transactions
 
 - [ ] Create `backend/src/routes/transactions.ts`
-- [ ] Implement endpoints:
+- [x] Implement endpoints:
   - [ ] `GET /api/transactions` - Get transaction history (single company)
   - [ ] `GET /api/transactions/:txHash` - Get transaction details
 - [ ] Query indexed events from database
 - [ ] Add filtering (by type, date, address)
 - [ ] Add pagination
 - [ ] Include transaction metadata
-- [ ] Add error handling
-- [ ] Write route tests
+- [x] Add error handling
+- [x] Write route tests
 - **Deliverable:** Transactions API endpoints (single company)
 
 ### Task 2.9: REST API Routes - Corporate Actions
 
 - [ ] Create `backend/src/routes/corporate-actions.ts`
-- [ ] Implement endpoints:
+- [x] Implement endpoints:
   - [ ] `GET /api/corporate-actions` - Get corporate actions (single company)
   - [ ] `GET /api/snapshots/:block` - Get historical cap table
-- [ ] Query CapTable contract for corporate actions
+- [x] Query CapTable contract for corporate actions
 - [ ] Add filtering and pagination
 - [ ] Include split history
-- [ ] Add error handling
-- [ ] Write route tests
+- [x] Add error handling
+- [x] Write route tests
 - **Deliverable:** Corporate actions API endpoints (single company)
 
 ### Task 2.10: Background Rescan Service
@@ -715,8 +737,8 @@ This document provides a detailed breakdown of all implementation tasks organize
   - [ ] Verify Firebase JWT
   - [ ] Remove wallet address
   - [ ] Return success response
-- [ ] Add error handling
-- [ ] Write route tests
+- [x] Add error handling
+- [x] Write route tests
 - **Deliverable:** Wallet linking endpoints
 
 ### Task 3.5: Role-Based Access Control
@@ -736,13 +758,13 @@ This document provides a detailed breakdown of all implementation tasks organize
 ### Task 3.6: User Management Endpoints
 
 - [ ] Create `backend/src/routes/users.ts`
-- [ ] Implement endpoints:
+- [x] Implement endpoints:
   - [ ] `GET /api/users/me` - Get current user
   - [ ] `PUT /api/users/me` - Update user profile
   - [ ] `GET /api/users/:id` - Get user (admin only)
 - [ ] Add validation
-- [ ] Add error handling
-- [ ] Write route tests
+- [x] Add error handling
+- [x] Write route tests
 - **Deliverable:** User management endpoints
 
 ### Task 3.7: Seed Admin/Issuer Roles
@@ -882,7 +904,7 @@ This document provides a detailed breakdown of all implementation tasks organize
   - [ ] Total shares
   - [ ] Quick stats
 - [ ] Add loading states
-- [ ] Add error handling
+- [x] Add error handling
 - [ ] Style page
 - [ ] Add navigation to other sections
 - **Deliverable:** Company dashboard page (single company)
@@ -1055,7 +1077,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 ### Task 5.5: Aggregate Endpoints
 
 - [ ] Create `backend/src/routes/analytics.ts`
-- [ ] Implement endpoints:
+- [x] Implement endpoints:
   - [ ] `GET /api/analytics` - Company analytics (single company)
   - [ ] `GET /api/totals` - Total shares, holders
 - [ ] Optimize queries
