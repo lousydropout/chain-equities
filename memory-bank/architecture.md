@@ -116,11 +116,26 @@ See `authentication.md` for complete authentication architecture and middleware 
     - `POST /api/wallet/link` - Link wallet to user account
   - Push updates to frontend via WebSockets or SSE
 
-#### Simplified Indexer Loop
+#### Viem Client Configuration ✅
+```ts
+import { getPublicClient, getWalletClient, testConnection } from './services/chain/client';
+
+// Singleton client with WebSocket/HTTP fallback
+const client = getPublicClient(); // Supports Hardhat, Sepolia, Mainnet
+
+// Optional wallet client for admin operations
+const wallet = getWalletClient(); // Returns null if ADMIN_PRIVATE_KEY not set
+
+// Test connection
+await testConnection(); // Verifies RPC connectivity
+```
+
+#### Simplified Indexer Loop (to be implemented)
 ```ts
 import { capTableAddress, tokenAddress } from './config/contracts';
+import { getPublicClient } from './services/chain/client';
 
-const client = createPublicClient({ chain: mainnet, transport: http() });
+const client = getPublicClient(); // Uses configured singleton client
 
 // Watch events from the single CapTable/Token pair
 client.watchEvent({
@@ -151,8 +166,8 @@ backend/
  │   ├── services/
  │   │   ├── firebase.ts    # Firebase Admin setup
  │   │   ├── chain/        # viem client & event listeners
- │   │   │   ├── indexer.ts
- │   │   │   └── client.ts
+ │   │   │   ├── client.ts  # ✅ Viem client (singleton, WebSocket/HTTP fallback)
+ │   │   │   └── indexer.ts # (to be created)
  │   │   └── db/           # Database operations
  │   │       └── queries.ts
  │   └── db/

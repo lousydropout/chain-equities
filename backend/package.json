@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "bun run src/index.ts",
     "start": "bun run src/index.ts",
+    "test": "bun test",
+    "test:client": "bun run scripts/test-client.ts",
     "db:migrate": "bun run scripts/migrate.ts",
     "db:seed": "bun run scripts/seed.ts",
     "db:reset": "bun run scripts/reset-db.ts --yes",

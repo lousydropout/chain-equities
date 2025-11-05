@@ -13,7 +13,10 @@
 - **Runtime**: Bun
 - **Framework**: Fastify (v5.6.1)
 - **Database**: Bun's native SQLite
-- **Blockchain Client**: viem (WebSocket subscriptions)
+- **Blockchain Client**: viem (v2.38.6) with WebSocket/HTTP fallback, singleton pattern
+  - Supports Hardhat (31337), Sepolia (11155111), Mainnet (1)
+  - Exponential backoff retry logic
+  - Optional wallet client for admin operations
 - **API**: Fastify REST endpoints
 - **Logging**: Pino with pino-pretty (development)
 - **Security**: @fastify/helmet, @fastify/cors
@@ -51,6 +54,7 @@
 - `backend/src/index.ts` - Fastify server entry point ✅
 - `backend/src/routes/` - REST API route handlers (to be created)
 - `backend/src/plugins/` - Fastify plugins (to be created)
+- `backend/src/services/chain/client.ts` - Viem client configuration (singleton, WebSocket/HTTP fallback) ✅
 - `backend/src/services/chain/indexer.ts` - Event listener (to be created)
 - `backend/src/db/schema.ts` - Complete SQLite schema (6 tables) ✅
 - `backend/src/db/migrations.ts` - Migration system with version tracking ✅

@@ -148,6 +148,14 @@
      - Server integration with bootstrap guard
      - Type-safe row mapping helpers
      - DEBUG_SQL logging support
+   - Viem client configuration complete (Task 2.4) ✅
+     - Singleton public and wallet clients
+     - WebSocket/HTTP fallback using viem's `fallback` utility
+     - Multi-chain support (Hardhat, Sepolia, Mainnet)
+     - Exponential backoff retry helper (`withRetry`)
+     - Connection testing with friendly error messages
+     - Comprehensive test suite (20 tests passing)
+     - Manual test script for interactive testing
 9. **Frontend** (React + wagmi) - Admin & Shareholder dashboards ⏳ TODO
 
 ### Planned Enhancements
@@ -172,15 +180,16 @@
 6. ✅ Contract deployment setup (Task 1.8 - COMPLETE)
 7. ✅ Scaffold Fastify server with logging, security, and health check (Task 2.1 - COMPLETE)
 8. ✅ Database setup and migrations (Task 2.3 - COMPLETE)
-9. ⏳ Set up backend indexer with viem event watching (Task 2.5)
-10. ⏳ Implement backend REST API endpoints (Tasks 2.6-2.9)
-11. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
-12. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
-13. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
-14. ⏳ Implement frontend wallet connector components (`config.ts`, `provider.tsx`, `Connect.tsx`)
-15. ⏳ Integrate Firebase Auth in frontend
-16. ⏳ Create frontend admin dashboard UI
-17. ⏳ Create frontend shareholder dashboard UI
+9. ✅ Viem client configuration with WebSocket/HTTP fallback (Task 2.4 - COMPLETE)
+10. ⏳ Set up backend indexer with viem event watching (Task 2.5)
+11. ⏳ Implement backend REST API endpoints (Tasks 2.6-2.9)
+12. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
+13. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
+14. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
+15. ⏳ Implement frontend wallet connector components (`config.ts`, `provider.tsx`, `Connect.tsx`)
+16. ⏳ Integrate Firebase Auth in frontend
+17. ⏳ Create frontend admin dashboard UI
+18. ⏳ Create frontend shareholder dashboard UI
 
 ### Role System ✅
 
@@ -289,8 +298,10 @@
   - Run all: `cd contracts && npx hardhat test` (137 tests passing)
   - Run specific: `cd contracts && npx hardhat test test/ChainEquityToken.ts`
 - **Backend Tests**: Use Bun's built-in test runner
-  - Run all: `cd backend && bun test`
+  - Run all: `cd backend && bun test` (37 tests passing: 17 auth middleware + 20 client configuration)
   - Run specific: `cd backend && bun test src/__tests__/middleware/auth.test.ts`
+  - Client tests: `cd backend && bun test src/services/chain/__tests__/client.test.ts`
+  - Manual connection test: `cd backend && bun run test:client`
 - **Deployment**: Use npm scripts
   - Deploy: `cd contracts && npm run deploy:acme` or `npm run deploy:anvil`
   - Manual: `cd contracts && npx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network localhost`
@@ -354,6 +365,7 @@
 
 - Backend database schema design and migrations (Task 2.2) ✅ COMPLETE
 - Backend database setup and migrations (Task 2.3) ✅ COMPLETE
+- Backend Viem client configuration (Task 2.4) ✅ COMPLETE
 - Backend event indexer implementation (Task 2.5) ⏳ NEXT
 - Backend REST API routes (Tasks 2.6-2.9)
 - Frontend admin dashboard for issuer operations

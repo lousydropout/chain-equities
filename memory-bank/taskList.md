@@ -295,7 +295,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~2 weeks
 
-**Status:** ⏳ In Progress (Task 2.1, 2.2, 2.3 complete)
+**Status:** ⏳ In Progress (Task 2.1, 2.2, 2.3, 2.4 complete)
 
 **Dependencies:** Phase 1 complete
 
@@ -433,18 +433,48 @@ This document provides a detailed breakdown of all implementation tasks organize
   - Setup: `bun run db:setup`
   - Reset: `bun run db:reset` (dev only)
 
-### Task 2.4: Viem Client Configuration
+### Task 2.4: Viem Client Configuration ✅
 
-- [ ] Create `backend/src/services/chain/client.ts`
-- [ ] Configure Viem public client:
-  - [ ] Local network (Anvil)
-  - [ ] Testnet support
-  - [ ] WebSocket transport for event listening
-- [ ] Add chain configuration
-- [ ] Create wallet client for admin operations
-- [ ] Add error handling and retry logic
-- [ ] Test connection to local/remote nodes
-- **Deliverable:** Viem client configured and tested
+- [x] Create `backend/src/services/chain/client.ts`
+- [x] Configure Viem public client:
+  - [x] Local network (hardhat node)
+  - [x] Testnet support
+  - [x] WebSocket transport for event listening
+- [x] Add chain configuration
+- [x] Create wallet client for admin operations
+- [x] Add error handling and retry logic
+- [x] Test connection to local/remote nodes
+- **Deliverable:** Viem client configured and tested ✅
+- **Status:** Complete - Viem client service implemented with singleton pattern, WebSocket/HTTP fallback, retry logic, and comprehensive tests
+- **Summary:**
+  - Created `backend/src/services/chain/client.ts` with singleton public and wallet clients
+  - Chain registry supports Hardhat (31337), Sepolia (11155111), and Mainnet (1)
+  - WebSocket transport with automatic HTTP fallback using viem's `fallback` utility
+  - Exponential backoff retry helper (`withRetry`) with configurable retries and delays
+  - Startup logging displays active chain, chainId, RPC URL, and WebSocket URL
+  - Connection testing with friendly error messages
+  - Optional wallet client (only created if `ADMIN_PRIVATE_KEY` is set)
+  - Comprehensive test suite: 20 tests covering all functionality
+  - Manual test script for interactive connection testing
+- **Files Created/Modified:**
+  - `backend/src/services/chain/client.ts` (new) - Main client service with singleton pattern
+  - `backend/src/services/chain/__tests__/client.test.ts` (new) - Comprehensive test suite (20 tests)
+  - `backend/scripts/test-client.ts` (new) - Manual connection test script
+  - `backend/.env.example` (modified) - Added chain configuration variables
+  - `backend/README.md` (modified) - Added blockchain configuration documentation
+  - `backend/package.json` (modified) - Added `test` and `test:client` scripts
+- **Test Commands:**
+  - Run all tests: `bun test`
+  - Run client tests: `bun test src/services/chain/__tests__/client.test.ts`
+  - Manual connection test: `bun run test:client`
+- **Key Features:**
+  - Singleton pattern for client instances
+  - WebSocket primary with HTTP fallback
+  - Exponential backoff retry (max 3 attempts, configurable delay)
+  - Multi-chain support (Hardhat, Sepolia, Mainnet)
+  - Environment variable configuration with sensible defaults
+  - Friendly error messages for connection failures
+  - All 37 tests passing (20 client tests + 17 auth middleware tests)
 
 ### Task 2.5: Event Indexer Implementation
 
