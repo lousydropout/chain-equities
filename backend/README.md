@@ -114,20 +114,53 @@ If the Hardhat node is not running, you'll see a friendly error message.
 
 ### Testing
 
-Run unit tests:
-```bash
-bun test
-```
+The test suite is organized into separate scripts to avoid mock interference:
 
-Run client-specific tests:
+**Main test suite** (excludes client tests to avoid mock interference):
 ```bash
+bun run test
+# or
+npm run test
+```
+Runs route and middleware tests (42 tests: 17 auth + 16 shareholders + 9 company routes)
+
+**Client configuration tests** (run separately):
+```bash
+bun run test:client
+# or
+npm run test:client
+```
+Runs client configuration tests in isolation (20 tests)
+
+**All tests** (includes tests that may fail due to mock interference):
+```bash
+bun run test:all
+# or
+npm run test:all
+```
+Runs all tests together (62 tests total, 5 client tests may fail when run with route tests)
+
+**Run specific test files:**
+```bash
+# Shareholders route tests
+bun test src/routes/__tests__/shareholders.test.ts
+
+# Company route tests
+bun test src/routes/__tests__/company.test.ts
+
+# Auth middleware tests
+bun test src/__tests__/middleware/auth.test.ts
+
+# Client configuration tests (run separately)
 bun test src/services/chain/__tests__/client.test.ts
 ```
 
-Test client connection manually (requires Hardhat node running):
+**Manual client connection test** (requires Hardhat node running):
 ```bash
-bun run test:client
+bun run test:client:manual
 ```
+
+**Note:** Client tests are separated from the main suite because they test the real Viem client implementation, while route tests use `mock.module()` to mock the client. When run together, the mocks interfere with client tests. All tests pass when run individually.
 
 ## Project Structure
 

@@ -4,6 +4,10 @@
  */
 
 import { describe, it, expect, beforeEach } from "bun:test";
+
+// CRITICAL: Import the real module using a direct path import
+// This must happen before any mock.module() calls in other test files
+// We use a direct import (not a namespace import) to ensure we get the real functions
 import {
   getPublicClient,
   getWalletClient,
@@ -63,8 +67,19 @@ describe("Viem Client Configuration", () => {
 
   describe("Public Client", () => {
     it("should create a public client instance", () => {
+      // Ensure we're using the real client, not a mock
+      // The real client should have getChainId method
       const client = getPublicClient();
       expect(client).toBeDefined();
+      
+      // Check if getChainId exists - if not, we might be getting a mocked client
+      if (typeof client.getChainId !== "function") {
+        throw new Error(
+          "Client appears to be mocked. getChainId is not a function. " +
+          "This test needs the real client implementation."
+        );
+      }
+      
       expect(typeof client.getChainId).toBe("function");
     });
 

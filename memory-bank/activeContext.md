@@ -179,6 +179,18 @@
      - Flat JSON response structure for frontend consistency
      - Comprehensive test suite (9 tests passing)
      - All routes registered with `/api` prefix
+   - REST API routes - Shareholders complete (Task 2.7) ✅
+     - `GET /api/shareholders` endpoint with pagination (limit/offset, max 100, min 1)
+     - `GET /api/shareholders/:address` endpoint for individual shareholder details
+     - Ownership percentage calculation using BigInt for two-decimal precision
+     - Effective balance calculation (balance * splitFactor / 10^18)
+     - In-memory caching for totalSupply/splitFactor (5-second TTL) to reduce contract calls
+     - Address validation using Viem's `isAddress` utility
+     - Fastify schema validation for request/response types
+     - Comprehensive error handling for contract read failures and database errors
+     - In-memory SQLite database testing (16 tests passing)
+     - Database column aliasing for consistent camelCase JSON responses
+     - Helper function `asShareholderResponse()` for unified data transformation
 9. **Frontend** (React + wagmi) - Admin & Shareholder dashboards ⏳ TODO
 
 ### Planned Enhancements
@@ -206,7 +218,8 @@
 9. ✅ Viem client configuration with WebSocket/HTTP fallback (Task 2.4 - COMPLETE)
 10. ✅ Set up backend indexer with viem event watching (Task 2.5 - COMPLETE)
 11. ✅ Implement company info REST API endpoints (Task 2.6 - COMPLETE)
-12. ⏳ Implement remaining REST API endpoints (Tasks 2.7-2.9)
+12. ✅ Implement shareholders REST API endpoints (Task 2.7 - COMPLETE)
+13. ⏳ Implement remaining REST API endpoints (Tasks 2.8-2.9)
 12. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
 13. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
 14. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
@@ -322,11 +335,14 @@
   - Run all: `cd contracts && npx hardhat test` (137 tests passing)
   - Run specific: `cd contracts && npx hardhat test test/ChainEquityToken.ts`
 - **Backend Tests**: Use Bun's built-in test runner
-  - Run all: `cd backend && bun test` (46 tests passing: 17 auth middleware + 20 client configuration + 9 company routes)
+  - Run main suite (excludes client tests): `cd backend && bun run test` (42 tests passing: 17 auth middleware + 16 shareholders + 9 company routes)
+  - Run client tests separately: `cd backend && bun run test:client` (20 tests passing)
+  - Run all tests: `cd backend && bun run test:all` (62 tests total, 5 may fail due to mock interference)
   - Run specific: `cd backend && bun test src/__tests__/middleware/auth.test.ts`
-  - Client tests: `cd backend && bun test src/services/chain/__tests__/client.test.ts`
+  - Shareholders route tests: `cd backend && bun test src/routes/__tests__/shareholders.test.ts`
   - Company route tests: `cd backend && bun test src/routes/__tests__/company.test.ts`
-  - Manual connection test: `cd backend && bun run test:client`
+  - Manual connection test: `cd backend && bun run test:client:manual`
+  - **Note:** Client tests are separated due to `mock.module()` interference from route tests. They pass when run individually.
 - **Deployment**: Use npm scripts
   - Deploy: `cd contracts && npm run deploy:acme` or `npm run deploy:anvil`
   - Manual: `cd contracts && npx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network localhost`
