@@ -61,21 +61,21 @@ describe("Authentication Middleware", () => {
     createUser(db, {
       uid: "test-uid-123",
       email: "test@example.com",
-      display_name: "Test User",
+      displayName: "Test User",
       role: "investor",
     });
 
     createUser(db, {
       uid: "test-uid-issuer",
       email: "issuer@example.com",
-      display_name: "Issuer User",
+      displayName: "Issuer User",
       role: "issuer",
     });
 
     createUser(db, {
       uid: "test-uid-admin",
       email: "admin@example.com",
-      display_name: "Admin User",
+      displayName: "Admin User",
       role: "admin",
     });
 

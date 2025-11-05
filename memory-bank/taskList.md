@@ -295,7 +295,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~2 weeks
 
-**Status:** ⏳ In Progress (Task 2.1 complete)
+**Status:** ⏳ In Progress (Task 2.1, 2.2 complete)
 
 **Dependencies:** Phase 1 complete
 
@@ -342,22 +342,46 @@ This document provides a detailed breakdown of all implementation tasks organize
   - Start server: `bun run dev` or `bun run start`
   - Verify health check: `curl http://localhost:4000/ping` (returns `{"status":"ok"}`)
 
-### Task 2.2: Database Schema Design
+### Task 2.2: Database Schema Design ✅
 
-- [ ] Design SQLite schema (Postgres-compatible):
-  - [ ] `users` table
-  - [ ] `shareholders` table (address, balance, effective_balance)
-  - [ ] `transactions` table
-  - [ ] `corporate_actions` table
-  - [ ] `events` table
-- [ ] Create configuration file to load contract addresses:
-  - [ ] Load `capTableAddress` and `tokenAddress` from `contracts/exports/deployments.json`
-  - [ ] Store in `backend/src/config/contracts.ts`
-- [ ] Create migration system
-- [ ] Write schema file: `backend/src/db/schema.ts`
-- [ ] Add indexes for common queries
-- [ ] Document relationships and constraints
-- **Deliverable:** Database schema ready for migration, contract addresses configured
+- [x] Design SQLite schema (Postgres-compatible):
+  - [x] `users` table (verified existing, not modified)
+  - [x] `shareholders` table (address, balance, effective_balance, last_updated_block)
+  - [x] `transactions` table (with UNIQUE(block_number, log_index) for deduplication)
+  - [x] `corporate_actions` table (with log_index and UNIQUE constraint)
+  - [x] `events` table (with tx_hash column and index)
+  - [x] `meta` table (for schema version and indexer state)
+- [x] Create configuration file to load contract addresses:
+  - [x] Load `capTableAddress` and `tokenAddress` from `contracts/exports/deployments.json`
+  - [x] Store in `backend/src/config/contracts.ts`
+- [x] Create migration system (`backend/src/db/migrations.ts`)
+- [x] Write schema file: `backend/src/db/schema.ts`
+- [x] Add indexes for common queries (addresses, block ranges, timestamps, composite indexes)
+- [x] Document relationships and constraints (`backend/src/db/schema.md`)
+- **Deliverable:** Database schema ready for migration, contract addresses configured ✅
+- **Status:** Complete - Production-ready schema with all refinements applied
+- **Summary:**
+  - Created 6-table schema: users, shareholders, transactions, corporate_actions, events, meta
+  - All tables use `(block_number, log_index)` UNIQUE constraints for idempotent indexing
+  - Contract address configuration loads from deployments.json with error handling
+  - Migration system with version tracking and idempotent up/down functions
+  - TypeScript interfaces use camelCase, DB columns use snake_case
+  - Comprehensive documentation with example queries and Postgres compatibility notes
+  - Applied polish: composite indexes, foreign key comments, consistent naming
+- **Files Created/Modified:**
+  - `backend/src/db/schema.ts` - Complete schema with all 6 tables, interfaces, and ALL_SCHEMAS export
+  - `backend/src/config/contracts.ts` - Contract address loader from deployments.json
+  - `backend/src/db/migrations.ts` - Migration runner with version tracking
+  - `backend/src/db/schema.md` - Complete schema documentation
+  - `backend/src/services/db/users.ts` - Updated to use camelCase input interfaces
+  - `backend/src/__tests__/middleware/auth.test.ts` - Updated to use camelCase
+- **Key Features:**
+  - Event identity via `(block_number, log_index)` pairs for safe replay
+  - SQLite/Postgres compatible syntax
+  - All numeric values stored as TEXT for wei precision
+  - Composite indexes for efficient cap table queries
+  - Foreign key relationships documented (commented)
+  - Meta table for schema versioning and indexer coordination
 
 ### Task 2.3: Database Setup and Migrations
 

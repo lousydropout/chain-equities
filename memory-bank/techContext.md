@@ -52,8 +52,9 @@
 - `backend/src/routes/` - REST API route handlers (to be created)
 - `backend/src/plugins/` - Fastify plugins (to be created)
 - `backend/src/services/chain/indexer.ts` - Event listener (to be created)
-- `backend/src/db/schema.ts` - SQLite schema ✅
-- `backend/src/config/contracts.ts` - Configuration (to be created)
+- `backend/src/db/schema.ts` - Complete SQLite schema (6 tables) ✅
+- `backend/src/db/migrations.ts` - Migration system with version tracking ✅
+- `backend/src/config/contracts.ts` - Contract address configuration ✅
 
 ### Frontend (to be created)
 - `frontend/src/app/admin/` - Issuer dashboard

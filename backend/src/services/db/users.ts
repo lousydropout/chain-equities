@@ -3,9 +3,13 @@
  * @notice Handles CRUD operations for users table with role management
  */
 
-import { Database } from 'bun:sqlite';
-import type { UserRecord, CreateUserInput, UpdateUserInput } from '../../db/schema';
-import type { UserRole } from '../../types/roles';
+import { Database } from "bun:sqlite";
+import type {
+  UserRecord,
+  CreateUserInput,
+  UpdateUserInput,
+} from "../../db/schema";
+import type { UserRole } from "../../types/roles";
 
 /**
  * Create a new user in the database
@@ -13,11 +17,8 @@ import type { UserRole } from '../../types/roles';
  * @param input User creation data
  * @returns Created user record
  */
-export function createUser(
-  db: Database,
-  input: CreateUserInput
-): UserRecord {
-  const { uid, email, display_name, role = 'investor' } = input;
+export function createUser(db: Database, input: CreateUserInput): UserRecord {
+  const { uid, email, displayName, role = "investor" } = input;
 
   const stmt = db.prepare(`
     INSERT INTO users (uid, email, display_name, role)
@@ -25,7 +26,7 @@ export function createUser(
     RETURNING *
   `);
 
-  const result = stmt.get(uid, email, display_name || null, role) as UserRecord;
+  const result = stmt.get(uid, email, displayName || null, role) as UserRecord;
   return result;
 }
 
@@ -36,7 +37,7 @@ export function createUser(
  * @returns User record or null if not found
  */
 export function getUserByUid(db: Database, uid: string): UserRecord | null {
-  const stmt = db.prepare('SELECT * FROM users WHERE uid = ?');
+  const stmt = db.prepare("SELECT * FROM users WHERE uid = ?");
   const result = stmt.get(uid) as UserRecord | undefined;
   return result || null;
 }
@@ -48,7 +49,7 @@ export function getUserByUid(db: Database, uid: string): UserRecord | null {
  * @returns User record or null if not found
  */
 export function getUserByEmail(db: Database, email: string): UserRecord | null {
-  const stmt = db.prepare('SELECT * FROM users WHERE email = ?');
+  const stmt = db.prepare("SELECT * FROM users WHERE email = ?");
   const result = stmt.get(email) as UserRecord | undefined;
   return result || null;
 }
@@ -63,8 +64,10 @@ export function getUserByWallet(
   db: Database,
   walletAddress: string
 ): UserRecord | null {
-  const stmt = db.prepare('SELECT * FROM users WHERE wallet_address = ?');
-  const result = stmt.get(walletAddress.toLowerCase()) as UserRecord | undefined;
+  const stmt = db.prepare("SELECT * FROM users WHERE wallet_address = ?");
+  const result = stmt.get(walletAddress.toLowerCase()) as
+    | UserRecord
+    | undefined;
   return result || null;
 }
 
@@ -83,18 +86,18 @@ export function updateUser(
   const updates: string[] = [];
   const values: unknown[] = [];
 
-  if (input.display_name !== undefined) {
-    updates.push('display_name = ?');
-    values.push(input.display_name);
+  if (input.displayName !== undefined) {
+    updates.push("display_name = ?");
+    values.push(input.displayName);
   }
 
-  if (input.wallet_address !== undefined) {
-    updates.push('wallet_address = ?');
-    values.push(input.wallet_address ? input.wallet_address.toLowerCase() : null);
+  if (input.walletAddress !== undefined) {
+    updates.push("wallet_address = ?");
+    values.push(input.walletAddress ? input.walletAddress.toLowerCase() : null);
   }
 
   if (input.role !== undefined) {
-    updates.push('role = ?');
+    updates.push("role = ?");
     values.push(input.role);
   }
 
@@ -107,7 +110,7 @@ export function updateUser(
 
   const stmt = db.prepare(`
     UPDATE users
-    SET ${updates.join(', ')}
+    SET ${updates.join(", ")}
     WHERE uid = ?
     RETURNING *
   `);
@@ -143,7 +146,7 @@ export function linkWallet(
   uid: string,
   walletAddress: string
 ): UserRecord | null {
-  return updateUser(db, uid, { wallet_address: walletAddress });
+  return updateUser(db, uid, { walletAddress: walletAddress });
 }
 
 /**
@@ -153,6 +156,5 @@ export function linkWallet(
  * @returns Updated user record or null if not found
  */
 export function unlinkWallet(db: Database, uid: string): UserRecord | null {
-  return updateUser(db, uid, { wallet_address: null });
+  return updateUser(db, uid, { walletAddress: null });
 }
-

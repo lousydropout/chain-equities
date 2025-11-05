@@ -135,7 +135,11 @@
    - Fastify server scaffold with logging, security, and health check ✅ (Task 2.1)
 8. **Backend** (Bun + Fastify) - Event indexer + REST API ⏳ IN PROGRESS
    - Server scaffold complete (Task 2.1) ✅
-   - Database schema design (Task 2.2) ⏳ NEXT
+   - Database schema design complete (Task 2.2) ✅
+     - 6-table schema: users, shareholders, transactions, corporate_actions, events, meta
+     - Contract address configuration system
+     - Migration system with version tracking
+     - Comprehensive documentation
 9. **Frontend** (React + wagmi) - Admin & Shareholder dashboards ⏳ TODO
 
 ### Planned Enhancements
@@ -292,8 +296,8 @@
 
 ### Future Enhancements
 
-- Backend database schema design and migrations (Task 2.2) ⏳ NEXT
-- Backend event indexer implementation (Task 2.5)
+- Backend database schema design and migrations (Task 2.2) ✅ COMPLETE
+- Backend event indexer implementation (Task 2.5) ⏳ NEXT
 - Backend REST API routes (Tasks 2.6-2.9)
 - Frontend admin dashboard for issuer operations
 - Frontend shareholder dashboard for investors
