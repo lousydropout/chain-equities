@@ -140,6 +140,14 @@
      - Contract address configuration system
      - Migration system with version tracking
      - Comprehensive documentation
+   - Database setup and migrations complete (Task 2.3) ✅
+     - Database connection utility with singleton pattern
+     - Atomic migrations with transaction support
+     - Seed scripts with separated seed functions
+     - Database reset script with production safety checks
+     - Server integration with bootstrap guard
+     - Type-safe row mapping helpers
+     - DEBUG_SQL logging support
 9. **Frontend** (React + wagmi) - Admin & Shareholder dashboards ⏳ TODO
 
 ### Planned Enhancements
@@ -163,15 +171,16 @@
 5. ✅ Comprehensive test suite (Task 1.7 - COMPLETE)
 6. ✅ Contract deployment setup (Task 1.8 - COMPLETE)
 7. ✅ Scaffold Fastify server with logging, security, and health check (Task 2.1 - COMPLETE)
-8. ⏳ Set up backend indexer with viem event watching (Task 2.5)
-9. ⏳ Implement backend REST API endpoints (Tasks 2.6-2.9)
-10. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
-11. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
-12. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
-13. ⏳ Implement frontend wallet connector components (`config.ts`, `provider.tsx`, `Connect.tsx`)
-14. ⏳ Integrate Firebase Auth in frontend
-15. ⏳ Create frontend admin dashboard UI
-16. ⏳ Create frontend shareholder dashboard UI
+8. ✅ Database setup and migrations (Task 2.3 - COMPLETE)
+9. ⏳ Set up backend indexer with viem event watching (Task 2.5)
+10. ⏳ Implement backend REST API endpoints (Tasks 2.6-2.9)
+11. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
+12. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
+13. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
+14. ⏳ Implement frontend wallet connector components (`config.ts`, `provider.tsx`, `Connect.tsx`)
+15. ⏳ Integrate Firebase Auth in frontend
+16. ⏳ Create frontend admin dashboard UI
+17. ⏳ Create frontend shareholder dashboard UI
 
 ### Role System ✅
 
@@ -294,9 +303,57 @@
   - Integration: 14+ tests (Task 1.7)
   - Total: 137 tests passing (including all comprehensive test suites)
 
+### Database Setup and Migrations ✅
+
+- **Location**: `backend/src/db/`, `backend/scripts/`
+- **Database Library**: `bun:sqlite` (built-in Bun SQLite support)
+- **Connection Utility**: `backend/src/db/index.ts` with singleton pattern
+  - `connect()` - Singleton database connection
+  - `query()` / `queryOne()` - Type-safe query helpers
+  - `execute()` - Insert/update/delete operations
+  - `transaction()` - Atomic transaction wrapper
+  - Type-safe row mapping helpers (`asUserRecord`, `asShareholderRecord`, etc.)
+  - DEBUG_SQL environment variable for query logging
+- **Migrations**: `backend/src/db/migrations.ts` with atomic transactions
+  - `up()` - Create all tables (wrapped in transaction)
+  - `down()` - Drop all tables (wrapped in transaction)
+  - `migrate()` - Version-aware migration runner
+  - Schema version tracking in meta table
+- **Seed Scripts**: `backend/src/db/seeds/` with separated seed functions
+  - `users.ts` - Seed test users (admin, issuer, investor)
+  - `shareholders.ts` - Placeholder for shareholder seeding
+  - `seed.ts` - Main orchestrator script
+- **Scripts**:
+  - `db:migrate` - Run migrations
+  - `db:seed` - Seed test data
+  - `db:reset` - Reset database (dev only, requires --yes flag)
+  - `db:setup` - Run migrations + seed in one command
+- **Server Integration**: Auto-migration in development mode
+  - Bootstrap guard: only auto-migrates when `NODE_ENV=development` or `AUTO_MIGRATE=true`
+  - Graceful shutdown closes database connection
+- **Files Created/Modified**:
+  - `backend/src/db/index.ts` (new) - Connection utility
+  - `backend/src/db/migrations.ts` (modified) - Atomic transactions
+  - `backend/src/db/seeds/users.ts` (new) - User seed function
+  - `backend/src/db/seeds/shareholders.ts` (new) - Shareholder seed placeholder
+  - `backend/scripts/migrate.ts` (new) - Migration runner
+  - `backend/scripts/seed.ts` (new) - Seed orchestrator
+  - `backend/scripts/reset-db.ts` (new) - Reset script
+  - `backend/src/index.ts` (modified) - Database initialization
+  - `backend/package.json` (modified) - Added db:* scripts
+  - `backend/.env.example` (modified) - Added database env vars
+  - `backend/.gitignore` (modified) - Added database files
+- **Test Commands**:
+  - `bun run db:migrate` - Run migrations
+  - `bun run db:seed` - Seed data
+  - `bun run db:setup` - Complete setup
+  - `bun run db:reset` - Reset (dev only)
+- **Status**: Complete - Task 2.3 ✅
+
 ### Future Enhancements
 
 - Backend database schema design and migrations (Task 2.2) ✅ COMPLETE
+- Backend database setup and migrations (Task 2.3) ✅ COMPLETE
 - Backend event indexer implementation (Task 2.5) ⏳ NEXT
 - Backend REST API routes (Tasks 2.6-2.9)
 - Frontend admin dashboard for issuer operations

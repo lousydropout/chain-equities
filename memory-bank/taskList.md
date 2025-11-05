@@ -295,7 +295,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~2 weeks
 
-**Status:** ⏳ In Progress (Task 2.1, 2.2 complete)
+**Status:** ⏳ In Progress (Task 2.1, 2.2, 2.3 complete)
 
 **Dependencies:** Phase 1 complete
 
@@ -383,18 +383,55 @@ This document provides a detailed breakdown of all implementation tasks organize
   - Foreign key relationships documented (commented)
   - Meta table for schema versioning and indexer coordination
 
-### Task 2.3: Database Setup and Migrations
+### Task 2.3: Database Setup and Migrations ✅
 
-- [ ] Choose database library (SQLite with `bun:sqlite` or Prisma)
-- [ ] Create initial migration
-- [ ] Set up database connection pool
-- [ ] Create database utility functions:
-  - [ ] `db.connect()`
-  - [ ] `db.query()`
-  - [ ] `db.transaction()`
-- [ ] Write seed script for test data
-- [ ] Add database reset script for development
-- **Deliverable:** Database setup with migrations
+- [x] Choose database library (SQLite with `bun:sqlite` or Prisma)
+- [x] Create initial migration
+- [x] Set up database connection pool
+- [x] Create database utility functions:
+  - [x] `db.connect()`
+  - [x] `db.query()`
+  - [x] `db.transaction()`
+- [x] Write seed script for test data
+- [x] Add database reset script for development
+- **Deliverable:** Database setup with migrations ✅
+- **Status:** Complete - Production-ready database setup with migrations, seeding, and utilities
+- **Summary:**
+  - Created `backend/src/db/index.ts` with singleton connection pattern, query/execute helpers, and transaction support
+  - Enhanced `backend/src/db/migrations.ts` with atomic transactions (rollback on error)
+  - Created migration runner script (`backend/scripts/migrate.ts`)
+  - Created seed script with separated seed functions (`backend/src/db/seeds/`)
+  - Created database reset script with production safety checks
+  - Added npm scripts: `db:migrate`, `db:seed`, `db:reset`, `db:setup`
+  - Integrated database initialization in server with bootstrap guard (auto-migrate only in development)
+  - Added type-safe row mapping helpers to prevent schema mismatches
+  - Added DEBUG_SQL environment variable for query logging
+  - All scripts tested and working correctly
+- **Files Created/Modified:**
+  - `backend/src/db/index.ts` (new) - Database connection utility with singleton, type-safe helpers
+  - `backend/src/db/migrations.ts` (modified) - Added atomic transactions
+  - `backend/src/db/seeds/users.ts` (new) - User seed function
+  - `backend/src/db/seeds/shareholders.ts` (new) - Shareholder seed placeholder
+  - `backend/scripts/migrate.ts` (new) - Migration runner script
+  - `backend/scripts/seed.ts` (new) - Seed orchestrator script
+  - `backend/scripts/reset-db.ts` (new) - Database reset script
+  - `backend/src/index.ts` (modified) - Added database initialization with bootstrap guard
+  - `backend/package.json` (modified) - Added db:\* scripts
+  - `backend/.env.example` (modified) - Added DATABASE_PATH, NODE_ENV, AUTO_MIGRATE, DEBUG_SQL
+  - `backend/.gitignore` (modified) - Added data/ directory and \*.db files
+- **Key Features:**
+  - Atomic migrations with rollback on error
+  - Idempotent seed scripts (safe to run multiple times)
+  - Production safety checks in reset script
+  - Bootstrap guard: auto-migration only in development or with AUTO_MIGRATE=true
+  - Type-safe row mapping helpers
+  - DEBUG_SQL logging for development
+  - WAL mode enabled for better concurrency
+- **Test Commands:**
+  - Migrate: `bun run db:migrate`
+  - Seed: `bun run db:seed`
+  - Setup: `bun run db:setup`
+  - Reset: `bun run db:reset` (dev only)
 
 ### Task 2.4: Viem Client Configuration
 

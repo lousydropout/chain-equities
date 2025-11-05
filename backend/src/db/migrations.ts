@@ -25,9 +25,14 @@ export const SCHEMA_VERSION = "1.0.0";
  * @returns Schema version string or null if not set
  */
 export function getVersion(db: Database): string | null {
-  const stmt = db.prepare("SELECT value FROM meta WHERE key = ?");
-  const result = stmt.get("schema_version") as { value: string } | undefined;
-  return result?.value || null;
+  try {
+    const stmt = db.prepare("SELECT value FROM meta WHERE key = ?");
+    const result = stmt.get("schema_version") as { value: string } | undefined;
+    return result?.value || null;
+  } catch (error) {
+    // Meta table doesn't exist yet, return null
+    return null;
+  }
 }
 
 /**
@@ -43,42 +48,64 @@ export function setVersion(db: Database, version: string): void {
 }
 
 /**
- * Run all migrations (create all tables)
+ * Run all migrations (create all tables) - ATOMIC
  * Idempotent: safe to call multiple times
+ * Wrapped in transaction for atomicity
  * @param db SQLite database instance
  */
 export function up(db: Database): void {
-  // Create meta table first (needed for version tracking)
-  db.exec(META_TABLE_SCHEMA);
+  // Enable foreign keys and start transaction
+  db.exec("PRAGMA foreign_keys = ON");
+  db.exec("BEGIN TRANSACTION");
 
-  // Create all other tables
-  db.exec(USERS_TABLE_SCHEMA);
-  db.exec(SHAREHOLDERS_TABLE_SCHEMA);
-  db.exec(TRANSACTIONS_TABLE_SCHEMA);
-  db.exec(CORPORATE_ACTIONS_TABLE_SCHEMA);
-  db.exec(EVENTS_TABLE_SCHEMA);
+  try {
+    // Create meta table first (needed for version tracking)
+    db.exec(META_TABLE_SCHEMA);
 
-  // Set schema version
-  setVersion(db, SCHEMA_VERSION);
+    // Create all other tables
+    db.exec(USERS_TABLE_SCHEMA);
+    db.exec(SHAREHOLDERS_TABLE_SCHEMA);
+    db.exec(TRANSACTIONS_TABLE_SCHEMA);
+    db.exec(CORPORATE_ACTIONS_TABLE_SCHEMA);
+    db.exec(EVENTS_TABLE_SCHEMA);
 
-  console.log(`✅ Database schema migrated to version ${SCHEMA_VERSION}`);
+    // Set schema version
+    setVersion(db, SCHEMA_VERSION);
+
+    db.exec("COMMIT");
+    console.log(`✅ Database schema migrated to version ${SCHEMA_VERSION}`);
+  } catch (error) {
+    db.exec("ROLLBACK");
+    console.error("❌ Migration failed, rolled back:", error);
+    throw error;
+  }
 }
 
 /**
- * Drop all tables (dev only - use with caution)
+ * Drop all tables (dev only - use with caution) - ATOMIC
  * @param db SQLite database instance
  */
 export function down(db: Database): void {
   console.warn("⚠️  Dropping all tables...");
 
-  db.exec("DROP TABLE IF EXISTS events");
-  db.exec("DROP TABLE IF EXISTS corporate_actions");
-  db.exec("DROP TABLE IF EXISTS transactions");
-  db.exec("DROP TABLE IF EXISTS shareholders");
-  db.exec("DROP TABLE IF EXISTS users");
-  db.exec("DROP TABLE IF EXISTS meta");
+  db.exec("PRAGMA foreign_keys = ON");
+  db.exec("BEGIN TRANSACTION");
 
-  console.log("✅ All tables dropped");
+  try {
+    db.exec("DROP TABLE IF EXISTS events");
+    db.exec("DROP TABLE IF EXISTS corporate_actions");
+    db.exec("DROP TABLE IF EXISTS transactions");
+    db.exec("DROP TABLE IF EXISTS shareholders");
+    db.exec("DROP TABLE IF EXISTS users");
+    db.exec("DROP TABLE IF EXISTS meta");
+
+    db.exec("COMMIT");
+    console.log("✅ All tables dropped");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    console.error("❌ Drop failed, rolled back:", error);
+    throw error;
+  }
 }
 
 /**
