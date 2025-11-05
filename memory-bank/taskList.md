@@ -12,7 +12,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~2 weeks
 
-**Status:** ⏳ In Progress (Task 1.2, 1.3, 1.4, 1.5, 1.5a, 1.6, 1.7, and 1.8 complete)
+**Status:** ⏳ In Progress (Task 1.2, 1.3, 1.4, 1.5, 1.5a, 1.6, 1.7, 1.8, and 1.9 complete)
 
 ### Task 1.1: Finalize ChainEquityToken Contract
 
@@ -235,14 +235,14 @@ This document provides a detailed breakdown of all implementation tasks organize
   - Deploy: `npm run deploy:acme` or `npm run deploy:anvil`
   - Manual: `npx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network localhost`
 
-### Task 1.9: Export ABIs and Deployment Artifacts
+### Task 1.9: Export ABIs and Deployment Artifacts ✅
 
-- [ ] Create `contracts/exports/` directory structure
-- [ ] Set up build script to export:
-  - [ ] ABIs for all contracts
-  - [ ] Deployment addresses JSON
-  - [ ] Contract artifacts
-- [ ] Generate `deployments.json` format:
+- [x] Create `contracts/exports/` directory structure
+- [x] Set up build script to export:
+  - [x] ABIs for all contracts
+  - [x] Deployment addresses JSON
+  - [x] Contract artifacts
+- [x] Generate `deployments.json` format:
   ```json
   {
     "networks": {
@@ -255,9 +255,29 @@ This document provides a detailed breakdown of all implementation tasks organize
     }
   }
   ```
-- [ ] Add npm script: `npm run export`
-- [ ] Document export format for backend/frontend consumption
-- **Deliverable:** `contracts/exports/` with ABIs and deployment JSONs
+- [x] Add npm script: `npm run export`
+- [x] Document export format for backend/frontend consumption
+- **Deliverable:** `contracts/exports/` with ABIs and deployment JSONs ✅
+- **Status:** Complete - ABI export system implemented with comprehensive tests and documentation
+- **Summary:**
+  - Created `export-abis.ts` script to extract ABIs from Hardhat artifacts (ABIs only, no metadata)
+  - Created `test-export.ts` comprehensive test suite (27 tests, all passing)
+  - Added `npm run export` script that chains ABI export with address export
+  - Added `npm run test:export` script for validation
+  - Created `exports/abis/` directory structure with exported ABIs
+  - Created `docs/exports.md` with complete documentation including viem (backend) and ethers (frontend) usage examples
+  - All scripts use npm/ts-node (aligned with project's npm usage for Hardhat Ignition compatibility)
+- **Files Created/Modified:**
+  - `contracts/scripts/export-abis.ts` (new) - ABI export script
+  - `contracts/scripts/test-export.ts` (new) - Comprehensive test suite
+  - `contracts/exports/abis/` (new) - Directory with exported ABIs
+  - `contracts/exports/abis/CapTable.json` (new) - CapTable ABI (23 entries)
+  - `contracts/exports/abis/ChainEquityToken.json` (new) - ChainEquityToken ABI (43 entries)
+  - `contracts/docs/exports.md` (new) - Complete export format documentation
+  - `contracts/package.json` (modified) - Added `export` and `test:export` scripts
+- **Test Commands:**
+  - Export ABIs: `npm run export` or `npx ts-node scripts/export-abis.ts`
+  - Test exports: `npm run test:export`
 
 ### Phase 1 Acceptance Criteria
 
