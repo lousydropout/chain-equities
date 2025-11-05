@@ -1,0 +1,57 @@
+/**
+ * @file Main entry point for ChainEquity backend server
+ * @notice Fastify server with logging, security, and health check endpoint
+ */
+
+import Fastify from 'fastify';
+import cors from '@fastify/cors';
+import helmet from '@fastify/helmet';
+
+// Get port from environment variable, default to 4000
+const PORT = Number(process.env.PORT) || 4000;
+
+// Initialize Fastify with Pino logger
+const fastify = Fastify({
+  logger: {
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        translateTime: 'HH:MM:ss Z',
+        ignore: 'pid,hostname',
+      },
+    },
+  },
+});
+
+// Graceful shutdown
+const shutdown = async (signal: string) => {
+  fastify.log.info(`${signal} received, shutting down gracefully...`);
+  await fastify.close();
+  process.exit(0);
+};
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+
+// Start server
+const start = async () => {
+  try {
+    // Register security plugins
+    await fastify.register(helmet);
+    await fastify.register(cors);
+
+    // Health check endpoint
+    fastify.get('/ping', async (request, reply) => {
+      return { status: 'ok' };
+    });
+
+    await fastify.listen({ port: PORT, host: '0.0.0.0' });
+    console.log(`🚀 Server listening on http://localhost:${PORT}`);
+  } catch (err) {
+    fastify.log.error(err);
+    process.exit(1);
+  }
+};
+
+start();
+

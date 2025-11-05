@@ -15,12 +15,11 @@ Your challenge: Build a working prototype showing how tokenized securities could
 This project requires:
 
 - **Hardhat** (installed as a dependency)
-- **Anvil** (installed via [Foundry](https://book.getfoundry.sh/getting-started/installation))
 
 To install dependencies:
 
 ```shell
-bun install
+npm install
 ```
 
 ## Local Development
@@ -29,10 +28,71 @@ This project uses Hardhat + Anvil for local development.
 
 ### Deployment
 
-To deploy, run `anvil` first, then:
+To deploy, run:
 
 ```shell
-bunx hardhat ignition deploy ignition/modules/Counter.ts --network anvil
+npm run node
+npm run deploy:acme
 ```
 
-Note: This expects you to provide a private key from anvil as an environment variable (see `.env.template`).
+## Script to run inside hardhat console
+
+```ts
+const tokenAddr = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+const capTableAddr = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const Token = await ethers.getContractAt("ChainEquityToken", tokenAddr);
+const CapTable = await ethers.getContractAt("CapTable", capTableAddr);
+await Token.name(); // "Acme Inc. Equity"
+```
+
+### Approve two shareholders
+
+```ts
+const [owner, alice, bob, charlie] = await ethers.getSigners();
+
+// approve alice
+(await Token.isApproved(alice.address)).toString(); // false
+await Token.approveWallet(alice.address);
+(await Token.isApproved(alice.address)).toString(); // true
+
+// approve bob
+(await Token.isApproved(bob.address)).toString(); // false
+await Token.approveWallet(bob.address);
+(await Token.isApproved(bob.address)).toString(); // true
+```
+
+### Mint shares and transfer
+
+```ts
+await Token.mint(alice.address, ethers.parseEther("100"));
+(await Token.balanceOf(alice.address)).toString(); // 100e18
+
+const tokenAsAlice = Token.connect(alice);
+await tokenAsAlice.transfer(bob.address, ethers.parseEther("30"));
+
+(await Token.balanceOf(alice.address)).toString(); // 70e18
+(await Token.balanceOf(bob.address)).toString(); // 30e18
+```
+
+### Execute a Stock Split
+
+```ts
+await Token.executeSplit(ethers.parseEther("7"));
+(await Token.splitFactor()).toString(); // "7000000000000000000"
+
+(await Token.effectiveBalanceOf(alice.address)).toString(); // 490e18
+(await Token.effectiveBalanceOf(bob.address)).toString(); // 210e18
+```
+
+### Record a Corporate Action
+
+```ts
+const data = ethers.AbiCoder.defaultAbiCoder().encode(
+  ["uint256"],
+  [ethers.parseEther("7")]
+);
+await CapTable.recordCorporateAction("SPLIT", data);
+
+(await CapTable.corporateActionCount()).toString(); // "1"
+await CapTable.getCorporateAction(1);
+```

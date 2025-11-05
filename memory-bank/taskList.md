@@ -295,25 +295,52 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~2 weeks
 
-**Status:** ⏳ Pending
+**Status:** ⏳ In Progress (Task 2.1 complete)
 
 **Dependencies:** Phase 1 complete
 
-### Task 2.1: Scaffold Fastify Server
+### Task 2.1: Scaffold Fastify Server ✅
 
-- [ ] Initialize Fastify project structure
-- [ ] Set up Bun runtime configuration
-- [ ] Install dependencies:
-  - [ ] `fastify`
-  - [ ] `viem`
-  - [ ] `pino` (logging)
-  - [ ] `@fastify/cors`
-  - [ ] `@fastify/helmet` (security)
-- [ ] Create `backend/src/index.ts` entry point
-- [ ] Set up basic server with `/ping` health check
-- [ ] Configure port (default: 4000)
-- [ ] Add environment variable support
-- **Deliverable:** Running Fastify server on :4000
+- [x] Initialize Fastify project structure
+- [x] Set up Bun runtime configuration
+- [x] Install dependencies:
+  - [x] `fastify` (v5.6.1)
+  - [x] `viem` (already installed)
+  - [x] `pino` (v9.6.0) and `pino-pretty` (v13.0.0) for logging
+  - [x] `@fastify/cors` (v11.0.0)
+  - [x] `@fastify/helmet` (v13.0.0)
+  - [x] `@types/node` (v20.0.0)
+- [x] Create `backend/src/index.ts` entry point
+- [x] Set up basic server with `/ping` health check
+- [x] Configure port (default: 4000) from `process.env.PORT`
+- [x] Add environment variable support (Bun auto-loads `.env`)
+- [x] Create modular directory structure (`plugins/`, `routes/`)
+- [x] Create `.env.example` with `PORT=4000`
+- [x] Add scripts to `package.json` (`dev` and `start`)
+- [x] Update README with setup and usage instructions
+- **Deliverable:** Running Fastify server on :4000 ✅
+- **Status:** Complete - Server scaffolded with logging, security plugins, and health check endpoint
+- **Summary:**
+  - Created production-ready Fastify server scaffold with minimal surface area
+  - Configured Pino logger with `pino-pretty` transport for development
+  - Registered security plugins (Helmet v13 for Fastify v5, CORS)
+  - Implemented `/ping` health check endpoint returning `{ status: "ok" }`
+  - Port configuration via `process.env.PORT` (default: 4000)
+  - Graceful shutdown handling for SIGINT/SIGTERM
+  - Server startup logging with emoji: `🚀 Server listening on http://localhost:<PORT>`
+  - Created modular directory structure ready for growth (`plugins/`, `routes/`)
+  - All dependencies installed and verified compatible with Fastify v5
+  - Server tested and verified: `/ping` endpoint returns correct response
+- **Files Created/Modified:**
+  - `backend/src/index.ts` (new) - Main server entry point
+  - `backend/src/plugins/` (new) - Directory for Fastify plugins
+  - `backend/src/routes/` (new) - Directory for API route handlers
+  - `backend/package.json` (modified) - Added dependencies and scripts
+  - `backend/.env.example` (new) - Environment variable template
+  - `backend/README.md` (modified) - Updated with setup and usage instructions
+- **Test Commands:**
+  - Start server: `bun run dev` or `bun run start`
+  - Verify health check: `curl http://localhost:4000/ping` (returns `{"status":"ok"}`)
 
 ### Task 2.2: Database Schema Design
 

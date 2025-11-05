@@ -2,11 +2,14 @@
   "name": "chain-equity",
   "version": "1.0.0",
   "scripts": {
-    "local:node": "anvil",
-    "deploy:acme": "npx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network localhost && npx hardhat run scripts/export-addresses.ts --network localhost && npx hardhat run scripts/verify-deployment.ts --network localhost",
-    "deploy:anvil": "npx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network anvil && npx hardhat run scripts/export-addresses.ts --network anvil && npx hardhat run scripts/verify-deployment.ts --network anvil",
-    "export": "npx ts-node scripts/export-abis.ts && npx hardhat run scripts/export-addresses.ts",
-    "test:export": "npx ts-node scripts/test-export.ts",
+    "local:node": "npx hardhat node",
+    "console": "npx hardhat console --network localhost",
+    "deploy:acme": "npx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network localhost && npm run export:addresses && npm run verify:deployment",
+    "deploy:anvil": "npx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network anvil && npm run export:addresses && npm run verify:deployment",
+    "export:abis": "npx hardhat run scripts/export-abis.ts --network localhost",
+    "export:addresses": "npx hardhat run scripts/export-addresses.ts --network localhost",
+    "verify:deployment": "npx hardhat run scripts/verify-deployment.ts --network localhost",
+    "export": "npm run export:abis && npm run export:addresses",
     "coverage": "HARDHAT_COVERAGE=true npx hardhat coverage"
   },
   "devDependencies": {

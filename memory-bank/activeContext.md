@@ -129,11 +129,13 @@
    - Gas analysis suite for all major operations ✅
    - Integration tests for end-to-end workflows ✅
    - Total: 137 tests passing ✅
-7. **Backend Foundation** - Database schema and auth middleware ✅ PARTIAL
+7. **Backend Foundation** - Database schema, auth middleware, and server scaffold ✅
    - Database schema with users table ✅
    - Auth middleware with role-based access control ✅
-   - Server entry point (index.ts) ⏳ TODO (needs Fastify server setup)
-8. **Backend** (Bun + Fastify) - Event indexer + REST API ⏳ TODO
+   - Fastify server scaffold with logging, security, and health check ✅ (Task 2.1)
+8. **Backend** (Bun + Fastify) - Event indexer + REST API ⏳ IN PROGRESS
+   - Server scaffold complete (Task 2.1) ✅
+   - Database schema design (Task 2.2) ⏳ NEXT
 9. **Frontend** (React + wagmi) - Admin & Shareholder dashboards ⏳ TODO
 
 ### Planned Enhancements
@@ -156,15 +158,16 @@
 4. ✅ Design token replacement logic (Task 1.6 - COMPLETE)
 5. ✅ Comprehensive test suite (Task 1.7 - COMPLETE)
 6. ✅ Contract deployment setup (Task 1.8 - COMPLETE)
-7. ⏳ Set up backend indexer with viem event watching
-8. ⏳ Implement backend REST API endpoints
-9. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
-10. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
-11. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
-12. ⏳ Implement frontend wallet connector components (`config.ts`, `provider.tsx`, `Connect.tsx`)
-13. ⏳ Integrate Firebase Auth in frontend
-14. ⏳ Create frontend admin dashboard UI
-15. ⏳ Create frontend shareholder dashboard UI
+7. ✅ Scaffold Fastify server with logging, security, and health check (Task 2.1 - COMPLETE)
+8. ⏳ Set up backend indexer with viem event watching (Task 2.5)
+9. ⏳ Implement backend REST API endpoints (Tasks 2.6-2.9)
+10. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
+11. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
+12. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
+13. ⏳ Implement frontend wallet connector components (`config.ts`, `provider.tsx`, `Connect.tsx`)
+14. ⏳ Integrate Firebase Auth in frontend
+15. ⏳ Create frontend admin dashboard UI
+16. ⏳ Create frontend shareholder dashboard UI
 
 ### Role System ✅
 
@@ -289,7 +292,9 @@
 
 ### Future Enhancements
 
-- Backend server setup (Fastify initialization in index.ts) ⏳ NEXT
+- Backend database schema design and migrations (Task 2.2) ⏳ NEXT
+- Backend event indexer implementation (Task 2.5)
+- Backend REST API routes (Tasks 2.6-2.9)
 - Frontend admin dashboard for issuer operations
 - Frontend shareholder dashboard for investors
 - Integration testing across all layers
@@ -301,7 +306,7 @@
 chain-equity/
 ├── contracts/          ✅ Smart contracts (Hardhat)
 ├── frontend/           ⏳ React app (Vite)
-├── backend/            ⏳ Fastify API (Bun)
+├── backend/            ⏳ Fastify API (Bun) - Server scaffold ✅
 ├── memory-bank/        ✅ Documentation
 ├── pnpm-workspace.yaml ✅ Workspace config
 └── chain-equity.code-workspace ✅ VS Code workspace

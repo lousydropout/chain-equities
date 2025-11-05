@@ -11,9 +11,13 @@
 
 ### Backend Layer
 - **Runtime**: Bun
+- **Framework**: Fastify (v5.6.1)
 - **Database**: Bun's native SQLite
 - **Blockchain Client**: viem (WebSocket subscriptions)
-- **API**: Bun.serve() REST endpoints
+- **API**: Fastify REST endpoints
+- **Logging**: Pino with pino-pretty (development)
+- **Security**: @fastify/helmet, @fastify/cors
+- **Port**: 4000 (configurable via PORT env var)
 - **Purpose**: Event indexer + read-only API
 
 ### Frontend Layer
@@ -43,11 +47,13 @@
 - `ignition/modules/ChainEquityToken.ts` - Deployment module
 - `test/` - Test files
 
-### Backend (to be created)
-- `backend/src/api.ts` - REST API routes
-- `backend/src/indexer.ts` - Event listener
-- `backend/src/db.ts` - SQLite schema
-- `backend/src/config.ts` - Configuration
+### Backend
+- `backend/src/index.ts` - Fastify server entry point ✅
+- `backend/src/routes/` - REST API route handlers (to be created)
+- `backend/src/plugins/` - Fastify plugins (to be created)
+- `backend/src/services/chain/indexer.ts` - Event listener (to be created)
+- `backend/src/db/schema.ts` - SQLite schema ✅
+- `backend/src/config/contracts.ts` - Configuration (to be created)
 
 ### Frontend (to be created)
 - `frontend/src/app/admin/` - Issuer dashboard
