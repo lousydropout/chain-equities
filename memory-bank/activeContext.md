@@ -156,12 +156,26 @@
      - Connection testing with friendly error messages
      - Comprehensive test suite (20 tests passing)
      - Manual test script for interactive testing
+   - Event indexer implementation complete (Task 2.5) ✅
+     - Comprehensive event indexer service with real-time watching and block scanning
+     - Centralized contract metadata (addresses + ABIs) in `config/contracts.ts`
+     - All 5 event watchers implemented (TokenLinked, Issued, Transfer, SplitExecuted, CorporateActionRecorded)
+     - Block scanning with `publicClient.getLogs()` and confirmation blocks for reorg safety
+     - Event handler registry for dynamic event dispatch
+     - Batch processing for efficient database writes (~100 events per transaction)
+     - Shareholder balance updates with splitFactor query and effective balance calculation
+     - Complete deduplication using UNIQUE (block_number, log_index) constraint
+     - Clean API: `Indexer.start()`, `Indexer.stop()`, `Indexer.rescan()`
+     - Server integration with automatic startup and graceful shutdown
+     - Comprehensive end-to-end testing verified (7 events indexed, all types working)
+     - Test scripts: `generate-test-events.ts`, `verify-indexed-data.ts`, `test-indexer.ts`
+     - Complete testing guide: `E2E_TESTING_GUIDE.md`
 9. **Frontend** (React + wagmi) - Admin & Shareholder dashboards ⏳ TODO
 
 ### Planned Enhancements
 
 - **Orchestrator.sol** - Factory contract for creating new companies (future enhancement)
-- **Backend Indexer** - Real-time event processing and database sync
+- **Backend Indexer** - ✅ Real-time event processing and database sync (Task 2.5 - COMPLETE)
 - **Contract Exports** - ✅ `/contracts/exports/` directory for deployment artifacts (Task 1.3 - COMPLETE)
 - **Backend API** - REST endpoints for companies, shareholders, transactions
 - **Backend Authentication** - ✅ Firebase Auth + Unified Middleware documented (see `authentication.md`)
@@ -181,7 +195,7 @@
 7. ✅ Scaffold Fastify server with logging, security, and health check (Task 2.1 - COMPLETE)
 8. ✅ Database setup and migrations (Task 2.3 - COMPLETE)
 9. ✅ Viem client configuration with WebSocket/HTTP fallback (Task 2.4 - COMPLETE)
-10. ⏳ Set up backend indexer with viem event watching (Task 2.5)
+10. ✅ Set up backend indexer with viem event watching (Task 2.5 - COMPLETE)
 11. ⏳ Implement backend REST API endpoints (Tasks 2.6-2.9)
 12. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
 13. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
@@ -366,8 +380,8 @@
 - Backend database schema design and migrations (Task 2.2) ✅ COMPLETE
 - Backend database setup and migrations (Task 2.3) ✅ COMPLETE
 - Backend Viem client configuration (Task 2.4) ✅ COMPLETE
-- Backend event indexer implementation (Task 2.5) ⏳ NEXT
-- Backend REST API routes (Tasks 2.6-2.9)
+- Backend event indexer implementation (Task 2.5) ✅ COMPLETE
+- Backend REST API routes (Tasks 2.6-2.9) ⏳ NEXT
 - Frontend admin dashboard for issuer operations
 - Frontend shareholder dashboard for investors
 - Integration testing across all layers

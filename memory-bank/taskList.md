@@ -295,7 +295,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~2 weeks
 
-**Status:** ⏳ In Progress (Task 2.1, 2.2, 2.3, 2.4 complete)
+**Status:** ⏳ In Progress (Task 2.1, 2.2, 2.3, 2.4, 2.5 complete)
 
 **Dependencies:** Phase 1 complete
 
@@ -476,28 +476,69 @@ This document provides a detailed breakdown of all implementation tasks organize
   - Friendly error messages for connection failures
   - All 37 tests passing (20 client tests + 17 auth middleware tests)
 
-### Task 2.5: Event Indexer Implementation
+### Task 2.5: Event Indexer Implementation ✅
 
-- [ ] Create `backend/src/services/chain/indexer.ts`
-- [ ] Load contract addresses from config (hard-coded single pair)
-- [ ] Implement event watcher for the single CapTable/Token pair:
-  - [ ] `watchTokenLinked()` - Token linking events (from CapTable)
-  - [ ] `watchIssued()` - Token minting events (from Token)
-  - [ ] `watchTransferred()` - Transfer events (from Token)
-  - [ ] `watchSplitExecuted()` - Stock split events (from Token)
-  - [ ] `watchCorporateActionRecorded()` - Corporate action events (from CapTable)
-- [ ] Add block scanning for missed events:
-  - [ ] `scanBlockRange()` function
-  - [ ] `getLastIndexedBlock()` function
-  - [ ] Handle reorgs
-- [ ] Implement event parsing and storage:
-  - [ ] Parse event logs
-  - [ ] Store in database
-  - [ ] Update shareholder balances
-  - [ ] Record transactions
-- [ ] Add deduplication logic
-- [ ] Add error handling and logging
-- **Deliverable:** Event indexer processing on-chain events from the single CapTable/Token pair
+- [x] Create `backend/src/services/chain/indexer.ts`
+- [x] Load contract addresses from config (centralized CONTRACTS export with addresses + ABIs)
+- [x] Implement event watcher for the single CapTable/Token pair:
+  - [x] `watchTokenLinked()` - Token linking events (from CapTable)
+  - [x] `watchIssued()` - Token minting events (from Token)
+  - [x] `watchTransferred()` - Transfer events (from Token)
+  - [x] `watchSplitExecuted()` - Stock split events (from Token)
+  - [x] `watchCorporateActionRecorded()` - Corporate action events (from CapTable)
+- [x] Add block scanning for missed events:
+  - [x] `scanBlockRange()` function using `publicClient.getLogs()`
+  - [x] `getLastIndexedBlock()` function
+  - [x] Handle reorgs with confirmation blocks (safe block calculation)
+- [x] Implement event parsing and storage:
+  - [x] Parse event logs using `parseEventLogs()`
+  - [x] Store in database (events, transactions, corporate_actions tables)
+  - [x] Update shareholder balances with splitFactor query
+  - [x] Record transactions (Issued and Transfer events)
+- [x] Add deduplication logic (INSERT OR IGNORE with UNIQUE constraint)
+- [x] Add error handling and logging
+- [x] Implement batch writes for performance (~100 events per transaction)
+- [x] Centralized contract metadata in `config/contracts.ts`
+- [x] Shared event handler registry for dynamic dispatch
+- [x] Clean API export: `Indexer.start()`, `Indexer.stop()`, `Indexer.rescan()`
+- [x] Integration into server startup with graceful error handling
+- **Deliverable:** Event indexer processing on-chain events from the single CapTable/Token pair ✅
+- **Status:** Complete - Event indexer fully implemented and tested
+- **Summary:**
+  - Created comprehensive event indexer service with real-time watching and block scanning
+  - Centralized contract metadata (addresses + ABIs) in `config/contracts.ts`
+  - Implemented all 5 event watchers using `publicClient.watchContractEvent()`
+  - Block scanning with `publicClient.getLogs()` and confirmation blocks for reorg safety
+  - Event handler registry for dynamic event dispatch
+  - Batch processing for efficient database writes
+  - Shareholder balance updates with splitFactor query and effective balance calculation
+  - Complete deduplication using UNIQUE (block_number, log_index) constraint
+  - Clean API with graceful lifecycle management
+  - Server integration with automatic startup
+  - Comprehensive end-to-end testing with all event types verified
+- **Files Created/Modified:**
+  - `backend/src/services/chain/indexer.ts` (new) - Main indexer service
+  - `backend/src/config/contracts.ts` (modified) - Centralized contract metadata with ABIs
+  - `backend/src/index.ts` (modified) - Indexer startup integration
+  - `backend/.env.example` (modified) - Added indexer configuration variables
+  - `backend/scripts/generate-test-events.ts` (new) - Test event generation script
+  - `backend/scripts/verify-indexed-data.ts` (new) - Data verification script
+  - `backend/scripts/test-indexer.ts` (new) - Indexer connection test script
+  - `backend/E2E_TESTING_GUIDE.md` (new) - Complete testing guide
+  - `backend/TEST_RESULTS.md` (new) - Test results documentation
+- **Test Results:**
+  - 7 events indexed successfully (2 Issued, 3 Transfer, 1 SplitExecuted, 1 CorporateActionRecorded)
+  - 3 transactions recorded correctly
+  - 2 shareholders tracked with accurate balances
+  - Effective balances calculated correctly after 2x stock split (900→1800, 600→1200)
+  - All event types verified working in real-time
+  - Deduplication working correctly
+  - Database storage verified for all tables
+- **Test Commands:**
+  - Test indexer: `bun run scripts/test-indexer.ts`
+  - Generate events: `bun run scripts/generate-test-events.ts`
+  - Verify data: `bun run scripts/verify-indexed-data.ts`
+  - Full E2E: See `E2E_TESTING_GUIDE.md`
 
 ### Task 2.6: REST API Routes - Company Info
 

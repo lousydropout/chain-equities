@@ -8,6 +8,7 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import { connect, close } from './db/index';
 import { migrate } from './db/migrations';
+import { Indexer } from './services/chain/indexer';
 
 // Get port from environment variable, default to 4000
 const PORT = Number(process.env.PORT) || 4000;
@@ -28,6 +29,9 @@ const fastify = Fastify({
 // Graceful shutdown
 const shutdown = async (signal: string) => {
   fastify.log.info(`${signal} received, shutting down gracefully...`);
+  await Indexer.stop().catch((err) => {
+    console.error('Error stopping indexer:', err);
+  });
   close(); // Close database connection
   await fastify.close();
   process.exit(0);
@@ -64,6 +68,12 @@ const start = async () => {
     // Health check endpoint
     fastify.get('/ping', async (request, reply) => {
       return { status: 'ok' };
+    });
+
+    // Start event indexer
+    Indexer.start().catch((err) => {
+      console.error('❌ Indexer failed to start:', err);
+      process.exit(1);
     });
 
     await fastify.listen({ port: PORT, host: '0.0.0.0' });

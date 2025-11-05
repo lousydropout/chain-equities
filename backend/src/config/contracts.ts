@@ -1,11 +1,13 @@
 /**
- * @file Contract address configuration loader
- * @notice Loads contract addresses from deployments.json for single-company setup
+ * @file Contract address and ABI configuration loader
+ * @notice Centralizes contract metadata (addresses + ABIs) for indexer and API use
+ * @notice Loads contract addresses from environment variables or deployments.json fallback
  */
 
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import type { Abi } from "viem";
 
 /**
  * Deployment JSON structure from contracts/exports/deployments.json
@@ -22,25 +24,19 @@ interface DeploymentJson {
 }
 
 /**
- * Contract addresses configuration
- * Loaded from contracts/exports/deployments.json
+ * Get contract address from environment variable or deployments.json fallback
  */
-export const contracts = (() => {
-  const defaultChainId = "31337"; // Local Anvil network
+function getContractAddress(
+  envVar: string | undefined,
+  deploymentsPath: string,
+  contractType: "capTable" | "token"
+): string {
+  // First try environment variable
+  if (envVar) {
+    return envVar;
+  }
 
-  // Resolve path to deployments.json (assuming backend is sibling to contracts)
-  // Support both ESM (import.meta.url) and CommonJS (__dirname) patterns
-  const currentDir =
-    typeof __dirname !== "undefined"
-      ? __dirname
-      : dirname(fileURLToPath(import.meta.url));
-
-  // From backend/src/config/contracts.ts, go up to workspace root, then into contracts
-  const deploymentsPath = join(
-    currentDir,
-    "../../../contracts/exports/deployments.json"
-  );
-
+  // Fallback to deployments.json
   let deploymentData: DeploymentJson;
 
   try {
@@ -49,7 +45,7 @@ export const contracts = (() => {
   } catch (error: any) {
     throw new Error(
       `Failed to load deployments.json from ${deploymentsPath}: ${error.message}. ` +
-        `Make sure contracts have been deployed and exports generated.`
+        `Make sure contracts have been deployed and exports generated, or set ${contractType.toUpperCase()}_ADDRESS environment variable.`
     );
   }
 
@@ -60,6 +56,7 @@ export const contracts = (() => {
     );
   }
 
+  const defaultChainId = "31337"; // Local Anvil network
   const networkData = deploymentData.networks[defaultChainId];
   if (!networkData) {
     throw new Error(
@@ -76,24 +73,89 @@ export const contracts = (() => {
     );
   }
 
-  if (!companyData.capTable || !companyData.token) {
+  const address = companyData[contractType];
+  if (!address || address.length === 0) {
+    throw new Error(`Invalid ${contractType} address: address is empty`);
+  }
+
+  return address;
+}
+
+/**
+ * Load ABI from exports directory
+ */
+function loadAbi(abiName: string): Abi {
+  const currentDir =
+    typeof __dirname !== "undefined"
+      ? __dirname
+      : dirname(fileURLToPath(import.meta.url));
+
+  const abiPath = join(
+    currentDir,
+    "../../../contracts/exports/abis",
+    `${abiName}.json`
+  );
+
+  try {
+    const fileContent = readFileSync(abiPath, "utf-8");
+    return JSON.parse(fileContent) as Abi;
+  } catch (error: any) {
     throw new Error(
-      `Invalid company deployment structure: missing "capTable" or "token" address`
+      `Failed to load ABI from ${abiPath}: ${error.message}. ` +
+        `Make sure contracts have been compiled and ABIs exported.`
     );
   }
+}
 
-  // Validate addresses are non-empty
-  if (!companyData.capTable || companyData.capTable.length === 0) {
-    throw new Error("Invalid capTable address: address is empty");
-  }
+// Resolve paths
+const currentDir =
+  typeof __dirname !== "undefined"
+    ? __dirname
+    : dirname(fileURLToPath(import.meta.url));
 
-  if (!companyData.token || companyData.token.length === 0) {
-    throw new Error("Invalid token address: address is empty");
-  }
+const deploymentsPath = join(
+  currentDir,
+  "../../../contracts/exports/deployments.json"
+);
 
-  return {
-    chainId: defaultChainId,
-    capTableAddress: companyData.capTable,
-    tokenAddress: companyData.token,
-  } as const;
-})();
+// Load contract addresses (env vars or deployments.json fallback)
+const capTableAddress = getContractAddress(
+  process.env.CAPTABLE_ADDRESS,
+  deploymentsPath,
+  "capTable"
+);
+
+const tokenAddress = getContractAddress(
+  process.env.TOKEN_ADDRESS,
+  deploymentsPath,
+  "token"
+);
+
+// Load ABIs
+const capTableAbi = loadAbi("CapTable");
+const tokenAbi = loadAbi("ChainEquityToken");
+
+/**
+ * Centralized contract metadata configuration
+ * Contains both addresses and ABIs for easy access throughout the application
+ */
+export const CONTRACTS = {
+  capTable: {
+    address: capTableAddress as `0x${string}`,
+    abi: capTableAbi,
+  },
+  token: {
+    address: tokenAddress as `0x${string}`,
+    abi: tokenAbi,
+  },
+} as const;
+
+/**
+ * Legacy export for backward compatibility
+ * @deprecated Use CONTRACTS instead
+ */
+export const contracts = {
+  chainId: "31337",
+  capTableAddress: capTableAddress,
+  tokenAddress: tokenAddress,
+} as const;
