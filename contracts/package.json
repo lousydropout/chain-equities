@@ -2,7 +2,8 @@
   "name": "chain-equity",
   "version": "1.0.0",
   "scripts": {
-    "local:node": "npx hardhat node",
+    "local:node": "anvil --state ./anvil_state.json --chain-id 31337",
+    "local:clear-node": "rm ./anvil_state.json",
     "console": "npx hardhat console --network localhost",
     "deploy:acme": "npx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network localhost && npm run export:addresses && npm run verify:deployment",
     "deploy:anvil": "npx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network anvil && npm run export:addresses && npm run verify:deployment",

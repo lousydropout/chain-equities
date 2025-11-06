@@ -6,6 +6,17 @@
 
 ## Recent Work
 
+### Bug Fix: Dashboard Stats Cards Auto-Refresh ✅
+
+- **Status**: Complete - Fixed query key mismatch preventing dashboard stats from refreshing after share issuance
+- **Location**: `frontend/src/components/IssueSharesForm.tsx`
+- **Issue**: "Total Outstanding" and "Total Shareholders" cards weren't auto-refreshing after admin successfully issued new shares
+- **Root Cause**: Query key mismatch - `IssueSharesForm` was invalidating `['company-stats']` but `useCompanyStats()` hook uses `['company', 'stats']` (array format)
+- **Solution**: Updated query invalidation in `IssueSharesForm.tsx` line 123 from `['company-stats']` to `['company', 'stats']` to match the actual query key used by the hook
+- **Result**: Dashboard stats cards now automatically update immediately after successful share issuance
+- **Files Modified**:
+  - `frontend/src/components/IssueSharesForm.tsx` - Fixed query key in `invalidateQueries` call
+
 ### Task 4.17: UI Improvements for Approvals Page ✅
 
 - **Status**: Complete - Display name cleanup and copy button functionality added
@@ -542,6 +553,22 @@
     - Handles loading states, wallet not linked (404), and other errors gracefully
     - Responsive grid layout: 4x1 on desktop (lg), 2x2 on medium screens (md), stacked on mobile
     - Grid updated from `md:grid-cols-3` to `md:grid-cols-2 lg:grid-cols-4`
+  - **Investor Holdings Card Auto-Refresh Fix** ✅
+    - Fixed issue where "Your Holdings" card didn't auto-refresh after linking/unlinking wallet
+    - Problem: WalletLink and ProfileMenu components only invalidated `['wallet', 'status']` query, not `['shareholder', 'me']` query used by Dashboard
+    - Solution: Added query invalidation and refetch for `['shareholder', 'me']` in both components
+    - Implementation: 
+      - `WalletLink.tsx`: Added `invalidateQueries` and `refetchQueries` for `['shareholder', 'me']` in both link and unlink mutation success handlers
+      - `ProfileMenu.tsx`: Added same invalidation/refetch logic to link and unlink mutations
+    - Result: "Your Holdings" card now automatically updates immediately after wallet linking/unlinking
+    - Files modified: `frontend/src/components/WalletLink.tsx`, `frontend/src/components/ProfileMenu.tsx`
+  - **Dashboard Stats Cards Auto-Refresh Fix** ✅
+    - Fixed issue where "Total Outstanding" and "Total Shareholders" cards didn't auto-refresh after successfully issuing new shares
+    - Problem: `IssueSharesForm` was invalidating query key `['company-stats']` but `useCompanyStats()` hook uses query key `['company', 'stats']` (array format)
+    - Solution: Changed query invalidation in `IssueSharesForm.tsx` from `['company-stats']` to `['company', 'stats']` to match the actual query key
+    - Implementation: Updated line 123 in `IssueSharesForm.tsx` to use correct query key format
+    - Result: Dashboard stats cards now automatically update immediately after successful share issuance
+    - Files modified: `frontend/src/components/IssueSharesForm.tsx`
 
 ### Planned Enhancements
 

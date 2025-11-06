@@ -49,7 +49,11 @@ export function ProfileMenu() {
         walletAddress: data.walletAddress || walletAddress,
         isLinked: true,
       });
-      await queryClient.refetchQueries({ queryKey: ['wallet', 'status'] });
+      // Invalidate and refetch queries to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ['wallet', 'status'] });
+      queryClient.invalidateQueries({ queryKey: ['shareholder', 'me'] });
+      // Explicitly refetch active queries for immediate update
+      await queryClient.refetchQueries({ queryKey: ['shareholder', 'me'] });
       setActionError(null);
     },
     onError: (err: Error) => {
@@ -65,7 +69,11 @@ export function ProfileMenu() {
         walletAddress: null,
         isLinked: false,
       });
-      await queryClient.refetchQueries({ queryKey: ['wallet', 'status'] });
+      // Invalidate and refetch queries to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ['wallet', 'status'] });
+      queryClient.invalidateQueries({ queryKey: ['shareholder', 'me'] });
+      // Explicitly refetch active queries for immediate update
+      await queryClient.refetchQueries({ queryKey: ['shareholder', 'me'] });
       setActionError(null);
     },
     onError: (err: Error) => {

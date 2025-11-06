@@ -120,7 +120,7 @@ export function IssueSharesForm({
   useEffect(() => {
     if (isSuccess && txHash) {
       queryClient.invalidateQueries({ queryKey: ['shareholders'] });
-      queryClient.invalidateQueries({ queryKey: ['company-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['company', 'stats'] });
       if (onSuccess) {
         onSuccess();
       }

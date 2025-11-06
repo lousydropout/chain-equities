@@ -39,8 +39,11 @@ export function WalletLink() {
         walletAddress: data.walletAddress || walletAddress,
         isLinked: true,
       });
-      // Also invalidate and refetch to ensure we get fresh data from server
-      await queryClient.refetchQueries({ queryKey: ['wallet', 'status'] });
+      // Invalidate and refetch queries to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ['wallet', 'status'] });
+      queryClient.invalidateQueries({ queryKey: ['shareholder', 'me'] });
+      // Explicitly refetch active queries for immediate update
+      await queryClient.refetchQueries({ queryKey: ['shareholder', 'me'] });
       setActionSuccess('Wallet linked successfully');
       setActionError(null);
       setTimeout(() => setActionSuccess(null), 3000);
@@ -60,8 +63,11 @@ export function WalletLink() {
         walletAddress: null,
         isLinked: false,
       });
-      // Also invalidate and refetch to ensure we get fresh data from server
-      await queryClient.refetchQueries({ queryKey: ['wallet', 'status'] });
+      // Invalidate and refetch queries to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ['wallet', 'status'] });
+      queryClient.invalidateQueries({ queryKey: ['shareholder', 'me'] });
+      // Explicitly refetch active queries for immediate update
+      await queryClient.refetchQueries({ queryKey: ['shareholder', 'me'] });
       setActionSuccess('Wallet unlinked successfully');
       setActionError(null);
       setTimeout(() => setActionSuccess(null), 3000);
