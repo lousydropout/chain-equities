@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import './App.css';
 import { useAuth } from './hooks/useAuth';
+import { Connect } from './components/Connect';
 
 function App() {
   const { user, isAuthenticated, isLoading, login, logout } = useAuth();
@@ -32,6 +33,8 @@ function App() {
   return (
     <div className="container">
       <h1>ChainEquity Demo - Mock Auth</h1>
+
+      <Connect />
 
       <div className="card">
         {isAuthenticated && user ? (

@@ -30,4 +30,3 @@ describe('Wagmi Hooks Accessibility', () => {
     expect(typeof useChainId).toBe('function');
   });
 });
-

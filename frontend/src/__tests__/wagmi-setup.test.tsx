@@ -18,16 +18,14 @@ describe('Wagmi Configuration', () => {
   });
 
   it('should have Hardhat chain configured', () => {
-    const hardhatChain = wagmiConfig.chains.find(
-      (chain) => chain.id === 31337
-    );
+    const hardhatChain = wagmiConfig.chains.find(chain => chain.id === 31337);
     expect(hardhatChain).toBeDefined();
     expect(hardhatChain?.name).toBe('Hardhat');
   });
 
   it('should have Sepolia chain configured', () => {
     const sepoliaChain = wagmiConfig.chains.find(
-      (chain) => chain.id === 11155111
+      chain => chain.id === 11155111,
     );
     expect(sepoliaChain).toBeDefined();
     expect(sepoliaChain?.name).toBe('Sepolia');
@@ -47,4 +45,3 @@ describe('Wagmi Configuration', () => {
     expect(wagmiConfig.chains.length).toBe(2);
   });
 });
-

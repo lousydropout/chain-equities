@@ -90,48 +90,45 @@ createRoot(document.getElementById("root")!).render(
 
 ---
 
-### 3. `src/Connect.tsx`
+### 3. `src/components/Connect.tsx`
 
-Provides a wallet connection UI limited to MetaMask.
+Provides a comprehensive wallet connection UI for MetaMask (implemented in Task 4.4).
 
+**Implementation Status:** ✅ Complete
+
+**Features:**
+- Connect/disconnect functionality using Wagmi hooks
+- Address display with truncation (`0x1234...5678`)
+- Connection status indicators (connected/disconnected/error)
+- Loading states during connection
+- Error handling with user-friendly messages
+- Reconnect handling
+- Light/dark mode support
+
+**Key Implementation Details:**
 ```typescript
-import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
 
-const allowedWallets = new Set(["io.metamask"]);
-
-export const Connect = () => {
-  const account = useAccount();
-  const { connectors, connect } = useConnect();
+export function Connect() {
+  const { address, isConnected, isConnecting, isReconnecting } = useAccount();
+  const { connect, connectors, error: connectError, isPending } = useConnect();
   const { disconnect } = useDisconnect();
 
-  return (
-    <div>
-      {account.isConnected ? (
-        <div>
-          <p>Connected: {account.address}</p>
-          <button onClick={() => disconnect()}>Disconnect</button>
-        </div>
-      ) : (
-        connectors
-          .filter((c) => allowedWallets.has(c.id))
-          .map((connector) => (
-            <button
-              key={connector.uid}
-              onClick={() => connect({ connector })}
-            >
-              Connect with MetaMask
-            </button>
-          ))
-      )}
-    </div>
-  );
-};
+  // Uses injected connector (MetaMask) via connectors[0]
+  // Formats address as: 0x1234...5678
+  // Shows status: "Connecting…", "Connected", "Reconnecting…", or error messages
+}
 ```
+
+**Files:**
+- `frontend/src/components/Connect.tsx` - Main component
+- `frontend/src/components/Connect.css` - Styled with light/dark mode support
 
 **Notes:**
 - Wagmi automatically detects MetaMask via `window.ethereum`.
 - No custom connectors or external wallet SDKs needed.
-- MetaMask connector ID: `"io.metamask"`.
+- Uses injected connector (first available connector from Wagmi).
+- Integrated into `App.tsx` in prominent location.
 
 ---
 
@@ -272,15 +269,17 @@ writeContract({
 ```
 frontend/
  ├── src/
- │   ├── config.ts          # Wagmi config
- │   ├── provider.tsx        # Web3Provider wrapper
- │   ├── Connect.tsx         # Wallet connection UI
- │   ├── WalletConnector.tsx # Connector button component (optional)
+ │   ├── config/
+ │   │   └── wagmi.ts        # Wagmi config (Task 4.3 ✅)
+ │   ├── provider.tsx         # Web3Provider wrapper (Task 4.3 ✅)
+ │   ├── components/
+ │   │   ├── Connect.tsx      # Wallet connection UI (Task 4.4 ✅)
+ │   │   └── Connect.css      # Component styles (Task 4.4 ✅)
  │   ├── lib/
- │   │   └── wallet/         # Wallet-related utilities
- │   │       └── hooks.ts    # Custom hooks for contract interactions
+ │   │   └── wallet/          # Wallet-related utilities (future)
+ │   │       └── hooks.ts     # Custom hooks for contract interactions (future)
  │   └── features/
- │       └── auth/            # Authentication components
+ │       └── auth/            # Authentication components (future)
 ```
 
 ---
@@ -338,10 +337,11 @@ export function ChainSwitcher() {
 | Feature                 | Status                         |
 | ----------------------- | ------------------------------ |
 | MetaMask Detection      | ✅ Built-in via Wagmi           |
-| Multi-chain Support     | ✅ (Hardhat + Astar)            |
+| Multi-chain Support     | ✅ (Hardhat + Sepolia)          |
 | Declarative React Hooks | ✅                              |
 | State Caching           | ✅ via React Query              |
 | Session Persistence     | ✅ via autoConnect              |
+| Wallet Connection UI    | ✅ Task 4.4 Complete           |
 | Custom Wallet Logic     | ❌ Not required                 |
 | Integration Points      | Contracts ↔ Backend ↔ Frontend |
 
@@ -357,15 +357,22 @@ export function ChainSwitcher() {
 
 ---
 
-## To Implement
+## Implementation Status
 
-1. Install dependencies: `bun add wagmi viem @tanstack/react-query`
-2. Create `src/config.ts` with chain configuration
-3. Create `src/provider.tsx` with WagmiProvider wrapper
-4. Create `src/Connect.tsx` for wallet connection UI
-5. Wrap app with `Web3Provider` in `main.tsx`
-6. Use Wagmi hooks (`useAccount`, `useWriteContract`, `useReadContract`) in components
-7. Import contract ABIs from `@chain-equity/contracts/artifacts/`
+✅ **Completed (Task 4.1-4.4):**
+1. ✅ Installed dependencies: `wagmi`, `viem`, `@tanstack/react-query`
+2. ✅ Created `src/config/wagmi.ts` with chain configuration (Hardhat + Sepolia)
+3. ✅ Created `src/provider.tsx` with WagmiProvider wrapper
+4. ✅ Created `src/components/Connect.tsx` for wallet connection UI
+5. ✅ Created `src/components/Connect.css` with styling and light/dark mode support
+6. ✅ Wrapped app with `Providers` in `main.tsx`
+7. ✅ Integrated Connect component into `App.tsx`
+
+⏳ **To Implement (Future Tasks):**
+- Use Wagmi hooks (`useWriteContract`, `useReadContract`) for contract interactions
+- Import contract ABIs from `contracts/exports/abis/`
+- Create custom hooks for contract operations
+- Implement contract write operations (transfer, mint, etc.)
 
 ---
 

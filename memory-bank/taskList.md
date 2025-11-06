@@ -295,7 +295,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~2 weeks
 
-**Status: ⏳ In Progress (Task 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.8 complete)
+\*\*Status: ⏳ In Progress (Task 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.8 complete)
 
 **Dependencies:** Phase 1 complete
 
@@ -856,7 +856,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~3 weeks
 
-**Status:** ⏳ In Progress (Task 4.1, 4.2 complete)
+**Status:** ⏳ In Progress (Task 4.1, 4.2, 4.3, 4.4 complete)
 
 **Dependencies:** Phase 3 complete
 
@@ -929,31 +929,77 @@ This document provides a detailed breakdown of all implementation tasks organize
   - Demo user matches backend exactly: { uid: 'demo-user', email: 'demo@example.com', role: 'issuer' }
   - No Firebase SDK integration (deferred to post-demo)
 
+### Task 4.3: Wagmi Configuration ✅
 
-### Task 4.3: Wagmi Configuration
+- [x] Create `frontend/src/config/wagmi.ts`
+- [x] Configure Wagmi with chains (Hardhat, testnet)
+- [x] Set up transports
+- [x] Enable auto-connect
+- [x] Create `frontend/src/provider.tsx`:
+  - [x] Wrap app with WagmiProvider
+  - [x] Wrap with QueryClientProvider
+- [x] Test wallet connection
+- **Deliverable:** Wagmi configured and working ✅
+- **Status:** Complete - Wagmi configuration fully implemented with Hardhat local and Sepolia testnet
+- **Summary:**
+  - Created `frontend/src/config/wagmi.ts` with Hardhat (31337) and Sepolia (11155111) chains
+  - Configured HTTP transports for both chains (Hardhat: http://127.0.0.1:8545)
+  - Added injected connector for MetaMask and other injected wallets
+  - Created `frontend/src/provider.tsx` with WagmiProvider and QueryClientProvider
+  - Updated `frontend/src/main.tsx` to wrap app with Providers and AuthProvider
+  - Auto-connect enabled via injected connector (Wagmi v2 pattern)
+  - Comprehensive test suite: 10 tests passing (6 configuration + 4 hooks accessibility)
+- **Files Created/Modified:**
+  - `frontend/src/config/wagmi.ts` (new) - Wagmi configuration with chains and connectors
+  - `frontend/src/provider.tsx` (new) - Provider wrapper component
+  - `frontend/src/main.tsx` (modified) - Added Providers wrapper
+  - `frontend/tsconfig.app.json` (modified) - Excluded test files from build
+  - `frontend/src/__tests__/wagmi-setup.test.tsx` (new) - Configuration tests
+  - `frontend/src/__tests__/wagmi-hooks.test.tsx` (new) - Hooks accessibility tests
+- **Test Commands:**
+  - Run Wagmi tests: `cd frontend && bun test src/__tests__/wagmi-*.test.tsx`
+  - Run all tests: `cd frontend && bun test src/__tests__/`
 
-- [ ] Create `frontend/src/config/wagmi.ts`
-- [ ] Configure Wagmi with chains (Hardhat, testnet)
-- [ ] Set up transports
-- [ ] Enable auto-connect
-- [ ] Create `frontend/src/provider.tsx`:
-  - [ ] Wrap app with WagmiProvider
-  - [ ] Wrap with QueryClientProvider
-- [ ] Test wallet connection
-- **Deliverable:** Wagmi configured and working
+### Task 4.4: Wallet Connection UI ✅
 
-### Task 4.4: Wallet Connection UI
-
-- [ ] Create `frontend/src/components/Connect.tsx`
-- [ ] Implement MetaMask connection:
-  - [ ] Connect button
-  - [ ] Disconnect button
-  - [ ] Display connected address
-  - [ ] Show connection status
-- [ ] Create `frontend/src/components/WalletConnector.tsx` (optional)
-- [ ] Add to main layout
-- [ ] Style components
-- **Deliverable:** Wallet connection UI
+- [x] Create `frontend/src/components/Connect.tsx`
+- [x] Implement MetaMask connection:
+  - [x] Connect button
+  - [x] Disconnect button
+  - [x] Display connected address
+  - [x] Show connection status
+- [x] Skip: `WalletConnector.tsx` (not needed - Connect component sufficient)
+- [x] Add to main layout
+- [x] Style components
+- **Deliverable:** Wallet connection UI ✅
+- **Status:** Complete - Wallet connection UI fully implemented with Wagmi hooks, styled components, and integrated into App layout
+- **Summary:**
+  - Created `frontend/src/components/Connect.tsx` with comprehensive wallet connection functionality
+  - Uses Wagmi hooks: `useAccount()`, `useConnect()`, `useDisconnect()`
+  - Implements "Connect Wallet" button when disconnected, "Disconnect" button when connected
+  - Displays formatted address (`0x1234...5678`) with full address in tooltip
+  - Shows connection status: "Connecting…", "Connected", "Reconnecting…", error messages
+  - Comprehensive error handling with user-friendly error messages
+  - Created `frontend/src/components/Connect.css` matching existing design system
+  - Supports light/dark mode via CSS media queries
+  - Integrated into `App.tsx` in prominent location above auth card
+  - All files formatted with Prettier, TypeScript compilation verified
+- **Files Created/Modified:**
+  - `frontend/src/components/Connect.tsx` (new) - Main wallet connection component
+  - `frontend/src/components/Connect.css` (new) - Component styles with light/dark mode support
+  - `frontend/src/App.tsx` (modified) - Added Connect component to layout
+- **Features:**
+  - Connect/disconnect functionality using MetaMask (injected connector)
+  - Address display with truncation (`0x1234...5678`)
+  - Connection status indicators with color coding (connected/disconnected/error)
+  - Error handling with user-friendly messages
+  - Loading states during connection
+  - Reconnect handling
+  - Responsive design matching existing app style
+- **Test Commands:**
+  - Format: `cd frontend && bun run format`
+  - TypeScript: `cd frontend && bunx tsc --noEmit`
+  - Build: `cd frontend && bun run build`
 
 ### Task 4.5: Login/Register Pages (Demo - Simulated)
 
