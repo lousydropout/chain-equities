@@ -56,13 +56,21 @@ Wraps the React app with Wagmi + React Query providers.
 ```typescript
 import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { config } from "./config";
+import { wagmiConfig } from "./config/wagmi";
 
-const queryClient = new QueryClient();
+// QueryClient created outside component for stability (important for React 19 + Wagmi v2)
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000, // 1 minute
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
-export function Web3Provider({ children }) {
+export function Providers({ children }) {
   return (
-    <WagmiProvider config={config}>
+    <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         {children}
       </QueryClientProvider>
@@ -72,18 +80,22 @@ export function Web3Provider({ children }) {
 ```
 
 **Notes:**
-- Every component beneath `Web3Provider` can use Wagmi hooks.
+- Every component beneath `Providers` can use Wagmi hooks.
 - React Query handles wallet + contract query caching.
+- **Important:** QueryClient must be created outside the component to ensure stability with React 19 and Wagmi v2 (prevents "Provider not found" errors).
+- QueryClientProvider must be inside WagmiProvider (Wagmi v2 requirement).
 
 **Usage in `main.tsx`:**
 ```typescript
-import { Web3Provider } from "./provider";
+import { Providers } from "./provider";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <Web3Provider>
-      <App />
-    </Web3Provider>
+    <Providers>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </Providers>
   </StrictMode>
 );
 ```
@@ -121,14 +133,17 @@ export function Connect() {
 ```
 
 **Files:**
-- `frontend/src/components/Connect.tsx` - Main component
-- `frontend/src/components/Connect.css` - Styled with light/dark mode support
+- `frontend/src/components/Connect.tsx` - Main component (refactored to use TailwindCSS + shadcn/ui)
+- ~~`frontend/src/components/Connect.css`~~ - Removed (replaced with TailwindCSS utilities)
 
 **Notes:**
 - Wagmi automatically detects MetaMask via `window.ethereum`.
 - No custom connectors or external wallet SDKs needed.
 - Uses injected connector (first available connector from Wagmi).
 - Integrated into `App.tsx` in prominent location.
+- **Updated (Task 4.4b):** Now uses shadcn/ui Card and Button components with TailwindCSS utilities.
+- **Dark mode:** Enabled by default via `class="dark"` on `<html>` element in `index.html`.
+- **Provider fix:** QueryClient is created outside component to ensure stability with React 19 and Wagmi v2.
 
 ---
 
@@ -271,11 +286,17 @@ frontend/
  ├── src/
  │   ├── config/
  │   │   └── wagmi.ts        # Wagmi config (Task 4.3 ✅)
- │   ├── provider.tsx         # Web3Provider wrapper (Task 4.3 ✅)
+ │   ├── provider.tsx         # Providers wrapper (Task 4.3 ✅)
  │   ├── components/
  │   │   ├── Connect.tsx      # Wallet connection UI (Task 4.4 ✅)
- │   │   └── Connect.css      # Component styles (Task 4.4 ✅)
+ │   │   └── ui/              # shadcn/ui components (Task 4.4b ✅)
+ │   │       ├── button.tsx
+ │   │       ├── card.tsx
+ │   │       ├── input.tsx
+ │   │       ├── form.tsx
+ │   │       └── label.tsx
  │   ├── lib/
+ │   │   ├── utils.ts         # Tailwind className utilities (Task 4.4b ✅)
  │   │   └── wallet/          # Wallet-related utilities (future)
  │   │       └── hooks.ts     # Custom hooks for contract interactions (future)
  │   └── features/
@@ -359,14 +380,17 @@ export function ChainSwitcher() {
 
 ## Implementation Status
 
-✅ **Completed (Task 4.1-4.4):**
+✅ **Completed (Task 4.1-4.4b):**
 1. ✅ Installed dependencies: `wagmi`, `viem`, `@tanstack/react-query`
 2. ✅ Created `src/config/wagmi.ts` with chain configuration (Hardhat + Sepolia)
-3. ✅ Created `src/provider.tsx` with WagmiProvider wrapper
+3. ✅ Created `src/provider.tsx` with WagmiProvider wrapper (fixed for React 19 compatibility)
 4. ✅ Created `src/components/Connect.tsx` for wallet connection UI
-5. ✅ Created `src/components/Connect.css` with styling and light/dark mode support
-6. ✅ Wrapped app with `Providers` in `main.tsx`
-7. ✅ Integrated Connect component into `App.tsx`
+5. ✅ Migrated to TailwindCSS + shadcn/ui (Task 4.4b)
+   - Removed `src/components/Connect.css` (now using Tailwind utilities)
+   - Refactored Connect.tsx to use shadcn/ui Card and Button components
+6. ✅ Enabled dark mode by default (`class="dark"` on `<html>` element)
+7. ✅ Wrapped app with `Providers` in `main.tsx`
+8. ✅ Integrated Connect component into `App.tsx`
 
 ⏳ **To Implement (Future Tasks):**
 - Use Wagmi hooks (`useWriteContract`, `useReadContract`) for contract interactions

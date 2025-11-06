@@ -18,6 +18,7 @@
 
     /* Paths */
     "paths": {
+      "@/*": ["./src/*"],
       "@chain-equity/contracts/*": ["../contracts/*"]
     },
 

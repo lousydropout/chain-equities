@@ -24,10 +24,12 @@
 - **Purpose**: Event indexer + read-only API
 
 ### Frontend Layer
-- **Framework**: React + TypeScript (Next.js optional)
-- **Wallet**: wagmi v2 + viem
-- **State Management**: @tanstack/react-query
-- **Styling**: tailwindcss + shadcn/ui
+- **Framework**: React 19 + TypeScript + Vite
+- **Wallet**: wagmi v2.5.0 + viem v2.12.0
+- **State Management**: @tanstack/react-query v5.90.7
+- **Styling**: TailwindCSS v3.4.18 + shadcn/ui (Task 4.4b ✅)
+- **UI Components**: shadcn/ui (Button, Card, Input, Form, Label)
+- **Dark Mode**: Enabled by default (class-based, TailwindCSS)
 - **Purpose**: Admin dashboard + Shareholder dashboard
 
 ## Development Environment

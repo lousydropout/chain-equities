@@ -4,7 +4,8 @@
  */
 
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import './Connect.css';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 /**
  * Formats an Ethereum address for display
@@ -26,7 +27,8 @@ export function Connect() {
   const { disconnect } = useDisconnect();
 
   // Get the injected connector (MetaMask)
-  const injectedConnector = connectors[0];
+  // Ensure connectors are available before accessing
+  const injectedConnector = connectors && connectors.length > 0 ? connectors[0] : null;
 
   // Handle connect button click
   const handleConnect = () => {
@@ -60,51 +62,68 @@ export function Connect() {
   // Determine if there's an error
   const hasError = !!connectError;
 
-  return (
-    <div className="connect-card">
-      <div className="connect-header">
-        <h3>Wallet Connection</h3>
-        <span
-          className={`connect-status ${isConnected ? 'status-connected' : hasError ? 'status-error' : 'status-disconnected'}`}
-        >
-          {getStatusMessage()}
-        </span>
-      </div>
+  // Get status badge className
+  const getStatusBadgeClass = (): string => {
+    if (isConnected) {
+      return 'bg-green-500/20 text-green-500';
+    }
+    if (hasError) {
+      return 'bg-red-500/20 text-red-500';
+    }
+    return 'bg-gray-500/20 text-gray-500';
+  };
 
-      {isConnected && address ? (
-        <div className="connect-content">
-          <div className="connect-address">
-            <span className="address-label">Address:</span>
-            <span className="address-value" title={address}>
-              {formatAddress(address)}
-            </span>
-          </div>
-          <button
-            onClick={handleDisconnect}
-            className="connect-button disconnect-button"
+  return (
+    <Card className="mb-6">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Wallet Connection</CardTitle>
+          <span
+            className={`px-3 py-1 rounded-md text-sm font-medium ${getStatusBadgeClass()}`}
           >
-            Disconnect
-          </button>
+            {getStatusMessage()}
+          </span>
         </div>
-      ) : (
-        <div className="connect-content">
-          <p className="connect-description">
-            Connect your MetaMask wallet to interact with the blockchain.
-          </p>
-          <button
-            onClick={handleConnect}
-            disabled={isConnecting || isPending || !injectedConnector}
-            className="connect-button connect-button-primary"
-          >
-            {isConnecting || isPending ? 'Connecting…' : 'Connect Wallet'}
-          </button>
-          {hasError && (
-            <div className="connect-error">
-              <p>{connectError.message || 'Failed to connect wallet'}</p>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isConnected && address ? (
+          <>
+            <div className="flex items-center gap-2 p-3 bg-muted rounded-md font-mono text-sm">
+              <span className="text-muted-foreground">Address:</span>
+              <span className="text-primary font-semibold" title={address}>
+                {formatAddress(address)}
+              </span>
             </div>
-          )}
-        </div>
-      )}
-    </div>
+            <Button
+              onClick={handleDisconnect}
+              variant="destructive"
+              className="w-full"
+            >
+              Disconnect
+            </Button>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground">
+              Connect your MetaMask wallet to interact with the blockchain.
+            </p>
+            <Button
+              onClick={handleConnect}
+              disabled={isConnecting || isPending || !injectedConnector}
+              className="w-full"
+            >
+              {isConnecting || isPending ? 'Connecting…' : 'Connect Wallet'}
+            </Button>
+            {hasError && (
+              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                <p className="text-sm text-destructive">
+                  {connectError.message || 'Failed to connect wallet'}
+                </p>
+              </div>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }

@@ -1001,6 +1001,84 @@ This document provides a detailed breakdown of all implementation tasks organize
   - TypeScript: `cd frontend && bunx tsc --noEmit`
   - Build: `cd frontend && bun run build`
 
+### Task 4.4b: Switch to TailwindCSS and shadcn/ui ✅
+
+- [x] Install TailwindCSS:
+  - [x] Run: `bun add -d tailwindcss postcss autoprefixer`
+  - [x] Run: `bunx tailwindcss init -p`
+  - [x] Configure `tailwind.config.js`:
+    - [x] Set `content: ['./index.html', './src/**/*.{ts,tsx}']`
+    - [x] Enable `darkMode: 'class'`
+  - [x] Replace `src/index.css` contents with Tailwind base layers
+- [x] Install and initialize shadcn/ui:
+  - [x] Run: `bunx shadcn@latest init` (created `components.json` manually for composite TS setup)
+  - [x] Run: `bunx shadcn@latest add button card input form`
+  - [x] Verify shadcn components placed under `src/components/ui/`
+  - [x] Verify paths work with Vite and TypeScript (added `@/*` alias to `tsconfig.app.json` and `vite.config.ts`)
+- [x] Update project references:
+  - [x] Remove old component-specific `.css` imports (removed `Connect.css`, `App.css`)
+  - [x] Refactor existing components to use shadcn/ui components and Tailwind utility classes:
+    - [x] `Connect.tsx` - Refactored to use shadcn/ui Button and Card components with Tailwind utilities
+    - [x] `App.tsx` - Refactored to use shadcn/ui Card components and Tailwind utilities
+  - [x] Ensure color palette matches default Tailwind theme (configured shadcn CSS variables in `index.css`)
+- [x] Verify build:
+  - [x] Run `bun run build` and confirm Tailwind classes compile correctly
+  - [x] All TypeScript compilation passes
+- [x] Documentation:
+  - [x] Update task list summary noting:
+    - [x] TailwindCSS + shadcn/ui integrated
+    - [x] Old CSS patterns deprecated
+    - [x] Subsequent tasks (4.5+) to follow new styling conventions
+- **Deliverable:** TailwindCSS configured and working, shadcn/ui initialized with core components, index.css converted to Tailwind base, no plain CSS dependencies remain ✅
+- **Status:** Complete - TailwindCSS v3.4.18 and shadcn/ui fully integrated with all components migrated
+- **Summary:**
+  - Installed TailwindCSS v3.4.18 (downgraded from v4 for shadcn/ui compatibility) with PostCSS and Autoprefixer
+  - Configured `tailwind.config.js` with content paths and dark mode support
+  - Added shadcn/ui CSS variables and theme configuration to `index.css`
+  - Created `components.json` manually for composite TypeScript setup
+  - Added `@/*` path alias to both `tsconfig.app.json` and `vite.config.ts`
+  - Installed shadcn/ui core components: Button, Card, Input, Form, Label
+  - Refactored `Connect.tsx` to use shadcn/ui Card and Button components with Tailwind utilities
+  - Refactored `App.tsx` to use shadcn/ui Card component and Tailwind utilities
+  - Removed all old CSS files (`Connect.css`, `App.css`)
+  - All components now use TailwindCSS utility classes and shadcn/ui components
+  - Build verified: TypeScript compilation passes, Vite build succeeds
+- **Files Created/Modified:**
+  - `frontend/tailwind.config.js` (new) - TailwindCSS configuration with shadcn theme
+  - `frontend/postcss.config.js` (new) - PostCSS configuration
+  - `frontend/components.json` (new) - shadcn/ui configuration
+  - `frontend/src/index.css` (modified) - Replaced with Tailwind directives and shadcn CSS variables
+  - `frontend/src/components/ui/button.tsx` (new) - shadcn/ui Button component
+  - `frontend/src/components/ui/card.tsx` (new) - shadcn/ui Card component
+  - `frontend/src/components/ui/input.tsx` (new) - shadcn/ui Input component
+  - `frontend/src/components/ui/form.tsx` (new) - shadcn/ui Form component
+  - `frontend/src/components/ui/label.tsx` (new) - shadcn/ui Label component
+  - `frontend/src/lib/utils.ts` (new) - Utility function for className merging
+  - `frontend/src/components/Connect.tsx` (modified) - Refactored to use shadcn/ui components
+  - `frontend/src/App.tsx` (modified) - Refactored to use shadcn/ui components and Tailwind
+  - `frontend/vite.config.ts` (modified) - Added path alias for `@/*`
+  - `frontend/tsconfig.app.json` (modified) - Added path alias for `@/*`
+  - `frontend/src/contexts/AuthContext.tsx` (modified) - Fixed TypeScript errors (type-only imports)
+  - `frontend/src/components/Connect.css` (deleted) - Removed old CSS file
+  - `frontend/src/App.css` (deleted) - Removed old CSS file
+- **Dependencies Added:**
+  - `tailwindcss@^3.4.18` (dev)
+  - `postcss@^8.5.6` (dev)
+  - `autoprefixer@^10.4.21` (dev)
+  - `clsx@^2.1.1`
+  - `tailwind-merge@^3.3.1`
+  - `@radix-ui/react-slot@^1.2.4`
+  - `@radix-ui/react-label@^2.1.8`
+  - `class-variance-authority@^0.7.1`
+- **Test Commands:**
+  - Build: `cd frontend && bun run build`
+  - TypeScript: `cd frontend && bunx tsc --noEmit`
+  - Dev: `cd frontend && bun run dev`
+- **Post-Implementation Notes:**
+  - Fixed Wagmi provider error: QueryClient now created outside component for React 19 compatibility
+  - Dark mode enabled by default: Added `class="dark"` to `<html>` element in `index.html`
+  - All components now use TailwindCSS utilities and shadcn/ui components
+
 ### Task 4.5: Login/Register Pages (Demo - Simulated)
 
 - [ ] Create `frontend/src/pages/Login.tsx`

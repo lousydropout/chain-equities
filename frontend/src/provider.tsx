@@ -11,6 +11,7 @@ import type { ReactNode } from 'react';
 /**
  * QueryClient instance with default options
  * Configured for optimal React Query behavior
+ * Created outside component to ensure stability across renders
  */
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,6 +25,9 @@ const queryClient = new QueryClient({
 /**
  * Providers component that wraps the app with Wagmi and React Query providers
  * @param children - React children to wrap
+ * 
+ * @note In Wagmi v2, QueryClientProvider must be inside WagmiProvider
+ * and the QueryClient should be stable across renders
  */
 export function Providers({ children }: { children: ReactNode }) {
   return (

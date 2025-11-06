@@ -7,10 +7,9 @@
 
 import {
   createContext,
-  useContext,
   useState,
   useEffect,
-  ReactNode,
+  type ReactNode,
 } from 'react';
 import type { AuthContext as AuthContextType } from '../types/auth';
 import { DEMO_USER } from '../types/auth';
@@ -18,7 +17,6 @@ import {
   getAuthUser,
   setAuthUser,
   removeAuthUser,
-  getAuthToken,
   setAuthToken,
   removeAuthToken,
 } from '../lib/auth';
