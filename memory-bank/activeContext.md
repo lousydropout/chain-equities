@@ -203,14 +203,16 @@
      - All tests passing: TypeScript compiles, Prettier formatting works, ESLint integration verified, build succeeds
      - Dev server tested and working (Vite running on port 5173)
    - Mock Auth Setup complete (Task 4.2) ✅
-     - Created auth types (`types/auth.ts`) with AuthContext interface and DEMO_USER constant matching backend
+     - Created auth types (`types/auth.ts`) with AuthContext interface and DEMO_USERS constant
+     - Multiple demo users added: admin (admin role), alice/bob/charlie (investor role)
+     - Created `getDemoUser()` helper function for user lookup by username or email
      - Created AuthContext provider (`contexts/AuthContext.tsx`) with login/logout and localStorage persistence
+     - Updated login function to accept username/email parameter for selecting demo user
      - Created useAuth hook (`hooks/useAuth.ts`) for accessing auth context
      - Created auth utilities (`lib/auth.ts`) with token and user storage helpers
      - Integrated AuthProvider in main.tsx wrapping the app
      - Updated App.tsx with demo UI showing login/logout buttons, user info (email, role, UID), and authentication state
      - All files formatted, TypeScript compilation verified, no linting errors
-     - Demo user matches backend exactly: { uid: 'demo-user', email: 'demo@example.com', role: 'issuer' }
      - localStorage persistence for auth state across page refreshes
      - No Firebase SDK integration (deferred to post-demo)
    - Wagmi Configuration complete (Task 4.3) ✅
@@ -239,13 +241,20 @@
      - Added ProtectedRoute component to redirect unauthenticated users
      - Created AuthRedirect component to redirect authenticated users away from auth pages
      - Created Home.tsx placeholder page (includes Connect component)
-     - Both pages accept any valid credentials and return demo user (issuer role)
+     - Both pages allow selecting demo user via quick login buttons or email/username entry
+     - Login page displays quick login buttons for admin, alice, bob, and charlie
      - Added demo mode notes under Card components explaining simulated authentication
      - All forms use shadcn/ui Form components with TailwindCSS styling
      - Fixed zod version compatibility (downgraded to v3.25.76 for react-hook-form compatibility)
      - Routes: /login, /register, / (protected home)
    - Protected Route Wrapper complete (Task 4.6) ✅
-     - ProtectedRoute component checks authentication via useAuth()
+     - ProtectedRoute component enhanced with role-based and wallet-based access control
+     - Added requiredRole, requireWallet, and redirectTo props
+     - Integrated useAccount() hook from Wagmi for wallet connection checks
+     - Created example routes: /admin (admin role), /investor (investor role), /wallet-required (wallet required)
+     - Demo users added for testing: admin (admin role), alice/bob/charlie (investor role)
+     - Login page updated with quick login buttons for each demo user
+     - ProtectedRoute checks authentication via useAuth()
      - Redirects unauthenticated users to /login
      - Shows loading state during auth check
      - Applied to home route (/) in App.tsx

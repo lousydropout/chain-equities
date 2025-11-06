@@ -9,6 +9,9 @@ import { useAuth } from './hooks/useAuth';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Home } from './pages/Home';
+import { Admin } from './pages/Admin';
+import { Investor } from './pages/Investor';
+import { WalletRequired } from './pages/WalletRequired';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 /**
@@ -61,6 +64,33 @@ function App() {
         element={
           <ProtectedRoute>
             <Home />
+          </ProtectedRoute>
+        }
+      />
+      {/* Admin-only route - requires admin role */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <Admin />
+          </ProtectedRoute>
+        }
+      />
+      {/* Investor-only route - requires investor role */}
+      <Route
+        path="/investor"
+        element={
+          <ProtectedRoute requiredRole="investor">
+            <Investor />
+          </ProtectedRoute>
+        }
+      />
+      {/* Wallet-required route - requires connected wallet */}
+      <Route
+        path="/wallet-required"
+        element={
+          <ProtectedRoute requireWallet={true}>
+            <WalletRequired />
           </ProtectedRoute>
         }
       />

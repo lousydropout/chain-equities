@@ -1116,22 +1116,60 @@ This document provides a detailed breakdown of all implementation tasks organize
   - TypeScript: `cd frontend && bunx tsc --noEmit`
   - Dev: `cd frontend && bun run dev`
 
-### Task 4.6: Protected Route Wrapper ✅
+### Task 4.6: ProtectedRoute Enhancements (Auth + Role + Wallet Checks) ✅
 
-- [x] Create `frontend/src/components/ProtectedRoute.tsx`
-- [x] Check authentication status (via useAuth hook)
-- [x] Redirect to login if not authenticated
-- [x] Show loading state
-- [x] Apply to protected routes (implemented in Task 4.5)
-- **Deliverable:** Route protection ✅
-- **Status:** Complete - ProtectedRoute component created and integrated in Task 4.5
+- [x] Enhance `frontend/src/components/ProtectedRoute.tsx` with role and wallet checks
+- [x] Add `requiredRole` prop for role-based access control
+- [x] Add `requireWallet` prop for wallet connection requirement
+- [x] Add `redirectTo` prop for custom redirect path (default: '/login')
+- [x] Integrate `useAccount()` hook from Wagmi for wallet connection status
+- [x] Implement role-based access control (admin, issuer, investor)
+- [x] Implement wallet-based access control
+- [x] Show loading state during auth and wallet checks
+- [x] Add example routes in App.tsx demonstrating all protection types
+- [x] Create placeholder pages for /admin, /investor, /wallet-required
+- **Deliverable:** Enhanced route protection with role and wallet checks ✅
+- **Status:** Complete - ProtectedRoute enhanced with role-based and wallet-based access control
 - **Summary:**
-  - ProtectedRoute component checks authentication via useAuth()
-  - Redirects unauthenticated users to /login
-  - Shows loading state during auth check
-  - Applied to home route (/) in App.tsx
-- **Files Created:**
-  - `frontend/src/components/ProtectedRoute.tsx` (created in Task 4.5)
+  - ProtectedRoute component enhanced with optional role and wallet requirements
+  - Supports `requiredRole?: 'admin' | 'issuer' | 'investor'` prop for role-based access
+  - Supports `requireWallet?: boolean` prop for wallet connection requirement
+  - Supports `redirectTo?: string` prop for custom redirect path (defaults to '/login')
+  - Checks authentication via useAuth() hook
+  - Checks wallet connection via useAccount() hook from Wagmi
+  - Redirects unauthenticated users to redirectTo (default: '/login')
+  - Redirects users with wrong role to home ('/')
+  - Redirects users without wallet (when requireWallet=true) to home ('/') where Connect component is displayed
+  - Shows loading state with spinner during auth and wallet status checks
+  - Applied to multiple routes in App.tsx demonstrating different protection scenarios
+- **Files Created/Modified:**
+  - `frontend/src/components/ProtectedRoute.tsx` (enhanced) - Added role and wallet checks
+  - `frontend/src/App.tsx` (modified) - Added example routes: /admin (admin role), /investor (investor role), /wallet-required (wallet required)
+  - `frontend/src/pages/Admin.tsx` (new) - Admin-only page demonstrating role-based protection
+  - `frontend/src/pages/Investor.tsx` (new) - Investor-only page demonstrating role-based protection
+  - `frontend/src/pages/WalletRequired.tsx` (new) - Wallet-required page demonstrating wallet-based protection
+- **Features:**
+  - Authentication check (required)
+  - Role-based access control (optional, via requiredRole prop)
+  - Wallet connection check (optional, via requireWallet prop)
+  - Custom redirect path (optional, via redirectTo prop)
+  - Loading states during auth and wallet checks
+  - Proper redirect handling for all access control scenarios
+- **Testing Scenarios:**
+  - ✅ Unauthenticated user → redirected to /login
+  - ✅ Authenticated user with wrong role → redirected to home
+  - ✅ Authenticated user without wallet (requireWallet=true) → redirected to home where Connect component is displayed
+  - ✅ All conditions valid → page renders normally
+  - ✅ Loading states display correctly during checks
+- **Demo Users Added:**
+  - Multiple demo users created for testing role-based access control:
+    - **Admin** (`admin@chainequity.com`) - admin role (deploys cap table)
+    - **Alice** (`alice@chainequity.com`) - investor role
+    - **Bob** (`bob@chainequity.com`) - investor role
+    - **Charlie** (`charlie@chainequity.com`) - investor role
+  - Login page updated with quick login buttons for each demo user
+  - Users can log in by clicking quick login buttons or entering email/username in login form
+  - All users stored in `DEMO_USERS` constant in `frontend/src/types/auth.ts`
 
 ### Task 4.7: API Client Setup
 

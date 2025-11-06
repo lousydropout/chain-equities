@@ -599,6 +599,40 @@ async function issueShares(companyId: string, to: string, amount: bigint) {
 
 ---
 
+## Demo Mode - Mock Authentication
+
+### Demo Users
+
+For demo and testing purposes, the frontend includes predefined demo users that can be used to test role-based access control:
+
+| Username | Email                    | Role     | Description                    |
+| -------- | ------------------------- | -------- | ------------------------------ |
+| admin    | admin@chainequity.com    | admin    | Deploys/manages cap table      |
+| alice    | alice@chainequity.com    | investor | Investor shareholder           |
+| bob      | bob@chainequity.com       | investor | Investor shareholder           |
+| charlie  | charlie@chainequity.com   | investor | Investor shareholder           |
+
+### Demo Login
+
+In demo mode, users can log in by:
+
+1. **Quick Login Buttons**: Click one of the quick login buttons on the login page
+2. **Email/Username Entry**: Enter any of the usernames or email addresses in the login form
+
+The demo users are defined in `frontend/src/types/auth.ts` in the `DEMO_USERS` constant. The `getDemoUser()` helper function allows lookup by username or email address.
+
+### Demo Authentication Flow
+
+1. User selects a demo user (via button or form entry)
+2. Frontend calls `login(usernameOrEmail)` with the selected identifier
+3. `AuthContext` uses `getDemoUser()` to find the matching user
+4. User is set in context and persisted to localStorage
+5. Protected routes can now check user role and access permissions
+
+**Note**: Demo mode uses mock authentication. In production, this will be replaced with Firebase Authentication integration.
+
+---
+
 ## Summary
 
 | Layer         | Role                                  | Technology               |

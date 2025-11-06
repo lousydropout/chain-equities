@@ -12,7 +12,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { AuthContext as AuthContextType } from '../types/auth';
-import { DEMO_USER } from '../types/auth';
+import { getDemoUser } from '../types/auth';
 import {
   getAuthUser,
   setAuthUser,
@@ -28,7 +28,7 @@ interface AuthContextValue {
   user: AuthContextType | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: () => Promise<void>;
+  login: (emailOrUsername?: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -77,20 +77,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   /**
-   * Simulate login - sets demo user
+   * Simulate login - sets demo user based on email or username
+   * @param emailOrUsername - Email address or username (admin, alice, bob, charlie)
    * @note Post-Demo: Replace with Firebase Auth signIn
    */
-  const login = async (): Promise<void> => {
+  const login = async (emailOrUsername?: string): Promise<void> => {
     setIsLoading(true);
     try {
       // Simulate async operation (e.g., API call)
       await new Promise(resolve => setTimeout(resolve, 300));
 
+      // Get demo user by email/username, or default to alice
+      const user = emailOrUsername
+        ? getDemoUser(emailOrUsername)
+        : getDemoUser('alice');
+
+      if (!user) {
+        throw new Error(
+          `User not found. Use: admin, alice, bob, or charlie (or their email addresses)`
+        );
+      }
+
       // Set demo user
-      setUser(DEMO_USER);
+      setUser(user);
 
       // Persist to localStorage
-      setAuthUser(JSON.stringify(DEMO_USER));
+      setAuthUser(JSON.stringify(user));
       // Set a mock token for API calls
       setAuthToken('demo-token');
     } catch (error) {

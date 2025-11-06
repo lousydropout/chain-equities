@@ -21,6 +21,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { DEMO_USERS } from '@/types/auth';
 
 /**
  * Login form schema validation
@@ -47,14 +48,28 @@ export function Login() {
     },
   });
 
-  const onSubmit = async (_data: LoginFormValues) => {
+  const onSubmit = async (data: LoginFormValues) => {
     try {
-      await login();
+      // Use email field to determine which user to log in as
+      // Accepts: email addresses or usernames (admin, alice, bob, charlie)
+      await login(data.email);
       // Redirect to home after successful login
       navigate('/');
     } catch (error) {
       console.error('Login failed:', error);
       // Error is handled by form state, but we can set a form-level error if needed
+      form.setError('root', {
+        message: error instanceof Error ? error.message : 'Login failed',
+      });
+    }
+  };
+
+  const handleQuickLogin = async (username: string) => {
+    try {
+      await login(username);
+      navigate('/');
+    } catch (error) {
+      console.error('Login failed:', error);
       form.setError('root', {
         message: error instanceof Error ? error.message : 'Login failed',
       });
@@ -132,10 +147,30 @@ export function Login() {
             </form>
           </Form>
           <div className="mt-4 p-3 bg-muted/50 border border-border rounded-md">
-            <p className="text-xs text-muted-foreground text-center">
-              <strong>Demo Mode:</strong> This is simulated authentication. Any valid
-              credentials will log you in as the demo user (issuer role). No actual user
-              accounts are created.
+            <p className="text-xs text-muted-foreground text-center mb-3">
+              <strong>Demo Mode:</strong> Enter an email or username to log in as a demo user.
+              Use quick login buttons below for easy access.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {Object.entries(DEMO_USERS).map(([username, user]) => (
+                <Button
+                  key={username}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleQuickLogin(username)}
+                  disabled={isLoading}
+                  className="text-xs"
+                >
+                  {username === 'admin' ? '👑 Admin' : `👤 ${username}`}
+                </Button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground text-center mt-3">
+              Or enter email/username in the form above:{' '}
+              {Object.values(DEMO_USERS)
+                .map(u => u.email)
+                .join(', ')}
             </p>
           </div>
         </CardContent>
