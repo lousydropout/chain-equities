@@ -158,6 +158,7 @@ async function getTransactions(
       LIMIT ? OFFSET ?
     `;
 
+    // Query result may have blockTimestamp as string or number (SQLite type coercion)
     const rows = query<{
       id: number;
       txHash: string;
@@ -165,23 +166,32 @@ async function getTransactions(
       toAddress: string | null;
       amount: string;
       blockNumber: number;
-      blockTimestamp: number | null;
+      blockTimestamp: number | string | null;
       logIndex: number;
       eventType: "ISSUED" | "TRANSFER";
     }>(sql, [...whereClause.params, limit, offset]);
 
     // Transform rows to response format
-    const transactions = rows.map((row) => ({
-      id: row.id,
-      txHash: row.txHash,
-      fromAddress: row.fromAddress,
-      toAddress: row.toAddress,
-      amount: row.amount,
-      blockNumber: row.blockNumber,
-      blockTimestamp: row.blockTimestamp,
-      logIndex: row.logIndex,
-      eventType: row.eventType,
-    }));
+    const transactions = rows.map((row) => {
+      // Ensure blockTimestamp is a number or null (SQLite may return as string)
+      let blockTimestamp: number | null = null;
+      if (row.blockTimestamp !== null && row.blockTimestamp !== undefined) {
+        const ts = Number(row.blockTimestamp);
+        blockTimestamp = isNaN(ts) ? null : ts;
+      }
+      
+      return {
+        id: row.id,
+        txHash: row.txHash,
+        fromAddress: row.fromAddress,
+        toAddress: row.toAddress,
+        amount: row.amount,
+        blockNumber: row.blockNumber,
+        blockTimestamp,
+        logIndex: row.logIndex,
+        eventType: row.eventType,
+      };
+    });
 
     reply.send({
       transactions,
@@ -225,6 +235,7 @@ async function getTransactionByHash(
     }
 
     // Query all transactions with matching hash
+    // Query result may have blockTimestamp as string or number (SQLite type coercion)
     const rows = query<{
       id: number;
       txHash: string;
@@ -232,7 +243,7 @@ async function getTransactionByHash(
       toAddress: string | null;
       amount: string;
       blockNumber: number;
-      blockTimestamp: number | null;
+      blockTimestamp: number | string | null;
       logIndex: number;
       eventType: "ISSUED" | "TRANSFER";
     }>(
@@ -265,19 +276,34 @@ async function getTransactionByHash(
     // All events in the same transaction have the same block_number and block_timestamp
     const firstRow = rows[0];
     const blockNumber = firstRow.blockNumber;
-    const blockTimestamp = firstRow.blockTimestamp;
+    
+    // Ensure blockTimestamp is a number or null (SQLite may return as string)
+    let blockTimestamp: number | null = null;
+    if (firstRow.blockTimestamp !== null && firstRow.blockTimestamp !== undefined) {
+      const ts = Number(firstRow.blockTimestamp);
+      blockTimestamp = isNaN(ts) ? null : ts;
+    }
 
     // Transform rows to response format
-    const transactions = rows.map((row) => ({
-      id: row.id,
-      fromAddress: row.fromAddress,
-      toAddress: row.toAddress,
-      amount: row.amount,
-      blockNumber: row.blockNumber,
-      blockTimestamp: row.blockTimestamp,
-      logIndex: row.logIndex,
-      eventType: row.eventType,
-    }));
+    const transactions = rows.map((row) => {
+      // Ensure blockTimestamp is a number or null (SQLite may return as string)
+      let ts: number | null = null;
+      if (row.blockTimestamp !== null && row.blockTimestamp !== undefined) {
+        const num = Number(row.blockTimestamp);
+        ts = isNaN(num) ? null : num;
+      }
+      
+      return {
+        id: row.id,
+        fromAddress: row.fromAddress,
+        toAddress: row.toAddress,
+        amount: row.amount,
+        blockNumber: row.blockNumber,
+        blockTimestamp: ts,
+        logIndex: row.logIndex,
+        eventType: row.eventType,
+      };
+    });
 
     reply.send({
       txHash,

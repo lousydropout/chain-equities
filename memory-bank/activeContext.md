@@ -6,6 +6,40 @@
 
 ## Recent Work
 
+### Task 4.18: Transactions Page Implementation ✅
+
+- **Status**: Complete - Transactions page fully implemented with sorting, formatting, and backend fix
+- **Location**: `frontend/src/pages/Transactions.tsx`, `frontend/src/App.tsx`, `backend/src/routes/transactions.ts`
+- **Key Features**:
+  - **Transactions Table**: Desktop-only table displaying all indexed blockchain transactions
+  - **Columns**: Tx Hash (with copy button), From, To, Amount, Block #, Event Type (badge), Date
+  - **Client-Side Sorting**: All columns sortable with default sort by blockNumber descending (most recent first)
+  - **Formatting**: 
+    - Addresses truncated using `formatAddress()` (e.g., "0x1234…5678")
+    - Amounts formatted using `formatTokenAmount()` with proper decimals
+    - Dates formatted from Unix timestamps using `formatDate()`
+    - Event types displayed as badges (ISSUED vs TRANSFER with different colors)
+  - **Copy Functionality**: Transaction hash copy button with "Copied!" visual feedback (2 seconds)
+  - **Loading States**: Skeleton component with animated pulse
+  - **Error Handling**: Error state with retry button
+  - **Navigation**: "Back to Dashboard" button and company name/symbol in header
+  - **Route**: `/transactions` added to App.tsx with ProtectedRoute wrapper
+- **Backend Fix**:
+  - **Issue**: Fastify schema validation failed because `blockTimestamp` was stored as TEXT (hex strings like "0x690cfbe8") but schema expected integer
+  - **Root Cause**: SQLite stores INTEGER values, but when retrieved with column aliases, they may be returned as strings. The indexer stores blockTimestamp as hex strings.
+  - **Solution**: Added explicit type conversion in `getTransactions()` and `getTransactionByHash()` to convert hex strings to numbers using `Number()` with NaN check
+  - **Implementation**: 
+    - Updated query result types to accept `number | string | null` for blockTimestamp
+    - Added conversion logic: `Number(row.blockTimestamp)` with `isNaN()` check, returns `null` if invalid
+    - Applied to both list and detail endpoints
+- **Files Created/Modified**:
+  - `frontend/src/pages/Transactions.tsx` (new) - Main transactions page with table and sorting
+  - `frontend/src/App.tsx` (modified) - Added `/transactions` route
+  - `backend/src/routes/transactions.ts` (modified) - Fixed blockTimestamp type conversion
+- **Test Commands**:
+  - Frontend: Visit `http://localhost:5173/transactions` after login
+  - Backend: `curl "http://localhost:4000/api/transactions?limit=10"` (requires server restart after fix)
+
 ### Bug Fix: Dashboard Stats Cards Auto-Refresh ✅
 
 - **Status**: Complete - Fixed query key mismatch preventing dashboard stats from refreshing after share issuance

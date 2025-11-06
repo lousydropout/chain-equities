@@ -874,7 +874,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~3 weeks
 
-**Status:** ⏳ In Progress (Task 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10, 4.11, 4.12, 4.13, 4.14, 4.15 complete)
+**Status:** ⏳ In Progress (Task 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10, 4.11, 4.12, 4.13, 4.14, 4.15, 4.18 complete)
 
 **Dependencies:** Phase 3 complete
 
@@ -1540,6 +1540,42 @@ This document provides a detailed breakdown of all implementation tasks organize
   - `backend/src/db/seeds/users.ts` (modified) - Updated display names to remove "Investor" suffix
   - `backend/scripts/update-display-names.ts` (new) - Script to update existing database records
   - `frontend/src/pages/Approvals.tsx` (modified) - Added copy buttons and handlers for wallet addresses
+
+### Task 4.18: Transactions Page Implementation ✅
+
+- [x] Create `Transactions.tsx` modeled after `CapTable.tsx`
+  - [x] Use `useTransactionsData()` to fetch data
+  - [x] Display columns: `txHash`, `fromAddress`, `toAddress`, `amount`, `blockNumber`, `eventType`, `blockTimestamp` (date)
+  - [x] Add client-side sorting on all columns (default: blockNumber descending)
+  - [x] Add copy button for transaction hash with visual feedback
+  - [x] Format addresses, amounts, and dates using utility functions
+  - [x] Use Badge component for event types (ISSUED vs TRANSFER)
+- [x] Add route to `App.tsx` with ProtectedRoute wrapper
+- [x] Add loading skeleton and error states
+- [x] Add "Back to Dashboard" navigation button
+- [x] Display company name/symbol in header
+- [x] Fix backend schema validation issue for blockTimestamp (hex string to number conversion)
+- **Deliverable:** Working `/transactions` page accessible from dashboard ✅
+- **Status:** Complete - Transactions page fully implemented with sorting, formatting, and backend fix
+- **Summary:**
+  - Created `Transactions.tsx` page component with comprehensive transaction table
+  - Implemented client-side sorting on all columns (txHash, fromAddress, toAddress, amount, blockNumber, eventType, blockTimestamp)
+  - Added copy button for transaction hash with "Copied!" feedback
+  - Formatted all columns: addresses (truncated), amounts (with decimals), dates (from timestamps), event types (badges)
+  - Added route to App.tsx with ProtectedRoute wrapper
+  - Fixed backend schema validation issue: blockTimestamp stored as TEXT (hex strings like "0x690cfbe8") needed conversion to number
+  - Backend fix: Added explicit conversion in `getTransactions()` and `getTransactionByHash()` to convert hex strings to numbers
+- **Files Created/Modified:**
+  - `frontend/src/pages/Transactions.tsx` (new) - Main transactions page with table and sorting
+  - `frontend/src/App.tsx` (modified) - Added `/transactions` route
+  - `backend/src/routes/transactions.ts` (modified) - Fixed blockTimestamp type conversion (hex string to number)
+- **Backend Fix:**
+  - Issue: Fastify schema validation failed because blockTimestamp was stored as TEXT (hex strings) but schema expected integer
+  - Solution: Added explicit conversion in response transformation to convert hex strings to numbers using `Number()` with NaN check
+  - Updated query result types to accept `number | string | null` for blockTimestamp to handle SQLite type coercion
+- **Test Commands:**
+  - Frontend: Visit `http://localhost:5173/transactions` after login
+  - Backend: `curl "http://localhost:4000/api/transactions?limit=10"` (requires server restart after fix)
 
 ### Phase 4 Acceptance Criteria
 

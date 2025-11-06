@@ -10,6 +10,7 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { CapTable } from './pages/CapTable';
+import { Transactions } from './pages/Transactions';
 import { Approvals } from './pages/Approvals';
 import { Admin } from './pages/Admin';
 import { Investor } from './pages/Investor';
@@ -103,6 +104,15 @@ function App() {
         element={
           <ProtectedRoute>
             <CapTable />
+          </ProtectedRoute>
+        }
+      />
+      {/* Transactions route - displays transaction history */}
+      <Route
+        path="/transactions"
+        element={
+          <ProtectedRoute>
+            <Transactions />
           </ProtectedRoute>
         }
       />
