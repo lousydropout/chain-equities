@@ -1,82 +1,29 @@
 /**
- * @file Tests for authentication middleware with role-based access control
- * @notice Validates requireAuth, requireRole, and requireAnyRole middleware
+ * @file Tests for mock authentication middleware (demo mode)
+ * @notice Validates requireAuth returns demo user and deferred middlewares allow requests
  */
 
 import { describe, it, expect, beforeEach, mock } from "bun:test";
-import { Database } from "bun:sqlite";
 import type { FastifyRequest, FastifyReply } from "fastify";
 import {
   requireAuth,
   requireRole,
   requireAnyRole,
   requireWalletSignature,
-  setDatabase,
-  setFirebaseAuth,
-  type AuthContext,
 } from "../../middleware/auth";
-import { USERS_TABLE_SCHEMA } from "../../db/schema";
-import { createUser } from "../../services/db/users";
 
-// Mock Firebase Auth
-const mockFirebaseAuth = {
-  verifyIdToken: mock(async (token: string) => {
-    if (token === "valid-token") {
-      return {
-        uid: "test-uid-123",
-        email: "test@example.com",
-      };
-    }
-    if (token === "valid-token-issuer") {
-      return {
-        uid: "test-uid-issuer",
-        email: "issuer@example.com",
-      };
-    }
-    if (token === "valid-token-admin") {
-      return {
-        uid: "test-uid-admin",
-        email: "admin@example.com",
-      };
-    }
-    throw new Error("Invalid token");
-  }),
-};
-
-describe("Authentication Middleware", () => {
-  let db: Database;
+describe("Mock Authentication Middleware (Demo Mode)", () => {
   let mockRequest: Partial<FastifyRequest>;
   let mockReply: Partial<FastifyReply>;
+  let sendMock: ReturnType<typeof mock>;
+  let codeMock: ReturnType<typeof mock>;
 
   beforeEach(() => {
-    // Create in-memory database
-    db = new Database(":memory:");
-    db.exec(USERS_TABLE_SCHEMA);
-
-    // Set up database and Firebase auth in middleware
-    setDatabase(db);
-    setFirebaseAuth(mockFirebaseAuth);
-
-    // Create test users
-    createUser(db, {
-      uid: "test-uid-123",
-      email: "test@example.com",
-      displayName: "Test User",
-      role: "investor",
-    });
-
-    createUser(db, {
-      uid: "test-uid-issuer",
-      email: "issuer@example.com",
-      displayName: "Issuer User",
-      role: "issuer",
-    });
-
-    createUser(db, {
-      uid: "test-uid-admin",
-      email: "admin@example.com",
-      displayName: "Admin User",
-      role: "admin",
+    sendMock = mock((payload: any) => payload);
+    codeMock = mock((statusCode: number) => {
+      return {
+        send: sendMock,
+      } as unknown as FastifyReply;
     });
 
     // Mock request and reply objects
@@ -87,19 +34,15 @@ describe("Authentication Middleware", () => {
     };
 
     mockReply = {
-      code: mock((statusCode: number) => {
-        return {
-          send: mock((payload: any) => ({ statusCode, payload })),
-        } as FastifyReply;
-      }),
-      send: mock((payload: any) => payload),
+      code: codeMock,
+      send: sendMock,
     };
   });
 
   describe("requireAuth", () => {
-    it("successfully authenticates user and fetches role from database", async () => {
+    it("attaches demo user to request when Authorization header is present", async () => {
       mockRequest.headers = {
-        authorization: "Bearer valid-token",
+        authorization: "Bearer any-token",
       };
 
       await requireAuth(
@@ -108,14 +51,14 @@ describe("Authentication Middleware", () => {
       );
 
       expect(mockRequest.user).toBeDefined();
-      expect(mockRequest.user?.uid).toBe("test-uid-123");
-      expect(mockRequest.user?.email).toBe("test@example.com");
-      expect(mockRequest.user?.role).toBe("investor");
+      expect(mockRequest.user?.uid).toBe("demo-user");
+      expect(mockRequest.user?.email).toBe("demo@example.com");
+      expect(mockRequest.user?.role).toBe("issuer");
     });
 
-    it("fetches issuer role from database", async () => {
+    it("always returns demo user with issuer role regardless of token", async () => {
       mockRequest.headers = {
-        authorization: "Bearer valid-token-issuer",
+        authorization: "Bearer different-token",
       };
 
       await requireAuth(
@@ -124,94 +67,39 @@ describe("Authentication Middleware", () => {
       );
 
       expect(mockRequest.user?.role).toBe("issuer");
-    });
-
-    it("fetches admin role from database", async () => {
-      mockRequest.headers = {
-        authorization: "Bearer valid-token-admin",
-      };
-
-      await requireAuth(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      );
-
-      expect(mockRequest.user?.role).toBe("admin");
+      expect(codeMock).not.toHaveBeenCalled();
     });
 
     it("returns 401 when Authorization header is missing", async () => {
       mockRequest.headers = {};
 
-      const result = await requireAuth(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      );
-
-      expect(mockReply.code).toHaveBeenCalledWith(401);
-    });
-
-    it("returns 401 when token is invalid", async () => {
-      mockRequest.headers = {
-        authorization: "Bearer invalid-token",
-      };
-
       await requireAuth(
         mockRequest as FastifyRequest,
         mockReply as FastifyReply
       );
 
-      expect(mockReply.code).toHaveBeenCalledWith(401);
-    });
-
-    it("returns 403 when user not found in database", async () => {
-      mockRequest.headers = {
-        authorization: "Bearer valid-token",
-      };
-
-      // Delete user from database
-      db.exec("DELETE FROM users WHERE uid = 'test-uid-123'");
-
-      await requireAuth(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      );
-
-      expect(mockReply.code).toHaveBeenCalledWith(403);
+      expect(codeMock).toHaveBeenCalledWith(401);
+      expect(sendMock).toHaveBeenCalledWith({
+        error: "Missing Authorization header",
+        message: "Authorization header is required",
+      });
+      expect(mockRequest.user).toBeUndefined();
     });
   });
 
-  describe("requireRole", () => {
-    beforeEach(() => {
-      // Set up authenticated user
-      mockRequest.user = {
-        uid: "test-uid-issuer",
-        email: "issuer@example.com",
-        role: "issuer",
-      };
-    });
-
-    it("allows access when user has required role", async () => {
-      const middleware = requireRole("issuer");
-      await middleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      );
-
-      // Should not call reply.code with 403
-      expect(mockReply.code).not.toHaveBeenCalledWith(403);
-    });
-
-    it("blocks access when user does not have required role", async () => {
+  describe("requireRole (Demo Mode - Stubbed)", () => {
+    it("allows all requests to pass through in demo mode", async () => {
       const middleware = requireRole("admin");
       await middleware(
         mockRequest as FastifyRequest,
         mockReply as FastifyReply
       );
 
-      expect(mockReply.code).toHaveBeenCalledWith(403);
+      // Should not block requests in demo mode
+      expect(codeMock).not.toHaveBeenCalled();
     });
 
-    it("returns 401 when user is not authenticated", async () => {
+    it("allows requests even without authenticated user in demo mode", async () => {
       mockRequest.user = undefined;
       const middleware = requireRole("issuer");
 
@@ -220,56 +108,24 @@ describe("Authentication Middleware", () => {
         mockReply as FastifyReply
       );
 
-      expect(mockReply.code).toHaveBeenCalledWith(401);
+      // Should not block requests in demo mode
+      expect(codeMock).not.toHaveBeenCalled();
     });
   });
 
-  describe("requireAnyRole", () => {
-    beforeEach(() => {
-      mockRequest.user = {
-        uid: "test-uid-issuer",
-        email: "issuer@example.com",
-        role: "issuer",
-      };
-    });
-
-    it("allows access when user has one of the required roles", async () => {
-      const middleware = requireAnyRole(["admin", "issuer"]);
-      await middleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      );
-
-      expect(mockReply.code).not.toHaveBeenCalledWith(403);
-    });
-
-    it("allows access when user has admin role", async () => {
-      mockRequest.user = {
-        uid: "test-uid-admin",
-        email: "admin@example.com",
-        role: "admin",
-      };
-
-      const middleware = requireAnyRole(["admin", "issuer"]);
-      await middleware(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      );
-
-      expect(mockReply.code).not.toHaveBeenCalledWith(403);
-    });
-
-    it("blocks access when user does not have any required role", async () => {
+  describe("requireAnyRole (Demo Mode - Stubbed)", () => {
+    it("allows all requests to pass through in demo mode", async () => {
       const middleware = requireAnyRole(["admin"]);
       await middleware(
         mockRequest as FastifyRequest,
         mockReply as FastifyReply
       );
 
-      expect(mockReply.code).toHaveBeenCalledWith(403);
+      // Should not block requests in demo mode
+      expect(codeMock).not.toHaveBeenCalled();
     });
 
-    it("returns 401 when user is not authenticated", async () => {
+    it("allows requests even without authenticated user in demo mode", async () => {
       mockRequest.user = undefined;
       const middleware = requireAnyRole(["admin", "issuer"]);
 
@@ -278,23 +134,34 @@ describe("Authentication Middleware", () => {
         mockReply as FastifyReply
       );
 
-      expect(mockReply.code).toHaveBeenCalledWith(401);
+      // Should not block requests in demo mode
+      expect(codeMock).not.toHaveBeenCalled();
     });
   });
 
-  describe("requireWalletSignature", () => {
-    beforeEach(() => {
+  describe("requireWalletSignature (Demo Mode - Stubbed)", () => {
+    it("allows all requests to pass through without signature verification", async () => {
       mockRequest.user = {
-        uid: "test-uid-123",
-        email: "test@example.com",
-        role: "investor",
-        wallet_address: "0x1234567890123456789012345678901234567890",
+        uid: "demo-user",
+        email: "demo@example.com",
+        role: "issuer",
       };
+      mockRequest.body = {};
+
+      await requireWalletSignature(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply
+      );
+
+      // Should not block requests in demo mode
+      expect(codeMock).not.toHaveBeenCalled();
     });
 
-    it("returns 400 when wallet is not linked", async () => {
+    it("allows requests even without wallet address in demo mode", async () => {
       mockRequest.user = {
-        ...mockRequest.user!,
+        uid: "demo-user",
+        email: "demo@example.com",
+        role: "issuer",
         wallet_address: undefined,
       };
 
@@ -303,25 +170,15 @@ describe("Authentication Middleware", () => {
         mockReply as FastifyReply
       );
 
-      expect(mockReply.code).toHaveBeenCalledWith(400);
-    });
-
-    it("returns 400 when message or signature is missing", async () => {
-      mockRequest.body = {};
-
-      await requireWalletSignature(
-        mockRequest as FastifyRequest,
-        mockReply as FastifyReply
-      );
-
-      expect(mockReply.code).toHaveBeenCalledWith(400);
+      // Should not block requests in demo mode
+      expect(codeMock).not.toHaveBeenCalled();
     });
   });
 
   describe("Middleware Composition", () => {
-    it("can chain requireAuth and requireRole", async () => {
+    it("can chain requireAuth and requireRole in demo mode", async () => {
       mockRequest.headers = {
-        authorization: "Bearer valid-token-issuer",
+        authorization: "Bearer any-token",
       };
 
       // First authenticate
@@ -331,22 +188,23 @@ describe("Authentication Middleware", () => {
       );
 
       expect(mockRequest.user).toBeDefined();
+      expect(mockRequest.user?.uid).toBe("demo-user");
       expect(mockRequest.user?.role).toBe("issuer");
 
-      // Then check role
-      const roleMiddleware = requireRole("issuer");
+      // Then check role (should pass in demo mode)
+      const roleMiddleware = requireRole("admin");
       await roleMiddleware(
         mockRequest as FastifyRequest,
         mockReply as FastifyReply
       );
 
-      // Should pass without errors
-      expect(mockReply.code).not.toHaveBeenCalledWith(403);
+      // Should pass without errors in demo mode
+      expect(codeMock).not.toHaveBeenCalled();
     });
 
-    it("can chain requireAuth and requireAnyRole", async () => {
+    it("can chain requireAuth and requireAnyRole in demo mode", async () => {
       mockRequest.headers = {
-        authorization: "Bearer valid-token-issuer",
+        authorization: "Bearer any-token",
       };
 
       await requireAuth(
@@ -354,13 +212,33 @@ describe("Authentication Middleware", () => {
         mockReply as FastifyReply
       );
 
-      const roleMiddleware = requireAnyRole(["admin", "issuer"]);
+      const roleMiddleware = requireAnyRole(["admin"]);
       await roleMiddleware(
         mockRequest as FastifyRequest,
         mockReply as FastifyReply
       );
 
-      expect(mockReply.code).not.toHaveBeenCalledWith(403);
+      // Should pass without errors in demo mode
+      expect(codeMock).not.toHaveBeenCalled();
+    });
+
+    it("can chain requireAuth and requireWalletSignature in demo mode", async () => {
+      mockRequest.headers = {
+        authorization: "Bearer any-token",
+      };
+
+      await requireAuth(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply
+      );
+
+      await requireWalletSignature(
+        mockRequest as FastifyRequest,
+        mockReply as FastifyReply
+      );
+
+      // Should pass without errors in demo mode
+      expect(codeMock).not.toHaveBeenCalled();
     });
   });
 });

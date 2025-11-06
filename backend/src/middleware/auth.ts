@@ -1,12 +1,11 @@
 /**
  * @file Unified authentication middleware for ChainEquity backend
- * @notice Handles Firebase JWT verification, wallet signature verification, and role-based access control
+ * @notice Demo mode: Mock authentication returning demo user with issuer role
+ * 
+ * @note Post-Demo: This will be replaced with Firebase JWT verification and real user management
  */
 
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { verifyMessage } from 'viem';
-import { Database } from 'bun:sqlite';
-import { getUserByUid } from '../services/db/users';
 import type { UserRole } from '../types/roles';
 
 /**
@@ -27,35 +26,21 @@ declare module 'fastify' {
 }
 
 /**
- * Firebase Admin auth instance (to be initialized by firebase service)
- * This will be set when Firebase Admin is configured
+ * Demo user constant - always returns issuer role for demo purposes
+ * @note Post-Demo: This will be replaced with real Firebase JWT verification
  */
-let firebaseAuth: any = null;
+const DEMO_USER: AuthContext = {
+  uid: 'demo-user',
+  email: 'demo@example.com',
+  role: 'issuer',
+};
 
 /**
- * Initialize Firebase Auth instance (called from firebase service)
- */
-export function setFirebaseAuth(authInstance: any) {
-  firebaseAuth = authInstance;
-}
-
-/**
- * Database instance (to be set by application initialization)
- */
-let db: Database | null = null;
-
-/**
- * Set database instance for user lookups
- */
-export function setDatabase(database: Database) {
-  db = database;
-}
-
-/**
- * Unified authentication middleware for Fastify
- * - Verifies Firebase ID token
- * - Fetches user role from database
- * - Attaches user context to request
+ * Mock authentication middleware for demo
+ * Returns a hardcoded demo user with issuer role
+ * No JWT verification or database lookups required
+ * 
+ * TODO: Replace mock auth with Firebase Admin verification after demo phase.
  * 
  * @param req Fastify request
  * @param reply Fastify reply
@@ -64,65 +49,25 @@ export async function requireAuth(
   req: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
-  try {
-    // Check for Authorization header
-    const header = req.headers.authorization;
-    if (!header) {
-      return reply.code(401).send({ error: 'Missing Authorization header' });
-    }
-
-    // Extract and verify Firebase JWT token
-    const token = header.replace('Bearer ', '');
-    
-    if (!firebaseAuth) {
-      return reply.code(500).send({ 
-        error: 'Firebase Auth not initialized',
-        message: 'Firebase Admin SDK must be configured before using auth middleware'
-      });
-    }
-
-    const decoded = await firebaseAuth.verifyIdToken(token);
-
-    // Fetch user role from database
-    if (!db) {
-      return reply.code(500).send({ 
-        error: 'Database not initialized',
-        message: 'Database must be initialized before using auth middleware'
-      });
-    }
-
-    const userRecord = getUserByUid(db, decoded.uid);
-
-    // If user doesn't exist in database, create with default investor role
-    // This handles first-time login after Firebase authentication
-    if (!userRecord) {
-      // Note: In production, you might want to handle this differently
-      // (e.g., require explicit user creation via admin endpoint)
-      return reply.code(403).send({ 
-        error: 'User not found',
-        message: 'User must be created in database before accessing API'
-      });
-    }
-
-    // Attach user context with role from database
-    req.user = {
-      uid: decoded.uid,
-      email: decoded.email || userRecord.email,
-      role: userRecord.role,
-      wallet_address: userRecord.wallet_address || undefined,
-    } as AuthContext;
-  } catch (err: any) {
-    reply.code(401).send({ 
-      error: 'Unauthorized', 
-      message: err.message 
+  // Check for Authorization header to maintain consistent API behavior
+  const header = req.headers.authorization;
+  if (!header) {
+    return reply.code(401).send({ 
+      error: 'Missing Authorization header',
+      message: 'Authorization header is required'
     });
   }
+
+  // Always attach demo user context (no token verification in demo mode)
+  req.user = DEMO_USER;
 }
 
 /**
  * Optional wallet verification step for sensitive routes
  * e.g., issuing or transferring shares
- * Requires that the user has linked a wallet address
+ * 
+ * TODO: Implement wallet signature verification after demo phase.
+ * For demo, this middleware allows all requests to pass through.
  * 
  * @param req Fastify request
  * @param reply Fastify reply
@@ -131,88 +76,43 @@ export async function requireWalletSignature(
   req: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
-  const body = req.body as { message?: string; signature?: `0x${string}` };
-  const { message, signature } = body;
-  const expectedAddress = req.user?.wallet_address;
-
-  if (!expectedAddress) {
-    return reply.code(400).send({ 
-      error: 'No wallet linked to this account' 
-    });
-  }
-
-  if (!message || !signature) {
-    return reply.code(400).send({ 
-      error: 'Missing message or signature' 
-    });
-  }
-
-  try {
-    const recovered = await verifyMessage({
-      message,
-      signature,
-      address: expectedAddress as `0x${string}`,
-    });
-
-    if (!recovered) {
-      return reply.code(403).send({ 
-        error: 'Invalid wallet signature' 
-      });
-    }
-  } catch (err: any) {
-    return reply.code(403).send({ 
-      error: 'Wallet signature verification failed',
-      message: err.message 
-    });
-  }
+  // Demo mode: Allow all requests without signature verification
+  // Post-demo: Verify signed message against linked wallet address
+  return;
 }
 
 /**
  * Role-based access control helper
  * Returns a middleware function that checks user role
  * 
- * @param role Required role
+ * TODO: Implement strict role checking after demo phase.
+ * For demo, this middleware allows all requests to pass through.
+ * 
+ * @param role Required role (not enforced in demo mode)
  * @returns Middleware function
  */
 export function requireRole(role: UserRole) {
   return async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
-    if (!req.user) {
-      return reply.code(401).send({ 
-        error: 'Unauthorized',
-        message: 'Authentication required' 
-      });
-    }
-
-    if (req.user.role !== role) {
-      return reply.code(403).send({ 
-        error: 'Forbidden',
-        message: `Requires ${role} role. Current role: ${req.user.role}` 
-      });
-    }
+    // Demo mode: Allow all requests without role checking
+    // Post-demo: Verify user has required role from database
+    return;
   };
 }
 
 /**
  * Alternative: require any of multiple roles
  * 
- * @param roles Array of allowed roles
+ * TODO: Implement strict role checking after demo phase.
+ * For demo, this middleware allows all requests to pass through.
+ * 
+ * @param roles Array of allowed roles (not enforced in demo mode)
  * @returns Middleware function
  */
 export function requireAnyRole(roles: UserRole[]) {
   return async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
-    if (!req.user) {
-      return reply.code(401).send({ 
-        error: 'Unauthorized',
-        message: 'Authentication required' 
-      });
-    }
-
-    if (!req.user.role || !roles.includes(req.user.role)) {
-      return reply.code(403).send({ 
-        error: 'Forbidden',
-        message: `Requires one of: ${roles.join(', ')}. Current role: ${req.user.role}` 
-      });
-    }
+    // Demo mode: Allow all requests without role checking
+    // Post-demo: Verify user has one of the required roles from database
+    return;
   };
 }
 

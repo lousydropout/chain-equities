@@ -299,8 +299,6 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Dependencies:** Phase 1 complete
 
-**Demo Track:** Focus on core API endpoints for single-company demo. Defer optimization and infrastructure tasks.
-
 ### Task 2.1: Scaffold Fastify Server ✅
 
 - [x] Initialize Fastify project structure
@@ -620,19 +618,20 @@ This document provides a detailed breakdown of all implementation tasks organize
 - **Test Commands:**
   - Run transaction route tests: `cd backend && bun test src/routes/__tests__/transactions.test.ts`
 
-### Task 2.9: REST API Routes - Corporate Actions (Demo Simplified)
+### Task 2.9: REST API Routes - Corporate Actions
 
 - [ ] Create `backend/src/routes/corporate-actions.ts`
-- [ ] Implement endpoints:
-  - [ ] `GET /api/corporate-actions` - Get corporate actions (single company, basic read-only)
-  - [ ] ~~`GET /api/snapshots/:block` - Get historical cap table~~ (Deferred: Post-Demo)
-- [ ] Query database for indexed corporate actions
-- [ ] Skip: Snapshots, filtering, pagination (deferred to post-demo)
+- [x] Implement endpoints:
+  - [ ] `GET /api/corporate-actions` - Get corporate actions (single company)
+  - [ ] `GET /api/snapshots/:block` - Get historical cap table
+- [x] Query CapTable contract for corporate actions
+- [ ] Add filtering and pagination
+- [ ] Include split history
 - [x] Add error handling
 - [x] Write route tests
-- **Deliverable:** Basic corporate actions API endpoint for demo
+- **Deliverable:** Corporate actions API endpoints (single company)
 
-### Task 2.10: Background Rescan Service ⏸️ **Deferred (Post-Demo)**
+### Task 2.10: Background Rescan Service
 
 - [ ] Create `backend/src/services/chain/rescan.ts`
 - [ ] Implement rescan logic:
@@ -645,7 +644,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 - [ ] Handle errors gracefully
 - **Deliverable:** Background rescan service
 
-### Task 2.11: API Documentation ⏸️ **Deferred (Post-Demo)**
+### Task 2.11: API Documentation
 
 - [ ] Set up Swagger/OpenAPI documentation
 - [ ] Document all endpoints:
@@ -658,7 +657,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 - [ ] Add to README
 - **Deliverable:** Complete API documentation
 
-### Task 2.12: Integration Testing ⏸️ **Deferred (Post-Demo)**
+### Task 2.12: Integration Testing
 
 - [ ] Set up integration test environment
 - [ ] Test full flow:
@@ -681,19 +680,17 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 ---
 
-## 🔐 Phase 3 — Authentication & Access Control (Demo Simplified)
+## 🔐 Phase 3 — Authentication & Access Control
 
-**Goal:** Minimal auth for demo - mock authentication with demo user (issuer role).
+**Goal:** Secure the backend with Firebase and optional wallet linking.
 
-**Duration:** ~3 days
+**Duration:** ~1.5 weeks
 
-**Status:** ⏳ In Progress (Task 3.2 complete)
+**Status:** ⏳ Pending
 
 **Dependencies:** Phase 2 complete
 
-**Demo Track:** Simplified to mock auth middleware. Firebase Admin, wallet linking, and full RBAC deferred to post-demo.
-
-### Task 3.1: Firebase Admin Setup ⏸️ **Deferred (Post-Demo)**
+### Task 3.1: Firebase Admin Setup
 
 - [ ] Install `firebase-admin` package
 - [ ] Create `backend/src/services/firebase.ts`
@@ -708,43 +705,27 @@ This document provides a detailed breakdown of all implementation tasks organize
 - [ ] Test Firebase Admin connection
 - **Deliverable:** Firebase Admin configured
 
-### Task 3.2: Mock Auth Middleware (Demo Simplified) ✅
+### Task 3.2: Unified Auth Middleware
 
-- [x] Create/update `backend/src/middleware/auth.ts`
-- [x] Implement mock `requireAuth()` middleware:
-  - [x] Return demo user with issuer role (no JWT verification)
-  - [x] Attach user context to request
-  - [x] Handle errors gracefully (401 if Authorization header missing)
-- [x] Skip: Firebase Admin integration (deferred)
-- [x] Skip: Wallet signature verification (deferred - stubbed to allow all requests)
-- [x] Skip: Real role-based enforcement (deferred - stubbed to allow all requests)
-- [x] Add TypeScript types for `AuthContext`
-- [x] Write middleware tests
-- **Deliverable:** Mock auth middleware returning demo user ✅
-- **Status:** Complete - Mock authentication middleware implemented with demo user, all deferred middlewares stubbed, comprehensive tests passing
-- **Summary:**
-  - Simplified `requireAuth()` to return hardcoded demo user: `{ uid: "demo-user", email: "demo@example.com", role: "issuer" }`
-  - Removed Firebase JWT verification and database lookups
-  - Stubbed `requireWalletSignature()`, `requireRole()`, and `requireAnyRole()` to allow all requests in demo mode
-  - Preserved `AuthContext` type and Fastify type extensions for `req.user`
-  - Added TODO comments marking post-demo implementation points
-  - Updated all tests to verify mock behavior (12 tests passing)
-- **Files Created/Modified:**
-  - `backend/src/middleware/auth.ts` (modified) - Simplified to mock auth with demo user
-  - `backend/src/__tests__/middleware/auth.test.ts` (modified) - Updated tests for mock auth behavior
-- **Test Results:**
-  - 12 tests passing, 21 assertions
-  - Tests verify demo user attachment, Authorization header validation, and deferred middleware passthrough
-- **Test Commands:**
-  - Run auth middleware tests: `cd backend && bun test src/__tests__/middleware/auth.test.ts`
+- [ ] Create `backend/src/middleware/auth.ts`
+- [ ] Implement `requireAuth()` middleware:
+  - [ ] Extract JWT from Authorization header
+  - [ ] Verify token with Firebase Admin
+  - [ ] Attach user context to request
+  - [ ] Handle errors gracefully
+- [ ] Implement `requireWalletSignature()` middleware:
+  - [ ] Verify signed message
+  - [ ] Check wallet linkage
+  - [ ] Validate signature
+- [ ] Implement `requireRole()` helper:
+  - [ ] Check user role
+  - [ ] Return 403 if unauthorized
+- [ ] Implement `requireAnyRole()` helper
+- [ ] Add TypeScript types for `AuthContext`
+- [ ] Write middleware tests
+- **Deliverable:** Unified auth middleware complete
 
-### Task 3.3: User Database Schema (Keep Structure, Skip Real Management)
-
-- [x] Users table structure exists (verified)
-- [ ] Skip: Real user management endpoints
-- [ ] Skip: Wallet linking to users
-- [ ] Document: Users table kept for structure, but real user management deferred
-- **Deliverable:** Users table structure preserved, real management deferred
+### Task 3.3: User Database Schema
 
 - [ ] Extend database schema:
   - [ ] Add `users` table (if not exists)
@@ -759,7 +740,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 - [ ] Write database migration
 - **Deliverable:** User database schema ready
 
-### Task 3.4: Wallet Linking Endpoint ⏸️ **Deferred (Post-Demo)**
+### Task 3.4: Wallet Linking Endpoint
 
 - [ ] Create `backend/src/routes/wallet.ts`
 - [ ] Implement `POST /api/wallet/link`:
@@ -776,7 +757,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 - [x] Write route tests
 - **Deliverable:** Wallet linking endpoints
 
-### Task 3.5: Role-Based Access Control ⏸️ **Deferred (Post-Demo)**
+### Task 3.5: Role-Based Access Control
 
 - [ ] Apply RBAC to all routes:
   - [ ] Admin routes (company creation, system settings)
@@ -790,7 +771,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 - [ ] Document role requirements
 - **Deliverable:** RBAC enforced across API
 
-### Task 3.6: User Management Endpoints ⏸️ **Deferred (Post-Demo)**
+### Task 3.6: User Management Endpoints
 
 - [ ] Create `backend/src/routes/users.ts`
 - [x] Implement endpoints:
@@ -802,7 +783,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 - [x] Write route tests
 - **Deliverable:** User management endpoints
 
-### Task 3.7: Seed Admin/Issuer Roles ⏸️ **Deferred (Post-Demo)**
+### Task 3.7: Seed Admin/Issuer Roles
 
 - [ ] Create seed script:
   - [ ] Create admin user
@@ -813,7 +794,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 - [ ] Document seed data
 - **Deliverable:** Seed script for testing
 
-### Task 3.8: Authentication Tests ⏸️ **Deferred (Post-Demo)**
+### Task 3.8: Authentication Tests
 
 - [ ] Write tests for:
   - [ ] JWT verification
@@ -825,14 +806,14 @@ This document provides a detailed breakdown of all implementation tasks organize
 - [ ] Test unauthorized access
 - **Deliverable:** Comprehensive auth tests
 
-### Phase 3 Acceptance Criteria (Demo Simplified)
+### Phase 3 Acceptance Criteria
 
-- ✅ Mock auth middleware returning demo user
-- ✅ Basic requireAuth middleware working
-- ✅ Routes can use mock auth (optional for demo)
-- ⏸️ Firebase Admin (deferred)
-- ⏸️ Full RBAC enforcement (deferred)
-- ⏸️ Wallet linking (deferred)
+- ✅ Firebase Admin integrated
+- ✅ Unified auth middleware working
+- ✅ All routes protected with authentication
+- ✅ Role-based access control enforced
+- ✅ Wallet linking functional
+- ✅ Seed data for testing
 
 ---
 
@@ -860,13 +841,15 @@ This document provides a detailed breakdown of all implementation tasks organize
 - [ ] Configure build scripts
 - **Deliverable:** Frontend project scaffolded
 
-### Task 4.2: Mock Auth Setup (Frontend, Demo Simplified)
+### Task 4.2: Firebase Auth Setup (Frontend)
 
-- [ ] Create mock auth context/hook (no Firebase SDK needed for demo)
-- [ ] Simulate login/logout
-- [ ] Return demo user (issuer role) for demo purposes
-- [ ] Skip: Real Firebase Auth integration (deferred)
-- **Deliverable:** Simulated auth UI for demo
+- [ ] Install Firebase SDK
+- [ ] Create `frontend/src/config/firebase.ts`
+- [ ] Initialize Firebase app
+- [ ] Set up Firebase Auth
+- [ ] Configure environment variables
+- [ ] Create auth context/hook
+- **Deliverable:** Firebase Auth configured
 
 ### Task 4.3: Wagmi Configuration
 
@@ -893,19 +876,19 @@ This document provides a detailed breakdown of all implementation tasks organize
 - [ ] Style components
 - **Deliverable:** Wallet connection UI
 
-### Task 4.5: Login/Register Pages (Demo - Simulated)
+### Task 4.5: Login/Register Pages
 
 - [ ] Create `frontend/src/pages/Login.tsx`
 - [ ] Create `frontend/src/pages/Register.tsx`
-- [ ] Implement simulated auth (no Firebase backend):
-  - [ ] Simple login form (demo mode)
-  - [ ] Return demo user on "login"
+- [ ] Implement Firebase Auth:
+  - [ ] Email/password login
+  - [ ] Registration
   - [ ] Error handling
   - [ ] Loading states
 - [ ] Add form validation
 - [ ] Style pages
 - [ ] Add routing
-- **Deliverable:** Simulated authentication pages for demo
+- **Deliverable:** Authentication pages
 
 ### Task 4.6: Protected Route Wrapper
 
@@ -1053,17 +1036,15 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 ---
 
-## 🧮 Phase 5 — Indexing & Data Optimization ⏸️ **Deferred (Post-Demo)**
+## 🧮 Phase 5 — Indexing & Data Optimization
 
 **Goal:** Improve performance and reliability.
 
 **Duration:** ~1 week
 
-**Status:** ⏸️ Deferred
+**Status:** ⏳ Pending
 
 **Dependencies:** Phase 4 complete
-
-**Note:** Entire phase deferred to focus on demo delivery.
 
 ### Task 5.1: Pagination Implementation
 
@@ -1150,17 +1131,15 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 ---
 
-## 🧰 Phase 6 — DevOps & Tooling ⏸️ **Deferred (Post-Demo)**
+## 🧰 Phase 6 — DevOps & Tooling
 
 **Goal:** Make builds, tests, and deployments reproducible.
 
 **Duration:** ~1 week
 
-**Status:** ⏸️ Deferred
+**Status:** ⏳ Pending
 
 **Dependencies:** Phase 5 complete
-
-**Note:** Entire phase deferred to focus on demo delivery.
 
 ### Task 6.1: Environment Management
 
@@ -1265,7 +1244,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Status:** ⏳ Pending
 
-**Dependencies:** Phase 4 complete (moved up in demo track)
+**Dependencies:** Phase 6 complete
 
 ### Task 7.1: Dashboard Redesign
 
@@ -1472,26 +1451,23 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 ## Summary
 
-**Total Estimated Duration (Demo Track):** ~8-9 weeks
+**Total Estimated Duration:** ~12-14 weeks
 
-**Demo Track Phases:**
+**Phases:**
 
-1. Contracts Foundation (2 weeks) ✅
-2. Backend API + Event Indexer (2 weeks) - Core endpoints only
-3. Authentication & Access Control (3 days) - Mock auth only
+1. Contracts Foundation (2 weeks)
+2. Backend API + Event Indexer (2 weeks)
+3. Authentication & Access Control (1.5 weeks)
 4. Frontend MVP (3 weeks)
-5. UX & Enterprise Polish (2 weeks) - **Moved up for demo**
+5. Indexing & Data Optimization (1 week)
+6. DevOps & Tooling (1 week)
+7. UX & Enterprise Polish (2 weeks)
+8. Production Readiness (ongoing, optional)
 
-**Deferred Phases (Post-Demo):**
+**Critical Path:**
 
-- Phase 5: Indexing & Data Optimization (pagination, caching, etc.)
-- Phase 6: DevOps & Tooling (CI/CD, Docker, etc.)
-- Phase 8: Production Readiness (ongoing, optional)
-
-**Demo Track Critical Path:**
-
-- Phase 1 → Phase 2 → Phase 3 (simplified) → Phase 4 → Phase 7 (moved up)
-- Phase 5, 6, 8 deferred until after demo
+- Phase 1 → Phase 2 → Phase 3 → Phase 4 (must be sequential)
+- Phase 5-8 can be parallelized or done incrementally
 
 **Key Milestones:**
 
