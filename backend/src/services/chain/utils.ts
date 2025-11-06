@@ -21,12 +21,14 @@ export async function safeRead<T>(
     return result as T;
   } catch (err) {
     // Log error for debugging but don't throw
-    console.error("Contract read failed:", {
-      address: config.address,
-      functionName: config.functionName,
-      error: err instanceof Error ? err.message : String(err),
-    });
+    // Suppress logging in test environment to avoid noise from intentionally mocked errors
+    if (process.env.NODE_ENV !== "test") {
+      console.error("Contract read failed:", {
+        address: config.address,
+        functionName: config.functionName,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
     return null;
   }
 }
-

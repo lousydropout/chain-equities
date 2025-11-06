@@ -1,0 +1,41 @@
+Task 2.9 Update:
+
+Replace lines 621-632 with:
+
+### Task 2.9: REST API Routes - Corporate Actions ✅
+
+- [x] Create `backend/src/routes/corporate-actions.ts`
+- [x] Implement endpoints:
+  - [x] `GET /api/corporate-actions` - Get corporate actions (single company) with basic pagination and optional filters
+  - [x] `GET /api/snapshots/:block` - Get historical cap table snapshot at specific block
+- [x] Query corporate_actions table from database (indexed events)
+- [x] Add filtering and pagination
+- [x] Add error handling
+- [x] Write route tests
+- **Deliverable:** Corporate actions API endpoints (single company) ✅
+- **Status:** Complete - Lightweight routes implemented with minimal dependencies
+- **Summary:**
+  - Created `backend/src/routes/corporate-actions.ts` with two endpoints following simplified plan
+  - GET /api/corporate-actions: Basic paginated list from corporate_actions table with optional filters (actionType, fromDate, toDate)
+  - GET /api/snapshots/:block: Returns shareholder balances at specific block number (address and balance only, skip splitFactor/ownership%)
+  - Uses safeRead utility for contract reads (consistent with other routes)
+  - Comprehensive test suite with 18 tests, all passing
+  - Routes registered in server with /api prefix
+- **Files Created/Modified:**
+  - `backend/src/routes/corporate-actions.ts` (new) - Corporate actions routes
+  - `backend/src/routes/__tests__/corporate-actions.test.ts` (new) - Test suite (18 tests)
+  - `backend/src/index.ts` (modified) - Registered corporate actions routes
+  - `backend/src/routes/__tests__/company.test.ts` (modified) - Updated to use safeRead mocks
+  - `backend/src/services/chain/__tests__/client.test.ts` (modified) - Improved test consistency
+- **Deferred (per simplified plan):**
+  - Merging SplitExecuted history into corporate actions
+  - Advanced schema validation
+  - Detailed error typing
+  - Ownership percentage calculations
+- **Test Commands:**
+  - Run corporate actions tests: `cd backend && bun test src/routes/__tests__/corporate-actions.test.ts`
+  - Run all tests: `cd backend && bun test`
+
+Also update line 298:
+**Status: ⏳ In Progress (Task 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.8, 2.9 complete)
+

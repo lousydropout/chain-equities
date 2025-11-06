@@ -3,21 +3,24 @@
  * @notice Validates GET /api/company and GET /api/company/metadata endpoints
  */
 
-import { describe, it, expect, beforeEach, mock, spyOn } from "bun:test";
+import { describe, it, expect, beforeEach, mock } from "bun:test";
 import Fastify from "fastify";
 import { companyRoutes } from "../company";
-import { getPublicClient } from "../../services/chain/client";
-import { CONTRACTS } from "../../config/contracts";
 
-// Mock the client module
-const mockReadContract = mock();
-const mockPublicClient = {
-  readContract: mockReadContract,
-};
+// Mock the database module (if needed)
+const mockQuery = mock();
+const mockQueryOne = mock();
 
-// Mock getPublicClient
+// Mock the chain client module
+const mockGetPublicClient = mock();
+const mockSafeRead = mock();
+
 mock.module("../../services/chain/client", () => ({
-  getPublicClient: () => mockPublicClient,
+  getPublicClient: mockGetPublicClient,
+}));
+
+mock.module("../../services/chain/utils", () => ({
+  safeRead: mockSafeRead,
 }));
 
 // Mock the contracts config
@@ -42,8 +45,14 @@ describe("Company Routes", () => {
     // Register company routes with /api prefix
     app.register(companyRoutes, { prefix: "/api" });
 
-    // Reset mock between tests
-    mockReadContract.mockReset();
+    // Create a mock public client object
+    const mockPublicClient = {
+      // Mock public client object
+    };
+
+    // Reset mocks between tests
+    mockGetPublicClient.mockReturnValue(mockPublicClient);
+    mockSafeRead.mockReset();
   });
 
   describe("GET /api/company", () => {
@@ -56,7 +65,7 @@ describe("Company Routes", () => {
         BigInt(1725349933),
       ];
 
-      mockReadContract.mockResolvedValue(mockCompanyInfo);
+      mockSafeRead.mockResolvedValue(mockCompanyInfo);
 
       const response = await app.inject({
         method: "GET",
@@ -76,11 +85,14 @@ describe("Company Routes", () => {
         isTokenLinked: true,
       });
 
-      expect(mockReadContract).toHaveBeenCalledWith({
-        address: "0x1234567890123456789012345678901234567890",
-        abi: [],
-        functionName: "getCompanyInfo",
-      });
+      expect(mockSafeRead).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          address: "0x1234567890123456789012345678901234567890",
+          abi: [],
+          functionName: "getCompanyInfo",
+        })
+      );
     });
 
     it("should handle unlinked token gracefully (null token address)", async () => {
@@ -92,7 +104,7 @@ describe("Company Routes", () => {
         BigInt(1725349933),
       ];
 
-      mockReadContract.mockResolvedValue(mockCompanyInfo);
+      mockSafeRead.mockResolvedValue(mockCompanyInfo);
 
       const response = await app.inject({
         method: "GET",
@@ -114,7 +126,7 @@ describe("Company Routes", () => {
     });
 
     it("should return 404 when contract read fails", async () => {
-      mockReadContract.mockResolvedValue(null);
+      mockSafeRead.mockResolvedValue(null);
 
       const response = await app.inject({
         method: "GET",
@@ -131,7 +143,8 @@ describe("Company Routes", () => {
     });
 
     it("should return 404 when contract read throws an error (safeRead catches and returns null)", async () => {
-      mockReadContract.mockRejectedValue(new Error("Network error"));
+      // safeRead catches errors internally and returns null, so we mock it to return null
+      mockSafeRead.mockResolvedValue(null);
 
       const response = await app.inject({
         method: "GET",
@@ -151,7 +164,7 @@ describe("Company Routes", () => {
 
   describe("GET /api/company/metadata", () => {
     it("should return company metadata when all contract reads succeed", async () => {
-      mockReadContract
+      mockSafeRead
         .mockResolvedValueOnce("Acme Inc.") // name
         .mockResolvedValueOnce("ACME") // symbol
         .mockResolvedValueOnce("0x1111111111111111111111111111111111111111" as `0x${string}`) // owner
@@ -176,11 +189,11 @@ describe("Company Routes", () => {
         token: "0x2222222222222222222222222222222222222222",
       });
 
-      expect(mockReadContract).toHaveBeenCalledTimes(6);
+      expect(mockSafeRead).toHaveBeenCalledTimes(6);
     });
 
     it("should handle unlinked token gracefully in metadata endpoint", async () => {
-      mockReadContract
+      mockSafeRead
         .mockResolvedValueOnce("Acme Inc.") // name
         .mockResolvedValueOnce("ACME") // symbol
         .mockResolvedValueOnce("0x1111111111111111111111111111111111111111" as `0x${string}`) // owner
@@ -207,7 +220,7 @@ describe("Company Routes", () => {
     });
 
     it("should return 404 when critical fields fail to read", async () => {
-      mockReadContract
+      mockSafeRead
         .mockResolvedValueOnce(null) // name fails
         .mockResolvedValueOnce("ACME") // symbol
         .mockResolvedValueOnce("0x1111111111111111111111111111111111111111" as `0x${string}`) // owner
@@ -230,7 +243,8 @@ describe("Company Routes", () => {
     });
 
     it("should return 404 when contract read throws an error (safeRead catches and returns null)", async () => {
-      mockReadContract.mockRejectedValue(new Error("Network error"));
+      // safeRead catches errors internally and returns null, so we mock it to return null
+      mockSafeRead.mockResolvedValue(null);
 
       const response = await app.inject({
         method: "GET",
@@ -248,7 +262,7 @@ describe("Company Routes", () => {
     });
 
     it("should handle missing createdAt gracefully", async () => {
-      mockReadContract
+      mockSafeRead
         .mockResolvedValueOnce("Acme Inc.") // name
         .mockResolvedValueOnce("ACME") // symbol
         .mockResolvedValueOnce("0x1111111111111111111111111111111111111111" as `0x${string}`) // owner

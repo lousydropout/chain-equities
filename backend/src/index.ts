@@ -11,6 +11,8 @@ import { migrate } from './db/migrations';
 import { Indexer } from './services/chain/indexer';
 import { companyRoutes } from './routes/company';
 import { shareholdersRoutes } from './routes/shareholders';
+import { transactionsRoutes } from './routes/transactions';
+import { corporateActionsRoutes } from './routes/corporate-actions';
 
 // Get port from environment variable, default to 4000
 const PORT = Number(process.env.PORT) || 4000;
@@ -70,6 +72,8 @@ const start = async () => {
     // Register API routes
     await fastify.register(companyRoutes, { prefix: '/api' });
     await fastify.register(shareholdersRoutes, { prefix: '/api' });
+    await fastify.register(transactionsRoutes, { prefix: '/api' });
+    await fastify.register(corporateActionsRoutes, { prefix: '/api' });
 
     // Health check endpoint
     fastify.get('/ping', async (request, reply) => {

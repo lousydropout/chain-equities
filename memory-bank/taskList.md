@@ -295,7 +295,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~2 weeks
 
-**Status: ⏳ In Progress (Task 2.1, 2.2, 2.3, 2.4, 2.5, 2.6 complete)
+**Status: ⏳ In Progress (Task 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.8 complete)
 
 **Dependencies:** Phase 1 complete
 
@@ -588,19 +588,35 @@ This document provides a detailed breakdown of all implementation tasks organize
 - [x] Write route tests
 - **Deliverable:** Shareholders API endpoints (single company)
 
-### Task 2.8: REST API Routes - Transactions
+### Task 2.8: REST API Routes - Transactions ✅
 
-- [ ] Create `backend/src/routes/transactions.ts`
+- [x] Create `backend/src/routes/transactions.ts`
 - [x] Implement endpoints:
-  - [ ] `GET /api/transactions` - Get transaction history (single company)
-  - [ ] `GET /api/transactions/:txHash` - Get transaction details
-- [ ] Query indexed events from database
-- [ ] Add filtering (by type, date, address)
-- [ ] Add pagination
-- [ ] Include transaction metadata
+  - [x] `GET /api/transactions` - Get transaction history (single company)
+  - [x] `GET /api/transactions/:txHash` - Get transaction details
+- [x] Query indexed events from database
+- [x] Add filtering (by type, date, address)
+- [x] Add pagination
+- [x] Include transaction metadata
 - [x] Add error handling
 - [x] Write route tests
-- **Deliverable:** Transactions API endpoints (single company)
+- **Deliverable:** Transactions API endpoints (single company) ✅
+- **Status:** Complete - REST API routes for transaction history implemented with comprehensive filtering, pagination, and test coverage
+- **Summary:**
+  - Created `backend/src/routes/transactions.ts` with two endpoints: GET /api/transactions and GET /api/transactions/:txHash
+  - Implemented comprehensive filtering: eventType (ISSUED/TRANSFER), address (from/to), date range (fromDate/toDate)
+  - Added pagination with configurable limit (default 50, max 100) and offset
+  - Full transaction metadata included: txHash, fromAddress, toAddress, amount, blockNumber, blockTimestamp, logIndex, eventType
+  - Complete error handling: 400 for invalid parameters, 404 for not found, 500 for server errors
+  - Fastify response schema validation for both endpoints
+  - Comprehensive test suite: 22 tests passing, covering all filters, pagination, validation, and error scenarios
+- **Files Created/Modified:**
+  - `backend/src/routes/transactions.ts` (new) - Transaction routes with filtering and pagination
+  - `backend/src/routes/__tests__/transactions.test.ts` (new) - Comprehensive test suite (22 tests)
+  - `backend/src/index.ts` (modified) - Registered transactions routes
+  - `backend/src/services/chain/utils.ts` (modified) - Suppressed error logging in test mode
+- **Test Commands:**
+  - Run transaction route tests: `cd backend && bun test src/routes/__tests__/transactions.test.ts`
 
 ### Task 2.9: REST API Routes - Corporate Actions
 
