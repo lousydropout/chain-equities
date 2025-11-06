@@ -282,6 +282,18 @@
      - Route: `/cap-table` added to App.tsx with ProtectedRoute wrapper
      - Real-time data from API (no hardcoded values)
      - Proper ownership percentage calculation using API data or fallback
+   - Shareholder Table Component complete (Task 4.10) ✅
+     - Created reusable `ShareholderTable.tsx` component extracted from CapTable
+     - Props: `shareholders`, `totalOutstanding` (bigint), `decimals` (optional), `defaultSort` (optional)
+     - Client-side sorting on all columns (Address, Balance, Effective Balance, Ownership %, Last Block)
+     - Sort indicators (ArrowUp/ArrowDown) with clickable headers
+     - Default sort: ownership % descending (configurable)
+     - Progress bar visualization for ownership percentages (width represents stake)
+     - Tooltip for "Effective Balance" column explaining share splits
+     - Same styling: monospace fonts, zebra-striping, desktop-only layout
+     - Refactored CapTable.tsx to use ShareholderTable component
+     - Type-safe implementation using existing Shareholder type
+     - Route: `/cap-table` accessible for testing
 
 ### Planned Enhancements
 
@@ -323,8 +335,9 @@
 24. ✅ Frontend API client setup complete (Task 4.7) - Composable API client, typed functions, React Query hooks
 25. ✅ Create frontend company dashboard page (Task 4.8) - Complete with stats endpoint, formatting, tooltips, navigation
 26. ✅ Create frontend cap table page (Task 4.9) - Desktop-only table with real data, formatting, navigation
-27. ⏳ Create frontend admin dashboard UI
-28. ⏳ Create frontend shareholder dashboard UI
+27. ✅ Create frontend shareholder table component (Task 4.10) - Reusable component with client-side sorting and progress bars
+28. ⏳ Create frontend admin dashboard UI
+29. ⏳ Create frontend shareholder dashboard UI
 
 ### Company Dashboard (Task 4.8) ✅
 

@@ -856,7 +856,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~3 weeks
 
-**Status:** ⏳ In Progress (Task 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9 complete)
+**Status:** ⏳ In Progress (Task 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10 complete)
 
 **Dependencies:** Phase 3 complete
 
@@ -1288,18 +1288,42 @@ This document provides a detailed breakdown of all implementation tasks organize
   - Responsive error handling and loading states
 - **Note:** Database must be reset after fresh contract deployments to avoid stale data conflicts (see backend README)
 
-### Task 4.10: Shareholder Table Component
+### Task 4.10: Shareholder Table Component ✅
 
-- [ ] Create `frontend/src/components/ShareholderTable.tsx`
-- [ ] Display shareholder data:
-  - [ ] Address
-  - [ ] Balance
-  - [ ] Effective balance
-  - [ ] Ownership percentage
-- [ ] Add pagination
-- [ ] Add sorting
-- [ ] Style table
-- **Deliverable:** Shareholder table component
+- [x] Create `frontend/src/components/ShareholderTable.tsx`
+- [x] Display shareholder data:
+  - [x] Address
+  - [x] Balance
+  - [x] Effective balance
+  - [x] Ownership percentage
+  - [x] Last Block
+- [x] Add sorting (client-side)
+- [x] Style table (desktop-only)
+- [x] Add progress bar for ownership visualization
+- **Deliverable:** Reusable shareholder table component ✅
+- **Status:** Complete - Reusable ShareholderTable component with client-side sorting and progress bars
+- **Summary:**
+  - Created `frontend/src/components/ShareholderTable.tsx` as reusable component
+  - Props: `shareholders: Shareholder[]`, `totalOutstanding: bigint`, `decimals?: number`, `defaultSort?: "ownership" | "balance" | "address"`
+  - Client-side sorting on all columns (Address, Balance, Effective Balance, Ownership %, Last Block)
+  - Sort indicators (ArrowUp/ArrowDown) from lucide-react
+  - Clickable headers with hover effects to toggle sort direction
+  - Default sort: ownership % descending (configurable via `defaultSort` prop)
+  - Progress bar visualization beneath ownership percentages (width represents ownership stake)
+  - Tooltip for "Effective Balance" column explaining share splits
+  - Same styling as CapTable: monospace fonts, zebra-striping, desktop-only layout
+  - Refactored `CapTable.tsx` to use ShareholderTable component
+  - Type-safe implementation using existing Shareholder type from `types/api.ts`
+- **Files Created/Modified:**
+  - `frontend/src/components/ShareholderTable.tsx` (new) - Reusable table component with sorting
+  - `frontend/src/pages/CapTable.tsx` (modified) - Refactored to use ShareholderTable component
+- **Key Features:**
+  - Reusable component for desktop-only table display
+  - Client-side sorting on all columns (no pagination)
+  - Default sort by ownership % descending
+  - Optional progress bar for ownership visualization
+  - Consistent styling with existing design system
+  - Type-safe implementation
 
 ### Task 4.11: Share Issue Form
 
@@ -1307,15 +1331,10 @@ This document provides a detailed breakdown of all implementation tasks organize
 - [ ] Implement form:
   - [ ] Recipient address input
   - [ ] Amount input
-  - [ ] Validation
-  - [ ] Submit handler
-- [ ] Connect to contract via Wagmi:
-  - [ ] Use `useWriteContract()`
-  - [ ] Handle transaction status
-  - [ ] Show success/error messages
-- [ ] Add wallet signature requirement
+  - [ ] Validation and transaction handling (Wagmi)
+  - [ ] Wallet signature requirement
 - [ ] Style form
-- **Deliverable:** Share issue form
+- **Deliverable:** Share issue form for issuer
 
 ### Task 4.12: Share Transfer Form
 
@@ -1323,10 +1342,8 @@ This document provides a detailed breakdown of all implementation tasks organize
 - [ ] Implement form:
   - [ ] Recipient address input
   - [ ] Amount input
-  - [ ] Validation
-  - [ ] Submit handler
-- [ ] Connect to contract via Wagmi
-- [ ] Add wallet signature requirement
+  - [ ] Validation and transaction handling (Wagmi)
+  - [ ] Wallet signature requirement
 - [ ] Style form
 - **Deliverable:** Share transfer form
 
@@ -1334,39 +1351,25 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 - [ ] Create `frontend/src/components/WalletLink.tsx`
 - [ ] Implement wallet linking:
-  - [ ] Check if wallet connected
-  - [ ] Generate message to sign
-  - [ ] Request signature via Wagmi
-  - [ ] Send to backend API
-  - [ ] Show success/error
+  - [ ] Detect connected wallet
+  - [ ] Generate message for user to sign
+  - [ ] Send signature to backend for verification
+  - [ ] Display success/pending status
 - [ ] Add to user profile
 - [ ] Style component
 - **Deliverable:** Wallet linking UI
 
-### Task 4.14: Basic Theming
+### Task 4.14: Investor Wallet Approval Flow
 
-- [ ] Set up CSS framework (Tailwind or styled-components)
-- [ ] Create theme variables
-- [ ] Design system components:
-  - [ ] Buttons
-  - [ ] Forms
-  - [ ] Tables
-  - [ ] Cards
-- [ ] Apply consistent styling
-- [ ] Add dark mode support (optional)
-- **Deliverable:** Themed UI components
+- [ ] Create `frontend/src/pages/Approvals.tsx`
+- [ ] Fetch pending linked wallets (via `/api/shareholders/pending`)
+- [ ] Display table of pending investors
+- [ ] Approve wallets (calls backend or contract function)
+- [ ] Update approval status live
+- [ ] Integrate approved wallets into Shareholder Table
+- **Deliverable:** Admin approval dashboard for linked wallets
 
-### Task 4.15: Loading States & Error Handling
-
-- [ ] Add loading spinners
-- [ ] Add skeleton loaders
-- [ ] Implement error boundaries
-- [ ] Add toast notifications
-- [ ] Handle API errors gracefully
-- [ ] Handle wallet errors
-- **Deliverable:** Polished UX with loading/error states
-
-### Task 4.16: Integration Testing
+### Task 4.15: Integration Testing
 
 - [ ] Test full user flows:
   - [ ] Register → Login → View company dashboard

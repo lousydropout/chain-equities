@@ -12,14 +12,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Info } from 'lucide-react';
-import { formatAddress, formatTokenAmount } from '@/lib/utils';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { ArrowLeft } from 'lucide-react';
+import { ShareholderTable } from '@/components/ShareholderTable';
 
 /**
  * Cap Table page component
@@ -66,7 +60,7 @@ export function CapTable() {
   }
 
   const decimals = stats?.decimals ?? 18;
-  const totalEffective = totalEffectiveSupply
+  const totalOutstanding = totalEffectiveSupply
     ? BigInt(totalEffectiveSupply)
     : stats?.totalOutstanding
       ? BigInt(stats.totalOutstanding)
@@ -96,83 +90,12 @@ export function CapTable() {
           <CardTitle>Shareholders</CardTitle>
         </CardHeader>
         <CardContent>
-          {shareholders.length === 0 ? (
-            <p className="text-muted-foreground py-8 text-center">
-              No shareholders found.
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
-                <thead className="border-b border-muted/40 text-muted-foreground">
-                  <tr>
-                    <th className="text-left py-2 px-4">Address</th>
-                    <th className="text-right py-2 px-4">Balance</th>
-                    <th className="text-right py-2 px-4">
-                      <div className="inline-flex items-center gap-1">
-                        Effective Balance
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Info className="h-3 w-3 cursor-help" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="max-w-xs">
-                                Balance adjusted for share splits (multiplied by
-                                split factor)
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </th>
-                    <th className="text-right py-2 px-4">Ownership %</th>
-                    <th className="text-right py-2 px-4">Last Block</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {shareholders.map((shareholder, i) => {
-                    const balance = BigInt(shareholder.balance ?? 0);
-                    const effectiveBalance = BigInt(
-                      shareholder.effectiveBalance ?? shareholder.balance ?? 0
-                    );
-                    // Use ownership percentage from API, or calculate it
-                    const ownershipPct =
-                      shareholder.ownershipPercentage ??
-                      (totalEffective > 0n
-                        ? (Number(effectiveBalance) /
-                            Number(totalEffective)) *
-                          100
-                        : 0);
-
-                    return (
-                      <tr
-                        key={shareholder.address ?? i}
-                        className={
-                          i % 2 === 0 ? 'bg-muted/20' : ''
-                        }
-                      >
-                        <td className="py-2 px-4 font-mono">
-                          {formatAddress(shareholder.address)}
-                        </td>
-                        <td className="py-2 px-4 text-right font-mono">
-                          {formatTokenAmount(balance, decimals)}
-                        </td>
-                        <td className="py-2 px-4 text-right font-mono">
-                          {formatTokenAmount(effectiveBalance, decimals)}
-                        </td>
-                        <td className="py-2 px-4 text-right">
-                          {ownershipPct.toFixed(2)}%
-                        </td>
-                        <td className="py-2 px-4 text-right text-muted-foreground font-mono">
-                          {shareholder.lastUpdatedBlock ?? '—'}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <ShareholderTable
+            shareholders={shareholders}
+            totalOutstanding={totalOutstanding}
+            decimals={decimals}
+            defaultSort="ownership"
+          />
         </CardContent>
       </Card>
     </div>
