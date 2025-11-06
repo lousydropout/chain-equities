@@ -38,6 +38,24 @@ export interface CompanyMetadata {
 }
 
 /**
+ * Company stats response from GET /api/company/stats
+ * Comprehensive dashboard statistics combining contract and database data
+ */
+export interface CompanyStats {
+  name: string;
+  symbol: string;
+  issuer: string;
+  createdAt: string; // ISO 8601 date string
+  tokenLinked: boolean;
+  tokenAddress: string | null;
+  totalShareholders: number;
+  totalAuthorized: string; // wei as string
+  totalOutstanding: string; // wei as string
+  decimals: number;
+  splitFactor?: string; // optional, wei as string
+}
+
+/**
  * Individual shareholder object
  */
 export interface Shareholder {

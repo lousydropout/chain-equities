@@ -8,7 +8,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
-import { Home } from './pages/Home';
+import { Dashboard } from './pages/Dashboard';
 import { Admin } from './pages/Admin';
 import { Investor } from './pages/Investor';
 import { WalletRequired } from './pages/WalletRequired';
@@ -64,7 +64,7 @@ function App() {
         path="/"
         element={
           <ProtectedRoute>
-            <Home />
+            <Dashboard />
           </ProtectedRoute>
         }
       />

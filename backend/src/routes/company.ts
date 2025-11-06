@@ -16,6 +16,7 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { getPublicClient } from "../services/chain/client";
 import { CONTRACTS } from "../config/contracts";
 import { safeRead } from "../services/chain/utils";
+import { queryOne } from "../db/index";
 
 /**
  * Helper function to check if an address is zero address
@@ -156,6 +157,106 @@ async function getCompanyMetadata(
 }
 
 /**
+ * GET /api/company/stats
+ * Returns comprehensive company statistics for dashboard display
+ * Combines data from CapTable contract, Token contract, and shareholders database
+ */
+async function getCompanyStats(
+  request: FastifyRequest,
+  reply: FastifyReply
+): Promise<void> {
+  const publicClient = getPublicClient();
+  const { address: capTableAddress, abi: capTableAbi } = CONTRACTS.capTable;
+  const { address: tokenAddress, abi: tokenAbi } = CONTRACTS.token;
+
+  try {
+    // Get company info from CapTable contract
+    const companyInfo = await safeRead<
+      [string, string, `0x${string}`, `0x${string}`, bigint]
+    >(publicClient, {
+      address: capTableAddress,
+      abi: capTableAbi,
+      functionName: "getCompanyInfo",
+    });
+
+    if (!companyInfo) {
+      reply.code(404).send({
+        error: "Company information not found",
+        message: "Failed to read from CapTable contract",
+      });
+      return;
+    }
+
+    const [name, symbol, issuer, token, createdAt] = companyInfo;
+
+    // Check if token is linked
+    const isTokenLinked = !isZeroAddress(token);
+    const linkedTokenAddress = isTokenLinked ? token : null;
+
+    // Get token stats if linked
+    let totalAuthorized = "0";
+    let totalOutstanding = "0";
+    let splitFactor: string | undefined;
+    const decimals = 18; // Standard ERC20 decimals
+
+    if (isTokenLinked && linkedTokenAddress) {
+      const [authorized, supply, split] = await Promise.all([
+        safeRead<bigint>(publicClient, {
+          address: linkedTokenAddress,
+          abi: tokenAbi,
+          functionName: "totalAuthorized",
+        }),
+        safeRead<bigint>(publicClient, {
+          address: linkedTokenAddress,
+          abi: tokenAbi,
+          functionName: "totalSupply",
+        }),
+        safeRead<bigint>(publicClient, {
+          address: linkedTokenAddress,
+          abi: tokenAbi,
+          functionName: "splitFactor",
+        }),
+      ]);
+
+      totalAuthorized = authorized?.toString() ?? "0";
+      totalOutstanding = supply?.toString() ?? "0";
+      splitFactor = split?.toString();
+    }
+
+    // Get total shareholders count from database
+    const shareholderCount = queryOne<{ count: number }>(
+      "SELECT COUNT(*) as count FROM shareholders"
+    );
+    const totalShareholders = shareholderCount?.count ?? 0;
+
+    // Format createdAt as ISO 8601 string
+    const createdAtTimestamp = Number(createdAt);
+    const createdAtDate = new Date(createdAtTimestamp * 1000);
+    const createdAtISO = createdAtDate.toISOString();
+
+    reply.send({
+      name,
+      symbol,
+      issuer,
+      createdAt: createdAtISO,
+      tokenLinked: isTokenLinked,
+      tokenAddress: linkedTokenAddress,
+      totalShareholders,
+      totalAuthorized,
+      totalOutstanding,
+      decimals,
+      ...(splitFactor && { splitFactor }),
+    });
+  } catch (error) {
+    request.log.error(error, "Error fetching company stats");
+    reply.code(500).send({
+      error: "Internal server error",
+      message: "Failed to fetch company statistics",
+    });
+  }
+}
+
+/**
  * Register company routes with Fastify instance
  */
 export async function companyRoutes(fastify: FastifyInstance): Promise<void> {
@@ -224,7 +325,56 @@ export async function companyRoutes(fastify: FastifyInstance): Promise<void> {
     },
   };
 
+  // Response schema for GET /api/company/stats
+  const statsSchema = {
+    response: {
+      200: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          symbol: { type: "string" },
+          issuer: { type: "string" },
+          createdAt: { type: "string" },
+          tokenLinked: { type: "boolean" },
+          tokenAddress: { type: ["string", "null"] },
+          totalShareholders: { type: "integer" },
+          totalAuthorized: { type: "string" },
+          totalOutstanding: { type: "string" },
+          decimals: { type: "integer" },
+          splitFactor: { type: "string" }, // Optional property (not in required array)
+        },
+        required: [
+          "name",
+          "symbol",
+          "issuer",
+          "createdAt",
+          "tokenLinked",
+          "tokenAddress",
+          "totalShareholders",
+          "totalAuthorized",
+          "totalOutstanding",
+          "decimals",
+        ],
+      },
+      404: {
+        type: "object",
+        properties: {
+          error: { type: "string" },
+          message: { type: "string" },
+        },
+      },
+      500: {
+        type: "object",
+        properties: {
+          error: { type: "string" },
+          message: { type: "string" },
+        },
+      },
+    },
+  };
+
   fastify.get("/company", { schema: companySchema }, getCompany);
   fastify.get("/company/metadata", { schema: metadataSchema }, getCompanyMetadata);
+  fastify.get("/company/stats", { schema: statsSchema }, getCompanyStats);
 }
 

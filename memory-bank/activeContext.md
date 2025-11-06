@@ -309,9 +309,49 @@
 22. ✅ Login/Register pages complete (Task 4.5) - React Router, form validation, protected routes
 23. ✅ Protected route wrapper complete (Task 4.6) - Authentication checks and redirects
 24. ✅ Frontend API client setup complete (Task 4.7) - Composable API client, typed functions, React Query hooks
-25. ⏳ Create frontend company dashboard page (Task 4.8)
+25. ✅ Create frontend company dashboard page (Task 4.8) - Complete with stats endpoint, formatting, tooltips, navigation
 26. ⏳ Create frontend admin dashboard UI
 27. ⏳ Create frontend shareholder dashboard UI
+
+### Company Dashboard (Task 4.8) ✅
+
+- **Location**: `frontend/src/pages/Dashboard.tsx`, `backend/src/routes/company.ts`
+- **Backend Endpoint**: `GET /api/company/stats` - Optimized single-call endpoint combining contract and database data
+- **Features**:
+  - Company header card with name, symbol, issuer, creation date, token status badge
+  - Stats grid with three cards: Total Outstanding, Total Shareholders, Authorized shares
+  - Tooltips and descriptions for each stat explaining what numbers mean
+  - Navigation cards to Cap Table, Transactions, and API Test pages
+  - Loading skeletons matching final layout
+  - Error handling with retry button
+  - Empty states showing "—" for missing data
+  - Logout button in top-right corner with user info display
+  - Formatting utilities for addresses, token amounts, and dates
+- **API Integration**:
+  - `useCompanyStats()` React Query hook with 30s staleTime and retry: 1
+  - Single optimized fetch for all dashboard data
+  - Returns: name, symbol, issuer, createdAt (ISO), tokenLinked, tokenAddress, totalShareholders, totalAuthorized, totalOutstanding, decimals, splitFactor (optional)
+- **Formatting**:
+  - `formatAddress()` - Truncates addresses (e.g., "0x1234…5678")
+  - `formatTokenAmount()` - Formats wei using viem.formatUnits + Intl.NumberFormat with compact notation
+  - `formatDate()` - Formats ISO dates to readable format
+- **Accessibility**:
+  - Tooltips on help icons explaining each stat
+  - Descriptions below stat values
+  - Navigation cards use semantic `<Link>` with aria-labels
+  - Focus rings and keyboard navigation support
+- **Access Control**: Dashboard accessible to all authenticated users (admin, issuer, investor). Role-specific dashboards planned for Task 7.1.
+- **Files Created/Modified**:
+  - `backend/src/routes/company.ts` - Added `/api/company/stats` endpoint
+  - `frontend/src/pages/Dashboard.tsx` - Main dashboard component
+  - `frontend/src/types/api.ts` - Added `CompanyStats` interface
+  - `frontend/src/lib/api.ts` - Added `getCompanyStats()` function
+  - `frontend/src/hooks/useApi.ts` - Added `useCompanyStats()` hook
+  - `frontend/src/lib/utils.ts` - Added formatting utilities
+  - `frontend/src/components/ui/badge.tsx` - Badge component
+  - `frontend/src/components/ui/tooltip.tsx` - Tooltip component
+- **Dependencies**: `lucide-react`, `@radix-ui/react-tooltip`
+- **Status**: Complete - Task 4.8 ✅
 
 ### Role System ✅
 

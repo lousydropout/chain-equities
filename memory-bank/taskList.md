@@ -856,7 +856,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~3 weeks
 
-**Status:** ⏳ In Progress (Task 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7 complete)
+**Status:** ⏳ In Progress (Task 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8 complete)
 
 **Dependencies:** Phase 3 complete
 
@@ -1212,19 +1212,48 @@ This document provides a detailed breakdown of all implementation tasks organize
   - Build: `cd frontend && bun run build`
   - Test page: Visit `http://localhost:5173/api-test` after login
 
-### Task 4.8: Company Dashboard Page
+### Task 4.8: Company Dashboard Page ✅
 
-- [ ] Create `frontend/src/pages/Dashboard.tsx` (single company view)
-- [ ] Fetch company info from API (`GET /api/company`)
-- [ ] Display company information:
-  - [ ] Company name, symbol
-  - [ ] Total shares
-  - [ ] Quick stats
-- [ ] Add loading states
-- [x] Add error handling
-- [ ] Style page
-- [ ] Add navigation to other sections
-- **Deliverable:** Company dashboard page (single company)
+- [x] Create `frontend/src/pages/Dashboard.tsx` (single company view)
+- [x] Create backend `/api/company/stats` endpoint (optimized single fetch)
+- [x] Fetch company info from API (`GET /api/company/stats`)
+- [x] Display company information:
+  - [x] Company name, symbol
+  - [x] Total shares (outstanding and authorized)
+  - [x] Quick stats (shareholders count, token status)
+- [x] Add loading states (skeleton components)
+- [x] Add error handling (retry button)
+- [x] Style page (TailwindCSS + shadcn/ui)
+- [x] Add navigation to other sections (cap table, transactions, API test)
+- [x] Add logout button (top-right corner)
+- [x] Add tooltips and descriptions for stat cards
+- [x] Add formatting utilities (formatAddress, formatTokenAmount, formatDate)
+- **Deliverable:** Company dashboard page (single company) ✅
+- **Status:** Complete - Dashboard fully implemented with stats endpoint, formatting, tooltips, and navigation
+- **Summary:**
+  - Created optimized `/api/company/stats` backend endpoint combining contract and database data
+  - Implemented Dashboard component with company header, stats grid, and navigation cards
+  - Added React Query hook `useCompanyStats()` with 30s staleTime and retry configuration
+  - Created formatting utilities using viem.formatUnits for token amounts
+  - Added tooltips and descriptions for all stat cards explaining what numbers mean
+  - Implemented loading skeletons, error handling with retry, and empty states
+  - Added logout button in top-right corner with user info display
+  - All stats cards include help icons with tooltips and descriptions
+  - Dashboard accessible to all authenticated users (admin, issuer, investor)
+- **Files Created/Modified:**
+  - `backend/src/routes/company.ts` (modified) - Added `/api/company/stats` endpoint
+  - `frontend/src/types/api.ts` (modified) - Added `CompanyStats` interface
+  - `frontend/src/lib/api.ts` (modified) - Added `getCompanyStats()` function
+  - `frontend/src/hooks/useApi.ts` (modified) - Added `useCompanyStats()` hook
+  - `frontend/src/lib/utils.ts` (modified) - Added `formatAddress()`, `formatTokenAmount()`, `formatDate()` utilities
+  - `frontend/src/pages/Dashboard.tsx` (new) - Main dashboard component with all sub-components
+  - `frontend/src/App.tsx` (modified) - Updated routing to use Dashboard for `/` route
+  - `frontend/src/pages/Home.tsx` (modified) - Converted to redirect/re-export Dashboard
+  - `frontend/src/components/ui/badge.tsx` (new) - Badge component for token status
+  - `frontend/src/components/ui/tooltip.tsx` (new) - Tooltip component for help text
+- **Dependencies Added:**
+  - `lucide-react` - Icons (LogOut, Copy, ArrowRight, Users, Coins, Link2, HelpCircle)
+  - `@radix-ui/react-tooltip` - Tooltip component primitives
 
 ### Task 4.9: Cap Table Page
 

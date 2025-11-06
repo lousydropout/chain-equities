@@ -152,7 +152,7 @@ export function Login() {
               Use quick login buttons below for easy access.
             </p>
             <div className="grid grid-cols-2 gap-2">
-              {Object.entries(DEMO_USERS).map(([username, user]) => (
+              {Object.entries(DEMO_USERS).map(([username]) => (
                 <Button
                   key={username}
                   type="button"

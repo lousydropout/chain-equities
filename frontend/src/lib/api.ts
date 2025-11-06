@@ -7,6 +7,7 @@ import { getAuthToken } from './auth';
 import type {
   CompanyInfo,
   CompanyMetadata,
+  CompanyStats,
   Shareholder,
   ShareholdersResponse,
   ShareholdersQueryParams,
@@ -145,6 +146,17 @@ export async function getCompany(): Promise<CompanyInfo> {
  */
 export async function getCompanyMetadata(): Promise<CompanyMetadata> {
   return api.apiRequest<CompanyMetadata>('/api/company/metadata');
+}
+
+/**
+ * Get company statistics for dashboard
+ * GET /api/company/stats
+ *
+ * @returns Comprehensive company statistics including totals, shareholders count, etc.
+ * @throws APIError on error
+ */
+export async function getCompanyStats(): Promise<CompanyStats> {
+  return api.apiRequest<CompanyStats>('/api/company/stats');
 }
 
 // ============================================================================

@@ -7,6 +7,7 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import {
   getCompany,
   getCompanyMetadata,
+  getCompanyStats,
   getShareholders,
   getShareholder,
   getTransactions,
@@ -16,6 +17,7 @@ import {
 import type {
   CompanyInfo,
   CompanyMetadata,
+  CompanyStats,
   Shareholder,
   ShareholdersResponse,
   ShareholdersQueryParams,
@@ -51,6 +53,21 @@ export function useCompanyMetadata(): UseQueryResult<CompanyMetadata, APIError> 
   return useQuery<CompanyMetadata, APIError>({
     queryKey: ['company', 'metadata'],
     queryFn: () => getCompanyMetadata(),
+  });
+}
+
+/**
+ * React Query hook for company statistics (dashboard)
+ * GET /api/company/stats
+ *
+ * @returns Query result with comprehensive company statistics
+ */
+export function useCompanyStats(): UseQueryResult<CompanyStats, APIError> {
+  return useQuery<CompanyStats, APIError>({
+    queryKey: ['company', 'stats'],
+    queryFn: () => getCompanyStats(),
+    staleTime: 30_000, // 30 seconds
+    retry: 1,
   });
 }
 
