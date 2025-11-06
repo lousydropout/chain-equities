@@ -856,7 +856,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~3 weeks
 
-**Status:** ⏳ In Progress (Task 4.1, 4.2, 4.3, 4.4 complete)
+**Status:** ⏳ In Progress (Task 4.1, 4.2, 4.3, 4.4, 4.5, 4.6 complete)
 
 **Dependencies:** Phase 3 complete
 
@@ -1079,28 +1079,59 @@ This document provides a detailed breakdown of all implementation tasks organize
   - Dark mode enabled by default: Added `class="dark"` to `<html>` element in `index.html`
   - All components now use TailwindCSS utilities and shadcn/ui components
 
-### Task 4.5: Login/Register Pages (Demo - Simulated)
+### Task 4.5: Login/Register Pages (Demo - Simulated) ✅
 
-- [ ] Create `frontend/src/pages/Login.tsx`
-- [ ] Create `frontend/src/pages/Register.tsx`
-- [ ] Implement simulated auth (no Firebase backend):
-  - [ ] Simple login form (demo mode)
+- [x] Create `frontend/src/pages/Login.tsx`
+- [x] Create `frontend/src/pages/Register.tsx`
+- [x] Implement simulated auth (no Firebase backend):
+  - [x] Simple login form (demo mode)
   - [x] Return demo user on "login"
-  - [ ] Error handling
-  - [ ] Loading states
-- [ ] Add form validation
-- [ ] Style pages
-- [ ] Add routing
-- **Deliverable:** Simulated authentication pages for demo
+  - [x] Error handling
+  - [x] Loading states
+- [x] Add form validation (zod schemas: email format, password min 6 chars, password confirmation match)
+- [x] Style pages (TailwindCSS + shadcn/ui components)
+- [x] Add routing (React Router with BrowserRouter)
+- **Deliverable:** Simulated authentication pages for demo ✅
+- **Status:** Complete - Login and Register pages implemented with form validation, error handling, and routing
+- **Summary:**
+  - Created Login.tsx and Register.tsx pages with react-hook-form and zod validation
+  - Implemented React Router with BrowserRouter in main.tsx
+  - Added ProtectedRoute component to redirect unauthenticated users
+  - Created AuthRedirect component to redirect authenticated users away from auth pages
+  - Created Home.tsx placeholder page (includes Connect component)
+  - Both pages accept any valid credentials and return demo user (issuer role)
+  - Added demo mode notes under Card components explaining simulated authentication
+  - All forms use shadcn/ui Form components with TailwindCSS styling
+  - Fixed zod version compatibility (downgraded to v3.25.76 for react-hook-form compatibility)
+- **Files Created/Modified:**
+  - `frontend/src/pages/Login.tsx` (new) - Login page with zod validation
+  - `frontend/src/pages/Register.tsx` (new) - Register page with password confirmation
+  - `frontend/src/pages/Home.tsx` (new) - Placeholder home page
+  - `frontend/src/components/ProtectedRoute.tsx` (new) - Route protection component
+  - `frontend/src/App.tsx` (modified) - Replaced with React Router routes
+  - `frontend/src/main.tsx` (modified) - Added BrowserRouter wrapper
+  - `frontend/package.json` (modified) - Updated zod to v3.25.76 for compatibility
+- **Test Commands:**
+  - Build: `cd frontend && bun run build`
+  - TypeScript: `cd frontend && bunx tsc --noEmit`
+  - Dev: `cd frontend && bun run dev`
 
-### Task 4.6: Protected Route Wrapper
+### Task 4.6: Protected Route Wrapper ✅
 
-- [ ] Create `frontend/src/components/ProtectedRoute.tsx`
-- [ ] Check Firebase Auth status
-- [ ] Redirect to login if not authenticated
-- [ ] Show loading state
-- [ ] Apply to protected routes
-- **Deliverable:** Route protection
+- [x] Create `frontend/src/components/ProtectedRoute.tsx`
+- [x] Check authentication status (via useAuth hook)
+- [x] Redirect to login if not authenticated
+- [x] Show loading state
+- [x] Apply to protected routes (implemented in Task 4.5)
+- **Deliverable:** Route protection ✅
+- **Status:** Complete - ProtectedRoute component created and integrated in Task 4.5
+- **Summary:**
+  - ProtectedRoute component checks authentication via useAuth()
+  - Redirects unauthenticated users to /login
+  - Shows loading state during auth check
+  - Applied to home route (/) in App.tsx
+- **Files Created:**
+  - `frontend/src/components/ProtectedRoute.tsx` (created in Task 4.5)
 
 ### Task 4.7: API Client Setup
 

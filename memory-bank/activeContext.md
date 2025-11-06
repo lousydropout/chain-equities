@@ -213,6 +213,42 @@
      - Demo user matches backend exactly: { uid: 'demo-user', email: 'demo@example.com', role: 'issuer' }
      - localStorage persistence for auth state across page refreshes
      - No Firebase SDK integration (deferred to post-demo)
+   - Wagmi Configuration complete (Task 4.3) ✅
+     - Created wagmi config with Hardhat (31337) and Sepolia (11155111) chains
+     - Configured HTTP transports and injected connector for MetaMask
+     - Created Providers component with WagmiProvider and QueryClientProvider
+     - Auto-connect enabled via injected connector
+     - Comprehensive test suite (10 tests passing)
+   - Wallet Connection UI complete (Task 4.4) ✅
+     - Created Connect.tsx component with comprehensive wallet connection functionality
+     - Uses Wagmi hooks: useAccount(), useConnect(), useDisconnect()
+     - Displays formatted address with full address in tooltip
+     - Shows connection status and error handling
+     - Integrated into App.tsx layout
+   - TailwindCSS + shadcn/ui integration complete (Task 4.4b) ✅
+     - Installed TailwindCSS v3.4.18 with PostCSS and Autoprefixer
+     - Configured tailwind.config.js with content paths and dark mode support
+     - Added shadcn/ui CSS variables and theme configuration
+     - Installed shadcn/ui core components: Button, Card, Input, Form, Label
+     - Refactored Connect.tsx and App.tsx to use shadcn/ui components and Tailwind utilities
+     - Removed all old CSS files, all components now use TailwindCSS
+     - Build verified: TypeScript compilation passes, Vite build succeeds
+   - Login/Register Pages complete (Task 4.5) ✅
+     - Created Login.tsx and Register.tsx pages with react-hook-form and zod validation
+     - Implemented React Router with BrowserRouter in main.tsx
+     - Added ProtectedRoute component to redirect unauthenticated users
+     - Created AuthRedirect component to redirect authenticated users away from auth pages
+     - Created Home.tsx placeholder page (includes Connect component)
+     - Both pages accept any valid credentials and return demo user (issuer role)
+     - Added demo mode notes under Card components explaining simulated authentication
+     - All forms use shadcn/ui Form components with TailwindCSS styling
+     - Fixed zod version compatibility (downgraded to v3.25.76 for react-hook-form compatibility)
+     - Routes: /login, /register, / (protected home)
+   - Protected Route Wrapper complete (Task 4.6) ✅
+     - ProtectedRoute component checks authentication via useAuth()
+     - Redirects unauthenticated users to /login
+     - Shows loading state during auth check
+     - Applied to home route (/) in App.tsx
 
 ### Planned Enhancements
 
@@ -246,9 +282,15 @@
 16. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
 17. ✅ Frontend project scaffolding complete (Task 4.1) - React + Vite + TypeScript with Prettier/ESLint
 18. ✅ Frontend mock auth setup complete (Task 4.2) - React Context, localStorage persistence, demo UI
-19. ⏳ Implement frontend wallet connector components (`config.ts`, `provider.tsx`, `Connect.tsx`)
-20. ⏳ Create frontend admin dashboard UI
-21. ⏳ Create frontend shareholder dashboard UI
+19. ✅ Frontend Wagmi configuration complete (Task 4.3) - Wagmi v2 with Hardhat and Sepolia chains
+20. ✅ Frontend wallet connection UI complete (Task 4.4) - Connect component with MetaMask integration
+21. ✅ TailwindCSS + shadcn/ui integration complete (Task 4.4b) - All components migrated to TailwindCSS
+22. ✅ Login/Register pages complete (Task 4.5) - React Router, form validation, protected routes
+23. ✅ Protected route wrapper complete (Task 4.6) - Authentication checks and redirects
+24. ⏳ Implement frontend API client setup (Task 4.7)
+25. ⏳ Create frontend company dashboard page (Task 4.8)
+26. ⏳ Create frontend admin dashboard UI
+27. ⏳ Create frontend shareholder dashboard UI
 
 ### Role System ✅
 
