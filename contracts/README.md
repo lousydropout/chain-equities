@@ -10,6 +10,15 @@ Tokenization on programmable blockchains offers a path forward: instant settleme
 
 Your challenge: Build a working prototype showing how tokenized securities could function on-chain with compliance gating, corporate actions, and operator workflows—without making regulatory claims.
 
+## Technical Report
+
+A comprehensive technical writeup documenting the system's architecture, design decisions, and implementation details is available in [`report.md`](./report.md). The report covers:
+
+- **Chain Selection Rationale**: EVM-compatible architecture with support for local development (Anvil), testnets (Sepolia), and mainnet deployment
+- **Corporate Action Implementation**: Virtual stock split mechanism and event-based symbol changes
+- **Key Architectural Decisions**: Single-company model, allowlist-based compliance gating, event-driven indexing, and separation of concerns
+- **Known Limitations and Risks**: Technical constraints, operational considerations, security considerations, and regulatory disclaimers
+
 ## Setup
 
 This project requires:
