@@ -197,6 +197,9 @@ export async function getShareholders(
   if (params?.offset !== undefined) {
     searchParams.set('offset', params.offset.toString());
   }
+  if (params?.blockNumber !== undefined) {
+    searchParams.set('blockNumber', params.blockNumber.toString());
+  }
   
   const queryString = searchParams.toString();
   const endpoint = queryString ? `/api/shareholders?${queryString}` : '/api/shareholders';

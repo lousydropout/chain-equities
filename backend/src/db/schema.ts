@@ -80,6 +80,7 @@ export const TRANSACTIONS_TABLE_SCHEMA = `
   CREATE INDEX IF NOT EXISTS idx_transactions_block_number ON transactions(block_number);
   CREATE INDEX IF NOT EXISTS idx_transactions_event_type ON transactions(event_type);
   CREATE INDEX IF NOT EXISTS idx_transactions_block_timestamp ON transactions(block_timestamp);
+  CREATE INDEX IF NOT EXISTS idx_transactions_from_to ON transactions(from_address, to_address);
 `;
 
 /**

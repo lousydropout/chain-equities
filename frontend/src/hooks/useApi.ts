@@ -106,8 +106,8 @@ export function useShareholders(
  * Convenience hook that returns shareholders data in a composed format
  * Eliminates need to destructure `data.data` and `data.pagination`
  *
- * @param params - Query parameters (limit, offset)
- * @returns Composed object with shareholders, pagination, and supply info
+ * @param params - Query parameters (limit, offset, blockNumber)
+ * @returns Composed object with shareholders, pagination, supply info, and block metadata
  */
 export function useShareholdersData(params?: ShareholdersQueryParams) {
   const query = useShareholders(params);
@@ -118,6 +118,13 @@ export function useShareholdersData(params?: ShareholdersQueryParams) {
     pagination: query.data?.pagination,
     totalSupply: query.data?.totalSupply,
     totalEffectiveSupply: query.data?.totalEffectiveSupply,
+    blockNumber: query.data?.blockNumber,
+    latestBlock: query.data?.latestBlock,
+    firstBlock: query.data?.firstBlock,
+    nextBlock: query.data?.nextBlock,
+    prevBlock: query.data?.prevBlock,
+    transactionBlocks: query.data?.transactionBlocks ?? [],
+    warning: query.data?.warning,
   };
 }
 

@@ -21,7 +21,7 @@ export interface ShareholderTableProps {
   defaultSort?: 'ownership' | 'balance' | 'address';
 }
 
-type SortField = 'address' | 'balance' | 'effectiveBalance' | 'ownership' | 'lastBlock';
+type SortField = 'address' | 'balance' | 'effectiveBalance' | 'ownership';
 type SortDirection = 'asc' | 'desc';
 
 /**
@@ -39,7 +39,7 @@ export function ShareholderTable({
       ? 'ownership'
       : defaultSort === 'balance'
         ? 'balance'
-        : 'address'
+        : 'address',
   );
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
@@ -79,10 +79,6 @@ export function ShareholderTable({
                   Number(totalOutstanding)) *
                 100
               : 0);
-          break;
-        case 'lastBlock':
-          aValue = a.lastUpdatedBlock ?? 0;
-          bValue = b.lastUpdatedBlock ?? 0;
           break;
         default:
           return 0;
@@ -190,22 +186,13 @@ export function ShareholderTable({
                 <SortIcon field="ownership" />
               </div>
             </th>
-            <th
-              className="text-right py-2 px-4 cursor-pointer hover:text-foreground transition-colors"
-              onClick={() => handleSort('lastBlock')}
-            >
-              <div className="inline-flex items-center gap-1 justify-end">
-                Last Block
-                <SortIcon field="lastBlock" />
-              </div>
-            </th>
           </tr>
         </thead>
         <tbody>
           {sortedShareholders.map((shareholder, i) => {
             const balance = BigInt(shareholder.balance ?? 0);
             const effectiveBalance = BigInt(
-              shareholder.effectiveBalance ?? shareholder.balance ?? 0
+              shareholder.effectiveBalance ?? shareholder.balance ?? 0,
             );
             // Use ownership percentage from API, or calculate it
             const ownershipPct =
@@ -223,10 +210,16 @@ export function ShareholderTable({
                   {formatAddress(shareholder.address)}
                 </td>
                 <td className="py-2 px-4 text-right font-mono">
-                  {formatTokenAmount(balance, decimals, { maxFraction: decimals, compact: false })}
+                  {formatTokenAmount(balance, decimals, {
+                    maxFraction: decimals,
+                    compact: false,
+                  })}
                 </td>
                 <td className="py-2 px-4 text-right font-mono">
-                  {formatTokenAmount(effectiveBalance, decimals, { maxFraction: decimals, compact: false })}
+                  {formatTokenAmount(effectiveBalance, decimals, {
+                    maxFraction: decimals,
+                    compact: false,
+                  })}
                 </td>
                 <td className="py-2 px-4 text-right">
                   <div className="flex flex-col items-end gap-1">
@@ -240,9 +233,6 @@ export function ShareholderTable({
                     </div>
                   </div>
                 </td>
-                <td className="py-2 px-4 text-right text-muted-foreground font-mono">
-                  {shareholder.lastUpdatedBlock ?? '—'}
-                </td>
               </tr>
             );
           })}
@@ -251,4 +241,3 @@ export function ShareholderTable({
     </div>
   );
 }
-

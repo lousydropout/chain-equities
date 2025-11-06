@@ -1577,6 +1577,170 @@ This document provides a detailed breakdown of all implementation tasks organize
   - Frontend: Visit `http://localhost:5173/transactions` after login
   - Backend: `curl "http://localhost:4000/api/transactions?limit=10"` (requires server restart after fix)
 
+### Task 4.19: Cap Table Historical Snapshots
+
+#### Summary
+
+Enhance the `/cap-table` page to allow users to "roll back" or "roll forward" in blockchain history by selecting a specific block number. The table should show token balances as of that block — effectively a historical snapshot of ownership.
+
+#### Files Created / Modified
+
+- [x] `frontend/src/pages/CapTable.tsx` - Added block selector UI with input field, Previous/Next buttons, and "Back to Latest" button
+
+- [x] `frontend/src/hooks/useApi.ts` - Updated to support blockNumber parameter and expose transactionBlocks array
+
+- [x] `frontend/src/types/api.ts` - Added blockNumber, latestBlock, firstBlock, nextBlock, prevBlock, transactionBlocks to ShareholdersResponse
+
+- [x] `frontend/src/lib/api.ts` - Updated getShareholders to accept blockNumber parameter
+
+- [x] `frontend/src/components/ShareholderTable.tsx` - Removed "Last Block" column
+
+- [x] `backend/src/routes/shareholders.ts` - Extended endpoint with blockNumber support, historical balance calculation, and transactionBlocks array
+
+- [x] `backend/src/db/schema.ts` - Added composite index `idx_transactions_from_to` for performance
+
+#### Implementation Steps
+
+- [x] Add a block number selector (input, slider, or dropdown) to the `/cap-table` page UI.
+
+- [x] Update the frontend hook to request snapshots using an optional query parameter:
+
+  `GET /api/shareholders?blockNumber=<number>`
+
+- [x] Extend the backend route handler to:
+
+  - Accept `blockNumber` as a query param.
+
+  - Compute token balances at that block using database state with BigInt arithmetic (correctly handles TRANSFER: decrement from, increment to; ISSUED: increment to only).
+
+  - Default to the latest indexed block if none provided.
+
+- [x] Display the current block number and navigation controls ("← Previous Block" / "Next Block →").
+
+- [x] Gracefully handle blocks before issuance or beyond the latest indexed event (clamps with warnings instead of errors).
+
+#### Additional Notes (for Cursor)
+
+**1. Relevant Table Schema (SQLite)**
+
+- Transactions are stored in `transactions` or similar, with key columns:
+
+```
+id INTEGER PRIMARY KEY,
+tx_hash TEXT,
+from_address TEXT,
+to_address TEXT,
+amount TEXT,
+block_number INTEGER,
+block_timestamp TEXT,
+event_type TEXT
+```
+
+- Each `ISSUED` or `TRANSFER` event represents a change in share ownership.
+
+- Balance snapshots can be derived cumulatively up to a given block.
+
+**2. Suggested SQL View for Snapshot Balances**
+
+Cursor may create a helper view to compute balances at any block:
+
+```sql
+CREATE VIEW IF NOT EXISTS cap_table_snapshot AS
+SELECT
+  to_address AS holder,
+  SUM(
+    CASE
+      WHEN event_type = 'ISSUED' THEN amount
+      WHEN event_type = 'TRANSFER' THEN amount
+      ELSE 0
+    END
+  ) AS received,
+  SUM(
+    CASE
+      WHEN event_type = 'TRANSFER' THEN amount
+      ELSE 0
+    END
+  ) AS sent,
+  SUM(
+    CASE
+      WHEN event_type = 'ISSUED' THEN amount
+      WHEN event_type = 'TRANSFER' THEN amount
+      ELSE 0
+    END
+  ) - SUM(
+    CASE
+      WHEN event_type = 'TRANSFER' THEN amount
+      ELSE 0
+    END
+  ) AS balance,
+  MAX(block_number) AS last_updated_block
+FROM transactions
+WHERE block_number <= @blockNumber
+GROUP BY holder;
+```
+
+- Cursor can compute this dynamically via query substitution rather than a permanent view.
+
+**3. Indexing Optimization**
+
+Ensure an index exists on `transactions(block_number)` and `transactions(to_address)` for fast filtering.
+
+**4. Demo Mode Tip**
+
+If contract queries are too slow, backend can fall back to SQL-derived snapshots for demo purposes.
+
+**Deliverable:**
+
+A `/cap-table` page with working historical snapshots, allowing the user to view balances as of any block number.
+
+**Status:** ✅ Completed
+
+**Dependencies:**
+
+- Task 4.11 (Cap Table Page) ✅
+
+- Task 2.8 (Transactions API) ✅
+
+- Indexed event data availability ✅
+
+**Acceptance Criteria:**
+
+- ✅ `/cap-table` supports optional block selection via input field and navigation buttons.
+
+- ✅ Snapshot correctly reflects balances up to chosen block using BigInt arithmetic.
+
+- ✅ Default is latest block (no blockNumber parameter).
+
+- ✅ Navigation updates balances dynamically using transactionBlocks array for smart navigation.
+
+- ✅ SQL-derived snapshots match contract state (verified via historical balance calculation).
+
+**Implementation Details:**
+
+1. **Backend Changes:**
+
+   - Added `getHistoricalBalances()` function that processes transactions using BigInt arithmetic
+   - Correctly handles TRANSFER events (decrement from sender, increment to receiver)
+   - Correctly handles ISSUED events (only increment to non-zero addresses)
+   - Returns `transactionBlocks` array (all unique block numbers with transactions) for efficient navigation
+   - Clamps invalid block numbers to valid range with warning messages
+   - Added composite index `idx_transactions_from_to` for performance
+
+2. **Frontend Changes:**
+
+   - Added block number input field with "Go" button
+   - Added Previous/Next navigation buttons that jump between transaction blocks
+   - Added "Back to Latest" button when viewing historical snapshots
+   - Visual banner showing current block number when viewing historical state
+   - Binary search to find largest block ≤ input (with clamping to first/last transaction block)
+   - Removed "Last Block" column from table (was showing incorrect values)
+
+3. **Key Features:**
+   - Smart navigation: buttons jump to next/previous blocks that have transactions (not just ±1)
+   - Input validation: clamps to valid range, uses binary search for efficient lookup
+   - Visual indicators: banner shows when viewing historical state, warning badges for clamped blocks
+   - Performance: single query for all transaction blocks, efficient binary search for navigation
+
 ### Phase 4 Acceptance Criteria
 
 - ✅ User can register and login

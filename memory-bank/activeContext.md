@@ -6,6 +6,46 @@
 
 ## Recent Work
 
+### Task 4.19: Cap Table Historical Snapshots ✅
+
+- **Status**: Complete - Historical snapshot functionality fully implemented with smart navigation
+- **Location**: `frontend/src/pages/CapTable.tsx`, `backend/src/routes/shareholders.ts`
+- **Key Features**:
+  - **Block Selector UI**: Input field with "Go" button, Previous/Next navigation buttons, "Back to Latest" button
+  - **Smart Navigation**: Buttons jump between blocks that have transactions (not just ±1), using `transactionBlocks` array
+  - **Binary Search**: Input field uses binary search to find largest block ≤ input, with clamping to first/last transaction block
+  - **Visual Indicators**: Banner shows when viewing historical state, warning badges for clamped blocks, "Latest" badge when viewing current state
+  - **Historical Balance Calculation**: 
+    - Processes transactions using BigInt arithmetic
+    - Correctly handles TRANSFER events (decrement from sender, increment to receiver)
+    - Correctly handles ISSUED events (only increment to non-zero addresses)
+  - **Performance Optimizations**:
+    - Added composite index `idx_transactions_from_to` on transactions table
+    - Single query to get all transaction blocks for efficient navigation
+    - Binary search for O(log n) block lookup
+- **Backend Changes**:
+  - Extended `/api/shareholders` endpoint with optional `blockNumber` query parameter
+  - Added `getHistoricalBalances()` function that computes balances from transaction history
+  - Returns `transactionBlocks` array (all unique block numbers with transactions) for frontend navigation
+  - Clamps invalid block numbers to valid range with warning messages (smooth UX, no 400 errors)
+  - Returns `blockNumber`, `latestBlock`, `firstBlock`, `nextBlock`, `prevBlock`, `transactionBlocks` in response
+- **Frontend Changes**:
+  - Updated types to include block metadata fields
+  - Added block selector UI with input, navigation buttons, and visual indicators
+  - Removed "Last Block" column from table (was showing incorrect values)
+  - Navigation handlers use `transactionBlocks` array for smart navigation
+- **Files Created/Modified**:
+  - `frontend/src/pages/CapTable.tsx` (modified) - Added block selector UI and navigation logic
+  - `frontend/src/hooks/useApi.ts` (modified) - Updated to support blockNumber and expose transactionBlocks
+  - `frontend/src/types/api.ts` (modified) - Added block metadata fields to ShareholdersResponse
+  - `frontend/src/lib/api.ts` (modified) - Updated getShareholders to accept blockNumber parameter
+  - `frontend/src/components/ShareholderTable.tsx` (modified) - Removed "Last Block" column
+  - `backend/src/routes/shareholders.ts` (modified) - Extended with historical snapshot support
+  - `backend/src/db/schema.ts` (modified) - Added composite index for performance
+- **Test Commands**:
+  - Frontend: Visit `http://localhost:5173/cap-table` and use block selector to navigate through history
+  - Backend: `curl "http://localhost:4000/api/shareholders?blockNumber=3"` to test historical snapshot
+
 ### Task 4.18: Transactions Page Implementation ✅
 
 - **Status**: Complete - Transactions page fully implemented with sorting, formatting, and backend fix
