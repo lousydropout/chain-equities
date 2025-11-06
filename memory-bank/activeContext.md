@@ -410,6 +410,20 @@
 - Backend event indexer implementation (Task 2.5) ✅ COMPLETE
 - Backend REST API routes - Company Info (Task 2.6) ✅ COMPLETE
 - Backend REST API routes - Shareholders, Transactions, Corporate Actions (Tasks 2.7-2.9) ⏳ NEXT
+9. **Phase 3 - Authentication & Access Control (Demo Simplified)** ⏳ IN PROGRESS
+   - Mock auth middleware complete (Task 3.2) ✅
+     - Simplified `requireAuth()` returning hardcoded demo user with issuer role
+     - Stubbed `requireWalletSignature()`, `requireRole()`, and `requireAnyRole()` for demo
+     - Comprehensive test suite (12 tests passing)
+   - User database schema verified (Task 3.3) ✅
+     - Users table structure preserved with all required fields (uid, email, display_name, wallet_address, role, created_at)
+     - User database utilities implemented in `backend/src/services/db/users.ts` (createUser, getUserByUid, linkWallet, etc.)
+     - No `/api/users` or `/api/wallet` routes exist (deferred to post-demo)
+     - Documentation added explaining deferred functionality
+     - Demo uses mock authentication (Task 3.2) which does not require database lookups
+   - Firebase Admin setup (Task 3.1) ⏸️ Deferred
+   - Wallet linking endpoints (Task 3.4) ⏸️ Deferred
+   - User management endpoints (Task 3.6) ⏸️ Deferred
 - Frontend admin dashboard for issuer operations
 - Frontend shareholder dashboard for investors
 - Integration testing across all layers

@@ -1,6 +1,10 @@
 /**
  * @file User database operations for ChainEquity backend
  * @notice Handles CRUD operations for users table with role management
+ * 
+ * @dev Database utilities for user management.
+ *      Implemented and typed, but not currently exposed via API in demo mode.
+ *      To be connected post-demo (see Tasks 3.3 & 3.4).
  */
 
 import { Database } from "bun:sqlite";

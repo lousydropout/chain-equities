@@ -687,7 +687,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~3 days
 
-**Status:** ⏳ In Progress (Task 3.2 complete)
+**Status:** ⏳ In Progress (Task 3.2, 3.3 complete)
 
 **Dependencies:** Phase 2 complete
 
@@ -738,26 +738,40 @@ This document provides a detailed breakdown of all implementation tasks organize
 - **Test Commands:**
   - Run auth middleware tests: `cd backend && bun test src/__tests__/middleware/auth.test.ts`
 
-### Task 3.3: User Database Schema (Keep Structure, Skip Real Management)
+### Task 3.3: User Database Schema (Keep Structure, Skip Real Management) ✅
 
 - [x] Users table structure exists (verified)
-- [ ] Skip: Real user management endpoints
-- [ ] Skip: Wallet linking to users
-- [ ] Document: Users table kept for structure, but real user management deferred
-- **Deliverable:** Users table structure preserved, real management deferred
+- [x] Skip: Real user management endpoints (confirmed - no `/api/users` routes exist)
+- [x] Skip: Wallet linking to users (confirmed - no `/api/wallet` routes exist)
+- [x] Document: Users table kept for structure, but real user management deferred
+- **Deliverable:** Users table structure preserved, real management deferred ✅
+- **Status:** Complete - Users table structure verified, utilities exist but not exposed via API, documentation added
 
-- [ ] Extend database schema:
-  - [ ] Add `users` table (if not exists)
-  - [ ] Add `wallet_address` column
-  - [ ] Add `role` column
-  - [ ] Add indexes
-- [ ] Create user model/utilities:
-  - [ ] `createUser()`
-  - [ ] `getUserByUid()`
-  - [ ] `updateUser()`
-  - [ ] `linkWallet()`
-- [ ] Write database migration
-- **Deliverable:** User database schema ready
+- [x] Extend database schema:
+  - [x] Add `users` table (already exists with all required fields)
+  - [x] Add `wallet_address` column (already exists)
+  - [x] Add `role` column (already exists)
+  - [x] Add indexes (already exist: email, wallet_address, role)
+- [x] Create user model/utilities:
+  - [x] `createUser()` (implemented in `src/services/db/users.ts`)
+  - [x] `getUserByUid()` (implemented)
+  - [x] `updateUser()` (implemented)
+  - [x] `linkWallet()` (implemented)
+- [x] Write database migration (users table already in schema and migrations)
+- **Deliverable:** User database schema ready ✅
+- **Summary:**
+  - Users table structure verified with all required fields (uid, email, display_name, wallet_address, role, created_at)
+  - All user database utilities implemented and typed in `backend/src/services/db/users.ts`
+  - No `/api/users` or `/api/wallet` routes exist (confirmed in `backend/src/index.ts` and routes directory)
+  - Demo uses mock authentication middleware (Task 3.2) which does not require database lookups
+  - Documentation added to `schema.md` explaining deferred functionality
+  - Code comments added to `users.ts` noting utilities are not exposed via API in demo mode
+- **Files Verified/Modified:**
+  - `backend/src/db/schema.ts` (verified) - Users table structure complete
+  - `backend/src/services/db/users.ts` (modified) - Added demo mode documentation comment
+  - `backend/src/db/schema.md` (modified) - Added demo mode note section
+  - `backend/src/index.ts` (verified) - No user/wallet routes registered
+  - `backend/src/routes/` (verified) - No user.ts or wallet.ts files exist
 
 ### Task 3.4: Wallet Linking Endpoint ⏸️ **Deferred (Post-Demo)**
 

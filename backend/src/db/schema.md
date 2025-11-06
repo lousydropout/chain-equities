@@ -27,6 +27,9 @@ The database uses SQLite with PostgreSQL-compatible syntax for future migration.
 
 **Relationships:** None (standalone authentication table)
 
+**Demo Mode Note:**
+The users table structure is preserved for schema continuity and future use. However, user management API endpoints (`/api/users`) and wallet linking endpoints (`/api/wallet`) are deferred to post-demo (see Tasks 3.4 & 3.6). Database utilities for user management exist in `src/services/db/users.ts` but are not currently exposed via API. The demo uses mock authentication middleware (Task 3.2) which does not require database lookups.
+
 ---
 
 ### shareholders
