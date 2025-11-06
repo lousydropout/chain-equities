@@ -856,7 +856,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~3 weeks
 
-**Status:** ⏳ In Progress (Task 4.1, 4.2, 4.3, 4.4, 4.5, 4.6 complete)
+**Status:** ⏳ In Progress (Task 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7 complete)
 
 **Dependencies:** Phase 3 complete
 
@@ -1171,17 +1171,46 @@ This document provides a detailed breakdown of all implementation tasks organize
   - Users can log in by clicking quick login buttons or entering email/username in login form
   - All users stored in `DEMO_USERS` constant in `frontend/src/types/auth.ts`
 
-### Task 4.7: API Client Setup
+### Task 4.7: API Client Setup ✅
 
-- [ ] Create `frontend/src/lib/api.ts`
-- [ ] Implement API client:
-  - [ ] Base URL configuration
-  - [ ] JWT token attachment
-  - [ ] Error handling
-  - [ ] Request/response interceptors
-- [ ] Create typed API functions
-- [ ] Add React Query hooks
-- **Deliverable:** API client ready
+- [x] Create `frontend/src/lib/api.ts`
+- [x] Implement API client:
+  - [x] Base URL configuration
+  - [x] JWT token attachment
+  - [x] Error handling
+  - [x] Request/response interceptors
+- [x] Create typed API functions
+- [x] Add React Query hooks
+- **Deliverable:** API client ready ✅
+- **Status:** Complete - Comprehensive API client implemented with composable design, centralized fetch logic, error handling, and React Query hooks
+- **Summary:**
+  - Created `frontend/src/types/api.ts` with TypeScript types matching all backend response schemas
+  - Implemented composable `createApiClient()` factory function for future multi-tenant support
+  - Centralized fetch logic with automatic JSON parsing for both success and error responses
+  - Created `APIError` class for typed error handling (status, message, data)
+  - Token attachment via token getter function (`getAuthToken()` from `lib/auth.ts`)
+  - All API functions implemented: `getCompany()`, `getCompanyMetadata()`, `getShareholders()`, `getShareholder()`, `getTransactions()`, `getTransactionByHash()`
+  - Created React Query hooks in `frontend/src/hooks/useApi.ts` with proper typing: `UseQueryResult<T, APIError>`
+  - Pagination ergonomics: Helper hooks (`useShareholdersData()`, `useTransactionsData()`) return composed objects
+  - Created API test page (`/api-test`) for comprehensive endpoint testing
+  - All files compile without errors, no linting errors
+- **Files Created/Modified:**
+  - `frontend/src/types/api.ts` (new) - Complete TypeScript types for all API responses
+  - `frontend/src/lib/api.ts` (new) - Composable API client with error handling and token attachment
+  - `frontend/src/hooks/useApi.ts` (new) - React Query hooks for all endpoints with pagination helpers
+  - `frontend/src/pages/APITest.tsx` (new) - Test page for verifying API client integration
+  - `frontend/src/App.tsx` (modified) - Added `/api-test` route
+- **Key Features:**
+  - Composable client design allows creating multiple client instances for different tenants
+  - JSON parsing for both success and error responses (handles 400/500 with JSON bodies)
+  - Clean return types: All functions return `Promise<T>` and throw `APIError` on error
+  - React Query integration uses existing QueryClient configuration
+  - Query keys structured for easy cache invalidation
+  - Environment variable support: `VITE_API_URL` (defaults to `http://localhost:4000`)
+- **Test Commands:**
+  - TypeScript: `cd frontend && bunx tsc --noEmit`
+  - Build: `cd frontend && bun run build`
+  - Test page: Visit `http://localhost:5173/api-test` after login
 
 ### Task 4.8: Company Dashboard Page
 

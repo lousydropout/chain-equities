@@ -258,6 +258,18 @@
      - Redirects unauthenticated users to /login
      - Shows loading state during auth check
      - Applied to home route (/) in App.tsx
+   - API Client Setup complete (Task 4.7) ✅
+     - Created `frontend/src/types/api.ts` with TypeScript types matching all backend response schemas
+     - Implemented composable `createApiClient()` factory function for future multi-tenant support
+     - Centralized fetch logic with automatic JSON parsing for both success and error responses
+     - Created `APIError` class for typed error handling (status, message, data)
+     - Token attachment via token getter function (`getAuthToken()` from `lib/auth.ts`)
+     - All API functions implemented: `getCompany()`, `getCompanyMetadata()`, `getShareholders()`, `getShareholder()`, `getTransactions()`, `getTransactionByHash()`
+     - Created React Query hooks in `frontend/src/hooks/useApi.ts` with proper typing: `UseQueryResult<T, APIError>`
+     - Pagination ergonomics: Helper hooks (`useShareholdersData()`, `useTransactionsData()`) return composed objects
+     - Created API test page (`/api-test`) for comprehensive endpoint testing
+     - All files compile without errors, no linting errors
+     - Environment variable support: `VITE_API_URL` (defaults to `http://localhost:4000`)
 
 ### Planned Enhancements
 
@@ -296,7 +308,7 @@
 21. ✅ TailwindCSS + shadcn/ui integration complete (Task 4.4b) - All components migrated to TailwindCSS
 22. ✅ Login/Register pages complete (Task 4.5) - React Router, form validation, protected routes
 23. ✅ Protected route wrapper complete (Task 4.6) - Authentication checks and redirects
-24. ⏳ Implement frontend API client setup (Task 4.7)
+24. ✅ Frontend API client setup complete (Task 4.7) - Composable API client, typed functions, React Query hooks
 25. ⏳ Create frontend company dashboard page (Task 4.8)
 26. ⏳ Create frontend admin dashboard UI
 27. ⏳ Create frontend shareholder dashboard UI

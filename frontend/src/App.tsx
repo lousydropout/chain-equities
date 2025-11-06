@@ -12,6 +12,7 @@ import { Home } from './pages/Home';
 import { Admin } from './pages/Admin';
 import { Investor } from './pages/Investor';
 import { WalletRequired } from './pages/WalletRequired';
+import { APITest } from './pages/APITest';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 /**
@@ -91,6 +92,15 @@ function App() {
         element={
           <ProtectedRoute requireWallet={true}>
             <WalletRequired />
+          </ProtectedRoute>
+        }
+      />
+      {/* API Test route - for testing API client integration */}
+      <Route
+        path="/api-test"
+        element={
+          <ProtectedRoute>
+            <APITest />
           </ProtectedRoute>
         }
       />
