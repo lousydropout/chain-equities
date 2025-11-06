@@ -204,7 +204,7 @@ export function Dashboard() {
       )}
 
       {/* Navigation Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <NavCard
           to="/cap-table"
           title="Cap Table"
@@ -218,8 +218,8 @@ export function Dashboard() {
         {(user?.role === 'issuer' || user?.role === 'admin') && (
           <NavCard
             to="/approvals"
-            title="Wallet Approvals"
-            description="Approve investor wallets"
+            title="Wallet Management"
+            description="Approve or revoke investor wallets"
           />
         )}
         <NavCard

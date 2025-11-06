@@ -12,6 +12,7 @@ import {
   getShareholder,
   getMyShareholder,
   getPendingApprovals,
+  getApprovedUsers,
   getTransactions,
   getTransactionByHash,
   linkWallet,
@@ -33,6 +34,7 @@ import type {
   TransactionsQueryParams,
   TransactionDetail,
   PendingApprovalsResponse,
+  ApprovedUsersResponse,
 } from '../types/api';
 
 // ============================================================================
@@ -186,6 +188,19 @@ export function usePendingApprovals(): UseQueryResult<PendingApprovalsResponse, 
   return useQuery<PendingApprovalsResponse, APIError>({
     queryKey: ['shareholders', 'pending'],
     queryFn: () => getPendingApprovals(),
+  });
+}
+
+/**
+ * React Query hook for approved wallet users
+ * GET /api/shareholders/approved
+ *
+ * @returns Query result with list of approved users
+ */
+export function useApprovedUsers(): UseQueryResult<ApprovedUsersResponse, APIError> {
+  return useQuery<ApprovedUsersResponse, APIError>({
+    queryKey: ['shareholders', 'approved'],
+    queryFn: () => getApprovedUsers(),
   });
 }
 

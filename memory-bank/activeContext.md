@@ -460,6 +460,13 @@
   - Wallet automatically disconnects on logout
   - Wallet automatically disconnects on login (fresh state)
   - Implemented in AuthContext using Wagmi's useDisconnect hook
+- **Unlink Wallet Bug Fix** ✅
+  - Fixed "Body cannot be empty when content-type is set to 'application/json'" error
+  - Issue: `unlinkWallet()` function was sending POST request with `Content-Type: application/json` but no body
+  - Fastify requires a body when content-type is `application/json`
+  - Solution: Added `body: JSON.stringify({})` to send empty JSON object
+  - Location: `frontend/src/lib/api.ts` - `unlinkWallet()` function
+  - API route: `POST /api/wallet/unlink` (doesn't require body parameters, uses authenticated user from headers)
 - **UI/UX Improvements** ✅
   - **Profile Menu with Wallet Management** ✅
     - Created `ProfileMenu.tsx` component consolidating wallet connection, linking, and logout

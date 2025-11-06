@@ -74,16 +74,6 @@ await tokenAsAlice.transfer(bob.address, ethers.parseEther("30"));
 (await Token.balanceOf(bob.address)).toString(); // 30e18
 ```
 
-### Execute a Stock Split
-
-```ts
-await Token.executeSplit(ethers.parseEther("7"));
-(await Token.splitFactor()).toString(); // "7000000000000000000"
-
-(await Token.effectiveBalanceOf(alice.address)).toString(); // 490e18
-(await Token.effectiveBalanceOf(bob.address)).toString(); // 210e18
-```
-
 ### Record a Corporate Action
 
 ```ts

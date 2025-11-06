@@ -15,6 +15,7 @@ import type {
   TransactionsQueryParams,
   TransactionDetail,
   PendingApprovalsResponse,
+  ApprovedUsersResponse,
 } from '../types/api';
 
 /**
@@ -238,6 +239,17 @@ export async function getPendingApprovals(): Promise<PendingApprovalsResponse> {
   return api.apiRequest<PendingApprovalsResponse>('/api/shareholders/pending');
 }
 
+/**
+ * Get approved wallet users
+ * GET /api/shareholders/approved
+ *
+ * @returns List of investors with linked wallets that are approved on contract
+ * @throws APIError on error
+ */
+export async function getApprovedUsers(): Promise<ApprovedUsersResponse> {
+  return api.apiRequest<ApprovedUsersResponse>('/api/shareholders/approved');
+}
+
 // ============================================================================
 // Transactions API Functions
 // ============================================================================
@@ -339,6 +351,7 @@ export async function unlinkWallet(): Promise<{ success: boolean; message: strin
     '/api/wallet/unlink',
     {
       method: 'POST',
+      body: JSON.stringify({}),
     }
   );
 }

@@ -174,3 +174,10 @@ export interface PendingApprovalsResponse {
   pending: PendingApproval[];
 }
 
+/**
+ * Approved users response from GET /api/shareholders/approved
+ */
+export interface ApprovedUsersResponse {
+  approved: PendingApproval[];
+}
+

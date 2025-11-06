@@ -224,6 +224,16 @@ async function getShareholder(
   try {
     const { address } = request.params;
 
+    // Check for reserved route names - these should be handled by other routes
+    const reservedWords = ['approved', 'pending', 'me'];
+    if (reservedWords.includes(address.toLowerCase())) {
+      reply.code(404).send({
+        error: "Not found",
+        message: `Route /shareholders/${address} not found`,
+      });
+      return;
+    }
+
     // Validate address format using viem
     if (!isAddress(address)) {
       reply.code(400).send({
@@ -460,6 +470,70 @@ async function getPendingApprovals(
 }
 
 /**
+ * GET /api/shareholders/approved
+ * Returns list of investors with linked wallets that are approved on contract
+ */
+async function getApprovedUsers(
+  request: FastifyRequest,
+  reply: FastifyReply
+): Promise<void> {
+  try {
+    const db = connect();
+    const publicClient = getPublicClient();
+    const { address: tokenAddress, abi } = CONTRACTS.token;
+
+    // Get all investors with linked wallets
+    const investors = getUsersWithLinkedWallets(db, "investor");
+
+    // Check approval status for each investor's wallet
+    const approvedUsers = [];
+    for (const investor of investors) {
+      if (!investor.walletAddress) {
+        continue; // Skip if no wallet address (shouldn't happen, but safety check)
+      }
+
+      // Validate wallet address format
+      if (!isAddress(investor.walletAddress)) {
+        request.log.warn(
+          { walletAddress: investor.walletAddress },
+          "Invalid wallet address format for investor"
+        );
+        continue;
+      }
+
+      // Check contract approval status
+      const isApproved = await safeRead<boolean>(publicClient, {
+        address: tokenAddress,
+        abi,
+        functionName: "isApproved",
+        args: [investor.walletAddress.toLowerCase() as Address],
+      });
+
+      // If wallet is approved, add to approved list
+      if (isApproved === true) {
+        approvedUsers.push({
+          uid: investor.uid,
+          email: investor.email,
+          displayName: investor.displayName || investor.email,
+          walletAddress: investor.walletAddress,
+          isApproved: true,
+        });
+      }
+    }
+
+    reply.send({
+      approved: approvedUsers,
+    });
+  } catch (error) {
+    request.log.error(error, "Error fetching approved users");
+    reply.code(500).send({
+      error: "Internal server error",
+      message: "Failed to fetch approved users",
+    });
+  }
+}
+
+/**
  * Register shareholders routes with Fastify instance
  */
 export async function shareholdersRoutes(
@@ -578,6 +652,39 @@ export async function shareholdersRoutes(
     },
   };
 
+  // Response schema for GET /api/shareholders/approved
+  const approvedUsersSchema = {
+    response: {
+      200: {
+        type: "object",
+        properties: {
+          approved: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                uid: { type: "string" },
+                email: { type: "string" },
+                displayName: { type: "string" },
+                walletAddress: { type: "string" },
+                isApproved: { type: "boolean" },
+              },
+              required: ["uid", "email", "displayName", "walletAddress", "isApproved"],
+            },
+          },
+        },
+        required: ["approved"],
+      },
+      500: {
+        type: "object",
+        properties: {
+          error: { type: "string" },
+          message: { type: "string" },
+        },
+      },
+    },
+  };
+
   // Register specific routes before parameterized routes to avoid conflicts
   // Fastify matches routes in registration order, so /me must come before /:address
   fastify.get("/shareholders", { schema: shareholdersListSchema }, getShareholders);
@@ -585,6 +692,11 @@ export async function shareholdersRoutes(
     "/shareholders/pending",
     { schema: pendingApprovalsSchema },
     getPendingApprovals
+  );
+  fastify.get(
+    "/shareholders/approved",
+    { schema: approvedUsersSchema },
+    getApprovedUsers
   );
   // Register /me route with explicit path to ensure it's matched before /:address
   fastify.get(
@@ -595,7 +707,8 @@ export async function shareholdersRoutes(
     },
     getMyShareholder
   );
-  // Register parameterized route last to avoid matching "me" as an address
+  // Register parameterized route last to avoid matching "me", "approved", or "pending" as addresses
+  // Fastify should match specific routes first, but we also check for reserved words in the handler
   fastify.get(
     "/shareholders/:address",
     { schema: shareholderDetailSchema },
