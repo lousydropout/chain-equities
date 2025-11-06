@@ -223,10 +223,10 @@ export function ShareholderTable({
                   {formatAddress(shareholder.address)}
                 </td>
                 <td className="py-2 px-4 text-right font-mono">
-                  {formatTokenAmount(balance, decimals)}
+                  {formatTokenAmount(balance, decimals, { maxFraction: decimals, compact: false })}
                 </td>
                 <td className="py-2 px-4 text-right font-mono">
-                  {formatTokenAmount(effectiveBalance, decimals)}
+                  {formatTokenAmount(effectiveBalance, decimals, { maxFraction: decimals, compact: false })}
                 </td>
                 <td className="py-2 px-4 text-right">
                   <div className="flex flex-col items-end gap-1">
