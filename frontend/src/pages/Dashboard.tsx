@@ -152,7 +152,10 @@ export function Dashboard() {
           description="Total shares currently issued and held by shareholders"
           value={
             totalOutstanding
-              ? formatTokenAmount(totalOutstanding, decimals, { compact: false, maxFraction: 20 })
+              ? formatTokenAmount(totalOutstanding, decimals, {
+                  compact: false,
+                  maxFraction: 20,
+                })
               : '—'
           }
           icon={<Coins className="h-5 w-5" aria-hidden />}
@@ -169,7 +172,12 @@ export function Dashboard() {
           title="Authorized"
           description="Maximum number of shares that can be issued (set at token creation)"
           value={
-            totalAuthorized ? formatTokenAmount(totalAuthorized, decimals, { compact: false, maxFraction: 20 }) : '—'
+            totalAuthorized
+              ? formatTokenAmount(totalAuthorized, decimals, {
+                  compact: false,
+                  maxFraction: 20,
+                })
+              : '—'
           }
           icon={<Link2 className="h-5 w-5" aria-hidden />}
           testId="stat-total-authorized"
@@ -204,7 +212,7 @@ export function Dashboard() {
       )}
 
       {/* Navigation Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <NavCard
           to="/cap-table"
           title="Cap Table"
@@ -222,11 +230,6 @@ export function Dashboard() {
             description="Approve or revoke investor wallets"
           />
         )}
-        <NavCard
-          to="/api-test"
-          title="API Test"
-          description="Debug endpoints"
-        />
       </div>
     </div>
   );
