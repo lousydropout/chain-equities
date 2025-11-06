@@ -13,9 +13,11 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { getPublicClient } from "../services/chain/client";
 import { CONTRACTS } from "../config/contracts";
 import { safeRead } from "../services/chain/utils";
-import { query, queryOne } from "../db/index";
+import { query, queryOne, connect } from "../db/index";
 import { isAddress } from "viem";
 import type { Address } from "viem";
+import { getUsersWithLinkedWallets, getUserByUid } from "../services/db/users";
+import { requireAuth } from '../middleware/auth';
 
 /**
  * Cache for totalSupply and splitFactor (5-second TTL)
@@ -303,6 +305,161 @@ async function getShareholder(
 }
 
 /**
+ * GET /api/shareholders/me
+ * Returns shareholder information for the authenticated user's linked wallet
+ * This endpoint queries by user ID (foundational), not wallet address
+ */
+async function getMyShareholder(
+  request: FastifyRequest,
+  reply: FastifyReply
+): Promise<void> {
+  const user = request.user;
+  if (!user) {
+    return reply.code(401).send({
+      error: 'Unauthorized',
+      message: 'Authentication required',
+    });
+  }
+
+  try {
+    const db = connect();
+    const userRecord = getUserByUid(db, user.uid);
+
+    // If user doesn't exist or has no linked wallet, return 404
+    if (!userRecord || !userRecord.walletAddress) {
+      return reply.code(404).send({
+        error: 'Wallet not linked',
+        message: 'No wallet address is linked to your account. Please link a wallet first.',
+      });
+    }
+
+    // Use the existing getShareholder logic but with the linked wallet address
+    const publicClient = getPublicClient();
+    const { address: tokenAddress, abi } = CONTRACTS.token;
+    const normalizedAddress = userRecord.walletAddress.toLowerCase() as Address;
+
+    // Query contract for real-time balances
+    const [balance, effectiveBalance] = await Promise.all([
+      safeRead<bigint>(publicClient, {
+        address: tokenAddress,
+        abi,
+        functionName: "balanceOf",
+        args: [normalizedAddress],
+      }),
+      safeRead<bigint>(publicClient, {
+        address: tokenAddress,
+        abi,
+        functionName: "effectiveBalanceOf",
+        args: [normalizedAddress],
+      }),
+    ]);
+
+    // Get cached supply data for ownership percentage
+    const { totalEffectiveSupply } = await getCachedSupply();
+
+    // Query database for last_updated_block
+    let lastUpdatedBlock: number | null = null;
+    try {
+      const dbRow = queryOne<{
+        lastUpdatedBlock: number;
+      }>(
+        `SELECT last_updated_block AS lastUpdatedBlock
+         FROM shareholders
+         WHERE address = ?`,
+        [normalizedAddress]
+      );
+      lastUpdatedBlock = dbRow?.lastUpdatedBlock || null;
+    } catch (dbError) {
+      request.log.warn(dbError, "Failed to query lastUpdatedBlock from database");
+    }
+
+    // Calculate ownership percentage
+    const ownershipPercentage = calculateOwnershipPercentage(
+      effectiveBalance || 0n,
+      totalEffectiveSupply
+    );
+
+    reply.send({
+      address: normalizedAddress,
+      balance: (balance || 0n).toString(),
+      effectiveBalance: (effectiveBalance || 0n).toString(),
+      ownershipPercentage,
+      lastUpdatedBlock,
+    });
+  } catch (error) {
+    request.log.error(error, "Error fetching my shareholder info");
+    reply.code(500).send({
+      error: "Internal server error",
+      message: "Failed to fetch shareholder information",
+    });
+  }
+}
+
+/**
+ * GET /api/shareholders/pending
+ * Returns list of investors with linked wallets that are not approved on contract
+ */
+async function getPendingApprovals(
+  request: FastifyRequest,
+  reply: FastifyReply
+): Promise<void> {
+  try {
+    const db = connect();
+    const publicClient = getPublicClient();
+    const { address: tokenAddress, abi } = CONTRACTS.token;
+
+    // Get all investors with linked wallets
+    const investors = getUsersWithLinkedWallets(db, "investor");
+
+    // Check approval status for each investor's wallet
+    const pendingApprovals = [];
+    for (const investor of investors) {
+      if (!investor.walletAddress) {
+        continue; // Skip if no wallet address (shouldn't happen, but safety check)
+      }
+
+      // Validate wallet address format
+      if (!isAddress(investor.walletAddress)) {
+        request.log.warn(
+          { walletAddress: investor.walletAddress },
+          "Invalid wallet address format for investor"
+        );
+        continue;
+      }
+
+      // Check contract approval status
+      const isApproved = await safeRead<boolean>(publicClient, {
+        address: tokenAddress,
+        abi,
+        functionName: "isApproved",
+        args: [investor.walletAddress.toLowerCase() as Address],
+      });
+
+      // If approval check failed or wallet is not approved, add to pending list
+      if (isApproved === null || isApproved === false) {
+        pendingApprovals.push({
+          uid: investor.uid,
+          email: investor.email,
+          displayName: investor.displayName || investor.email,
+          walletAddress: investor.walletAddress,
+          isApproved: false,
+        });
+      }
+    }
+
+    reply.send({
+      pending: pendingApprovals,
+    });
+  } catch (error) {
+    request.log.error(error, "Error fetching pending approvals");
+    reply.code(500).send({
+      error: "Internal server error",
+      message: "Failed to fetch pending approvals",
+    });
+  }
+}
+
+/**
  * Register shareholders routes with Fastify instance
  */
 export async function shareholdersRoutes(
@@ -388,7 +545,57 @@ export async function shareholdersRoutes(
     },
   };
 
+  // Response schema for GET /api/shareholders/pending
+  const pendingApprovalsSchema = {
+    response: {
+      200: {
+        type: "object",
+        properties: {
+          pending: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                uid: { type: "string" },
+                email: { type: "string" },
+                displayName: { type: "string" },
+                walletAddress: { type: "string" },
+                isApproved: { type: "boolean" },
+              },
+              required: ["uid", "email", "displayName", "walletAddress", "isApproved"],
+            },
+          },
+        },
+        required: ["pending"],
+      },
+      500: {
+        type: "object",
+        properties: {
+          error: { type: "string" },
+          message: { type: "string" },
+        },
+      },
+    },
+  };
+
+  // Register specific routes before parameterized routes to avoid conflicts
+  // Fastify matches routes in registration order, so /me must come before /:address
   fastify.get("/shareholders", { schema: shareholdersListSchema }, getShareholders);
+  fastify.get(
+    "/shareholders/pending",
+    { schema: pendingApprovalsSchema },
+    getPendingApprovals
+  );
+  // Register /me route with explicit path to ensure it's matched before /:address
+  fastify.get(
+    "/shareholders/me",
+    { 
+      preHandler: requireAuth,
+      schema: shareholderDetailSchema 
+    },
+    getMyShareholder
+  );
+  // Register parameterized route last to avoid matching "me" as an address
   fastify.get(
     "/shareholders/:address",
     { schema: shareholderDetailSchema },

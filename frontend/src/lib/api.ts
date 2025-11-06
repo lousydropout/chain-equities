@@ -3,7 +3,7 @@
  * @notice Composable API client with centralized fetch logic, error handling, and token attachment
  */
 
-import { getAuthToken } from './auth';
+import { getAuthToken, getAuthUser } from './auth';
 import type {
   CompanyInfo,
   CompanyMetadata,
@@ -14,6 +14,7 @@ import type {
   TransactionsResponse,
   TransactionsQueryParams,
   TransactionDetail,
+  PendingApprovalsResponse,
 } from '../types/api';
 
 /**
@@ -70,6 +71,19 @@ export function createApiClient(
     // Attach auth token if available
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
+    }
+    
+    // In demo mode, send user info in custom headers so backend knows which user
+    const userStr = getAuthUser();
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        headers.set('X-User-Uid', user.uid || '');
+        headers.set('X-User-Email', user.email || '');
+        headers.set('X-User-Role', user.role || '');
+      } catch (err) {
+        // Ignore parsing errors
+      }
     }
     
     try {
@@ -199,6 +213,29 @@ export async function getShareholders(
  */
 export async function getShareholder(address: string): Promise<Shareholder> {
   return api.apiRequest<Shareholder>(`/api/shareholders/${encodeURIComponent(address)}`);
+}
+
+/**
+ * Get current user's shareholder information
+ * GET /api/shareholders/me
+ * Queries by user ID (foundational), not wallet address
+ *
+ * @returns Shareholder details for authenticated user's linked wallet
+ * @throws APIError on error (404 if wallet not linked)
+ */
+export async function getMyShareholder(): Promise<Shareholder> {
+  return api.apiRequest<Shareholder>('/api/shareholders/me');
+}
+
+/**
+ * Get pending wallet approvals
+ * GET /api/shareholders/pending
+ *
+ * @returns List of investors with linked wallets that are not approved on contract
+ * @throws APIError on error
+ */
+export async function getPendingApprovals(): Promise<PendingApprovalsResponse> {
+  return api.apiRequest<PendingApprovalsResponse>('/api/shareholders/pending');
 }
 
 // ============================================================================

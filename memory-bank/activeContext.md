@@ -13,17 +13,21 @@
 - **Integration**: Embedded in Dashboard under "Shareholder Actions" card section
 - **Key Features**:
   - Form validation with react-hook-form + zod (recipient address, amount <= user's balance)
-  - Fetches user's balance using `useShareholder(connectedAddress)` hook
+  - Fetches user's balance using `useMyShareholder()` hook (queries by user ID via `/api/shareholders/me`)
   - Displays user's current balance in the form
   - Wagmi integration: `useWriteContract` for transfer transaction, `useWaitForTransactionReceipt` for confirmation
   - Available to all authenticated users (not role-restricted)
   - Transaction state management (loading, success with hash, error handling)
   - Automatic cache invalidation for shareholders and company stats after successful transfer
-  - Handles edge cases: wallet not connected, balance loading, no balance
+  - Handles edge cases: wallet not linked, balance loading, no balance
+  - Shows wallet mismatch warning if connected wallet doesn't match linked wallet
 - **Files Created**:
   - `frontend/src/components/TransferSharesForm.tsx` - Main transfer form component
 - **Files Modified**:
   - `frontend/src/pages/Dashboard.tsx` - Added "Shareholder Actions" section with TransferSharesForm
+  - `backend/src/routes/shareholders.ts` - Added GET /api/shareholders/me endpoint
+  - `frontend/src/lib/api.ts` - Added getMyShareholder() function
+  - `frontend/src/hooks/useApi.ts` - Added useMyShareholder() hook
 
 ### Task 4.13: Wallet Linking UI ✅
 
@@ -32,6 +36,12 @@
 - **Integration**: Embedded in Dashboard under "Wallet Management" section, Connect component added to Dashboard
 - **Key Features**:
   - Link/unlink wallet functionality with backend API integration
+  - User ID-based authentication (frontend sends user info in custom headers)
+  - Backend extracts user info from X-User-Uid, X-User-Email, X-User-Role headers
+  - Auto-creates users in database if they don't exist (demo mode)
+  - Graceful handling of "user not found" scenarios
+  - Optimistic cache updates for immediate UI feedback
+  - Wallet disconnection on logout/login for security
   - Shows current wallet linking status
   - Displays connected wallet address
   - Link/unlink buttons with loading states and error handling
@@ -370,11 +380,12 @@
    - Share Transfer Form complete (Task 4.12) ✅
      - Created `TransferSharesForm.tsx` component for shareholders to transfer tokens
      - Form validation with balance checking (amount <= user's balance)
-     - Fetches user's balance using `useShareholder(connectedAddress)` hook
+     - Fetches user's balance using `useMyShareholder()` hook (queries by user ID)
      - Displays user's current balance in the form
      - Uses Wagmi's `useWriteContract` to call `transfer()` function
      - Available to all authenticated users (not role-restricted)
-     - Handles edge cases: wallet not connected, balance loading, no balance
+     - Handles edge cases: wallet not linked, balance loading, no balance
+     - Shows wallet mismatch warning if connected wallet doesn't match linked wallet
      - Transaction state management and cache invalidation
      - Integrated into Dashboard under "Shareholder Actions" section
    - Wallet Linking UI complete (Task 4.13) ✅
@@ -386,12 +397,47 @@
      - Graceful error handling (shows buttons even if status check fails)
      - Integrated into Dashboard under "Wallet Management" section
      - Connect component added to Dashboard for wallet connection
+     - User ID-based authentication (frontend sends user info in headers, backend extracts it)
+     - Auto-creates users in database if they don't exist (demo mode)
+     - Wallet disconnection on logout/login for security
+   - Investor Wallet Approval Flow complete (Task 4.14) ✅
+     - Created Approvals page for issuer/admin to approve investor wallets
+     - Backend endpoint: GET /api/shareholders/pending - Returns investors with linked wallets not approved on contract
+     - Frontend displays table of pending approvals with investor details
+     - Approve button calls approveWallet() function on ChainEquityToken contract via Wagmi
+     - Real-time status updates via React Query cache invalidation
+     - Role-based access control (only issuer/admin can access)
+     - Integrated into Dashboard with navigation card
    - Issue Shares Form Enhanced ✅
      - Enhanced with investor dropdown (replaces manual address input)
      - Fetches investors with linked wallets via `useInvestorsWithWallets()` hook
      - Dropdown displays investor displayName and wallet address
      - Maps selected investor UID to wallet address on form submission
      - Shows helpful message if no investors have linked wallets
+
+### Recent Fixes and Improvements
+
+- **User ID-based Authentication** ✅
+  - Frontend sends user info in custom headers (X-User-Uid, X-User-Email, X-User-Role)
+  - Backend extracts user info from headers instead of hardcoded demo-user
+  - Fixes wallet linking to use correct user ID (no more catch-22)
+- **Shareholder Query by User ID** ✅
+  - Added `/api/shareholders/me` endpoint that queries by authenticated user ID
+  - Frontend uses `useMyShareholder()` hook instead of querying by wallet address
+  - Eliminates catch-22: queries by user ID (foundational) instead of wallet address
+  - TransferSharesForm now queries by user ID, not connected wallet address
+- **Database Mapping Fixes** ✅
+  - Fixed all user database functions to use `asUserRecord()` helper
+  - Properly maps snake_case database columns to camelCase TypeScript properties
+  - Fixes wallet linking response to return correct walletAddress
+- **Wallet Disconnection on Auth State Changes** ✅
+  - Wallet automatically disconnects on logout
+  - Wallet automatically disconnects on login (fresh state)
+  - Implemented in AuthContext using Wagmi's useDisconnect hook
+- **UI/UX Improvements** ✅
+  - Added user greeting in Dashboard: "Hi, <username>" button replaces logout icon
+  - Shows who is currently logged in
+  - Button still functions as logout when clicked
 
 ### Planned Enhancements
 

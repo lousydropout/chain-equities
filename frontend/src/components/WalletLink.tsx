@@ -33,8 +33,14 @@ export function WalletLink() {
   // Link wallet mutation
   const linkMutation = useMutation({
     mutationFn: (walletAddress: string) => linkWallet(walletAddress),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wallet', 'status'] });
+    onSuccess: async (data, walletAddress) => {
+      // Optimistically update the cache with the new wallet address
+      queryClient.setQueryData(['wallet', 'status'], {
+        walletAddress: data.walletAddress || walletAddress,
+        isLinked: true,
+      });
+      // Also invalidate and refetch to ensure we get fresh data from server
+      await queryClient.refetchQueries({ queryKey: ['wallet', 'status'] });
       setActionSuccess('Wallet linked successfully');
       setActionError(null);
       setTimeout(() => setActionSuccess(null), 3000);
@@ -48,8 +54,14 @@ export function WalletLink() {
   // Unlink wallet mutation
   const unlinkMutation = useMutation({
     mutationFn: () => unlinkWallet(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wallet', 'status'] });
+    onSuccess: async () => {
+      // Optimistically update the cache to show unlinked state
+      queryClient.setQueryData(['wallet', 'status'], {
+        walletAddress: null,
+        isLinked: false,
+      });
+      // Also invalidate and refetch to ensure we get fresh data from server
+      await queryClient.refetchQueries({ queryKey: ['wallet', 'status'] });
       setActionSuccess('Wallet unlinked successfully');
       setActionError(null);
       setTimeout(() => setActionSuccess(null), 3000);

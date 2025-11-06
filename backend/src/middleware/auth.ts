@@ -58,8 +58,22 @@ export async function requireAuth(
     });
   }
 
-  // Always attach demo user context (no token verification in demo mode)
+  // In demo mode, extract user info from custom headers sent by frontend
+  const userUid = req.headers['x-user-uid'] as string | undefined;
+  const userEmail = req.headers['x-user-email'] as string | undefined;
+  const userRole = req.headers['x-user-role'] as string | undefined;
+
+  if (userUid && userEmail && userRole) {
+    // Use user info from headers (demo mode)
+    req.user = {
+      uid: userUid,
+      email: userEmail,
+      role: userRole as UserRole,
+    };
+  } else {
+    // Fallback to demo user if headers not present
   req.user = DEMO_USER;
+  }
 }
 
 /**

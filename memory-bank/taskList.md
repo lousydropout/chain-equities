@@ -1404,17 +1404,21 @@ This document provides a detailed breakdown of all implementation tasks organize
 - **Status:** Complete - Share transfer form implemented with balance validation
 - **Summary:**
   - Created TransferSharesForm component with react-hook-form + zod validation
-  - Fetches user's balance using useShareholder(connectedAddress) hook
+  - Fetches user's balance using useMyShareholder() hook (queries by user ID, not wallet address)
   - Validates amount <= user's balance in zod schema
   - Uses Wagmi's useWriteContract to call transfer() function
   - Displays user's current balance in the form
-  - Handles edge cases: wallet not connected, balance loading, no balance
+  - Handles edge cases: wallet not linked, balance loading, no balance
   - Available to all authenticated users (not role-restricted)
   - Automatic cache invalidation for shareholders and company stats
   - Transaction state management (loading, success with hash, error handling)
+  - Shows wallet mismatch warning if connected wallet doesn't match linked wallet
 - **Files Created/Modified:**
-  - `frontend/src/components/TransferSharesForm.tsx` (new) - Main transfer form component
+  - `frontend/src/components/TransferSharesForm.tsx` (new) - Main transfer form component, uses useMyShareholder() hook
   - `frontend/src/pages/Dashboard.tsx` (modified) - Added "Shareholder Actions" section with TransferSharesForm
+  - `backend/src/routes/shareholders.ts` (modified) - Added GET /api/shareholders/me endpoint (queries by user ID)
+  - `frontend/src/lib/api.ts` (modified) - Added getMyShareholder() function
+  - `frontend/src/hooks/useApi.ts` (modified) - Added useMyShareholder() hook
 
 ### Task 4.13: Wallet Linking UI ✅
 
@@ -1441,22 +1445,42 @@ This document provides a detailed breakdown of all implementation tasks organize
   - Graceful error handling (shows buttons even if status check fails)
 - **Files Created/Modified:**
   - `backend/src/routes/wallet.ts` (new) - Wallet linking routes
-  - `backend/src/services/db/users.ts` (modified) - Added getUsersWithLinkedWallets() function
+  - `backend/src/services/db/users.ts` (modified) - Added getUsersWithLinkedWallets() function, fixed to use asUserRecord() helper
+  - `backend/src/middleware/auth.ts` (modified) - Extracts user info from custom headers (X-User-Uid, X-User-Email, X-User-Role)
   - `backend/src/index.ts` (modified) - Registered wallet routes
-  - `frontend/src/components/WalletLink.tsx` (new) - Wallet linking UI component
-  - `frontend/src/lib/api.ts` (modified) - Added wallet API functions
+  - `frontend/src/lib/api.ts` (modified) - Added wallet API functions, sends user info in custom headers
+  - `frontend/src/components/WalletLink.tsx` (new) - Wallet linking UI component with optimistic cache updates
   - `frontend/src/hooks/useApi.ts` (modified) - Added useWalletStatus() and useInvestorsWithWallets() hooks
-  - `frontend/src/pages/Dashboard.tsx` (modified) - Added Wallet Management section and Connect component
+  - `frontend/src/pages/Dashboard.tsx` (modified) - Added Wallet Management section and Connect component, user greeting
+  - `frontend/src/contexts/AuthContext.tsx` (modified) - Added wallet disconnection on logout/login
 
-### Task 4.14: Investor Wallet Approval Flow
+### Task 4.14: Investor Wallet Approval Flow ✅
 
-- [ ] Create `frontend/src/pages/Approvals.tsx`
-- [ ] Fetch pending linked wallets (via `/api/shareholders/pending`)
-- [ ] Display table of pending investors
-- [ ] Approve wallets (calls backend or contract function)
-- [ ] Update approval status live
-- [ ] Integrate approved wallets into Shareholder Table
-- **Deliverable:** Admin approval dashboard for linked wallets
+- [x] Create `frontend/src/pages/Approvals.tsx`
+- [x] Fetch pending linked wallets (via `/api/shareholders/pending`)
+- [x] Display table of pending investors
+- [x] Approve wallets (calls contract function via Wagmi)
+- [x] Update approval status live
+- [x] Integrate approved wallets into Shareholder Table
+- **Deliverable:** Admin approval dashboard for linked wallets ✅
+- **Status:** Complete - Investor wallet approval flow implemented
+- **Summary:**
+  - Created Approvals page for issuer/admin to approve investor wallets
+  - Backend endpoint: GET /api/shareholders/pending - Returns investors with linked wallets that are not approved on contract
+  - Frontend displays table of pending approvals with investor details (email, displayName, wallet address)
+  - Approve button calls `approveWallet()` function on ChainEquityToken contract using Wagmi
+  - Real-time status updates via React Query cache invalidation
+  - Role-based access control (only issuer/admin can access)
+  - Integrated into Dashboard with navigation card
+  - Handles wallet connection state and loading/error states
+- **Files Created/Modified:**
+  - `backend/src/routes/shareholders.ts` (modified) - Added getPendingApprovals endpoint
+  - `frontend/src/pages/Approvals.tsx` (new) - Approval dashboard page
+  - `frontend/src/types/api.ts` (modified) - Added PendingApproval and PendingApprovalsResponse types
+  - `frontend/src/lib/api.ts` (modified) - Added getPendingApprovals function
+  - `frontend/src/hooks/useApi.ts` (modified) - Added usePendingApprovals hook
+  - `frontend/src/App.tsx` (modified) - Added /approvals route
+  - `frontend/src/pages/Dashboard.tsx` (modified) - Added navigation card for Approvals page
 
 ### Task 4.15: Integration Testing
 

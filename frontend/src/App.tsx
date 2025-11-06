@@ -10,6 +10,7 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { CapTable } from './pages/CapTable';
+import { Approvals } from './pages/Approvals';
 import { Admin } from './pages/Admin';
 import { Investor } from './pages/Investor';
 import { WalletRequired } from './pages/WalletRequired';
@@ -102,6 +103,15 @@ function App() {
         element={
           <ProtectedRoute>
             <CapTable />
+          </ProtectedRoute>
+        }
+      />
+      {/* Approvals route - wallet approval dashboard for issuer/admin */}
+      <Route
+        path="/approvals"
+        element={
+          <ProtectedRoute>
+            <Approvals />
           </ProtectedRoute>
         }
       />

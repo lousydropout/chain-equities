@@ -11,6 +11,7 @@ import {
   useEffect,
   type ReactNode,
 } from 'react';
+import { useDisconnect, useAccount } from 'wagmi';
 import type { AuthContext as AuthContextType } from '../types/auth';
 import { getDemoUser } from '../types/auth';
 import {
@@ -51,6 +52,8 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthContextType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { disconnect } = useDisconnect();
+  const { isConnected } = useAccount();
 
   /**
    * Load auth state from localStorage on mount
@@ -84,6 +87,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = async (emailOrUsername?: string): Promise<void> => {
     setIsLoading(true);
     try {
+      // Disconnect wallet if connected (ensure fresh state on login)
+      if (isConnected) {
+        disconnect();
+      }
+
       // Simulate async operation (e.g., API call)
       await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -114,10 +122,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   /**
-   * Logout - clears auth state
+   * Logout - clears auth state and disconnects wallet
    * @note Post-Demo: Replace with Firebase Auth signOut
    */
   const logout = (): void => {
+    // Disconnect wallet if connected
+    if (isConnected) {
+      disconnect();
+    }
+    
+    // Clear auth state
     setUser(null);
     removeAuthUser();
     removeAuthToken();

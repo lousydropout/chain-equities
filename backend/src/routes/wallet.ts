@@ -6,7 +6,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { connect } from '../db/index';
 import { requireAuth } from '../middleware/auth';
-import { unlinkWallet, linkWallet, getUserByUid, getUsersWithLinkedWallets } from '../services/db/users';
+import { unlinkWallet, linkWallet, getUserByUid, getUsersWithLinkedWallets, createUser } from '../services/db/users';
 import { isAddress } from 'viem';
 
 /**
@@ -55,6 +55,27 @@ export async function walletRoutes(app: FastifyInstance) {
 
       try {
         const db = connect();
+        
+        // In demo mode, auto-create user if they don't exist
+        let userRecord = getUserByUid(db, user.uid);
+        if (!userRecord) {
+          // Auto-create user for demo mode
+          createUser(db, {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.email,
+            role: user.role,
+          });
+          userRecord = getUserByUid(db, user.uid);
+        }
+
+        if (!userRecord) {
+          return reply.code(500).send({
+            error: 'Internal server error',
+            message: 'Failed to create or retrieve user',
+          });
+        }
+
         const updatedUser = linkWallet(db, user.uid, walletAddress);
 
         if (!updatedUser) {
@@ -100,10 +121,12 @@ export async function walletRoutes(app: FastifyInstance) {
         
         // Check if user has a linked wallet
         const currentUser = getUserByUid(db, user.uid);
+        
+        // In demo mode, if user doesn't exist, return success (no wallet to unlink)
         if (!currentUser) {
-          return reply.code(404).send({
-            error: 'User not found',
-            message: 'User account not found',
+          return reply.send({
+            success: true,
+            message: 'Wallet unlinked successfully',
           });
         }
 
@@ -157,10 +180,14 @@ export async function walletRoutes(app: FastifyInstance) {
         const db = connect();
         const userRecord = getUserByUid(db, user.uid);
 
+        // In demo mode, if user doesn't exist in DB, return empty wallet status
+        // This allows the frontend to work even if users aren't seeded yet
         if (!userRecord) {
-          return reply.code(404).send({
-            error: 'User not found',
-            message: 'User account not found',
+          // Demo mode: Return empty wallet status instead of 404
+          // Post-demo: This should return 404 or auto-create user
+          return reply.send({
+            walletAddress: null,
+            isLinked: false,
           });
         }
 

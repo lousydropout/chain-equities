@@ -20,7 +20,6 @@ import {
   Users,
   Coins,
   Link2,
-  LogOut,
   HelpCircle,
 } from 'lucide-react';
 import { formatAddress, formatTokenAmount, formatDate } from '@/lib/utils';
@@ -97,15 +96,16 @@ export function Dashboard() {
     <div className="mx-auto max-w-6xl p-4 md:p-6 space-y-6">
       {/* Top Bar with Logout */}
       <div className="flex justify-end">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleLogout}
-          aria-label="Logout"
-        >
-          <LogOut className="h-4 w-4 mr-2" />
-          Logout
-        </Button>
+        {user && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLogout}
+            aria-label="Logout"
+          >
+            Hi, {user.email.split('@')[0]}
+          </Button>
+        )}
       </div>
 
       {/* Header Card */}
@@ -233,6 +233,13 @@ export function Dashboard() {
           title="Transactions"
           description="Transfers & mints"
         />
+        {(user?.role === 'issuer' || user?.role === 'admin') && (
+          <NavCard
+            to="/approvals"
+            title="Wallet Approvals"
+            description="Approve investor wallets"
+          />
+        )}
         <NavCard to="/api-test" title="API Test" description="Debug endpoints" />
       </div>
     </div>

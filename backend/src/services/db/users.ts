@@ -14,6 +14,7 @@ import type {
   UpdateUserInput,
 } from "../../db/schema";
 import type { UserRole } from "../../types/roles";
+import { asUserRecord } from "../../db/index";
 
 /**
  * Create a new user in the database
@@ -30,8 +31,8 @@ export function createUser(db: Database, input: CreateUserInput): UserRecord {
     RETURNING *
   `);
 
-  const result = stmt.get(uid, email, displayName || null, role) as UserRecord;
-  return result;
+  const result = stmt.get(uid, email, displayName || null, role);
+  return asUserRecord(result);
 }
 
 /**
@@ -42,8 +43,11 @@ export function createUser(db: Database, input: CreateUserInput): UserRecord {
  */
 export function getUserByUid(db: Database, uid: string): UserRecord | null {
   const stmt = db.prepare("SELECT * FROM users WHERE uid = ?");
-  const result = stmt.get(uid) as UserRecord | undefined;
-  return result || null;
+  const result = stmt.get(uid);
+  if (!result) {
+    return null;
+  }
+  return asUserRecord(result);
 }
 
 /**
@@ -54,8 +58,11 @@ export function getUserByUid(db: Database, uid: string): UserRecord | null {
  */
 export function getUserByEmail(db: Database, email: string): UserRecord | null {
   const stmt = db.prepare("SELECT * FROM users WHERE email = ?");
-  const result = stmt.get(email) as UserRecord | undefined;
-  return result || null;
+  const result = stmt.get(email);
+  if (!result) {
+    return null;
+  }
+  return asUserRecord(result);
 }
 
 /**
@@ -69,10 +76,11 @@ export function getUserByWallet(
   walletAddress: string
 ): UserRecord | null {
   const stmt = db.prepare("SELECT * FROM users WHERE wallet_address = ?");
-  const result = stmt.get(walletAddress.toLowerCase()) as
-    | UserRecord
-    | undefined;
-  return result || null;
+  const result = stmt.get(walletAddress.toLowerCase());
+  if (!result) {
+    return null;
+  }
+  return asUserRecord(result);
 }
 
 /**
@@ -119,8 +127,11 @@ export function updateUser(
     RETURNING *
   `);
 
-  const result = stmt.get(...values) as UserRecord | undefined;
-  return result || null;
+  const result = stmt.get(...values);
+  if (!result) {
+    return null;
+  }
+  return asUserRecord(result);
 }
 
 /**

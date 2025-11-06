@@ -29,7 +29,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle2, XCircle, Copy } from 'lucide-react';
 import { chainEquityToken } from '@/config/contracts';
-import { useShareholder } from '@/hooks/useApi';
+import { useMyShareholder } from '@/hooks/useApi';
 import { formatAddress, formatTokenAmount } from '@/lib/utils';
 import { useState } from 'react';
 
@@ -89,14 +89,22 @@ export function TransferSharesForm({
   const queryClient = useQueryClient();
   const [copiedHash, setCopiedHash] = useState(false);
 
-  // Fetch user's balance
+  // Query by user ID (foundational), not wallet address
+  // Backend will look up the linked wallet address from the authenticated user
   const {
     data: shareholderData,
     isLoading: balanceLoading,
     error: balanceError,
-  } = useShareholder(connectedAddress, isConnected);
+  } = useMyShareholder();
 
-  const userBalance = shareholderData?.balance ?? null;
+  // Handle 404 gracefully - it means wallet not linked or no balance
+  const userBalance = balanceError?.status === 404 
+    ? null 
+    : shareholderData?.balance ?? null;
+
+  // Check if connected wallet matches linked wallet (for security)
+  const walletMismatch = connectedAddress && shareholderData?.address && 
+    connectedAddress.toLowerCase() !== shareholderData.address.toLowerCase();
 
   // Create schema with user balance for validation
   const transferSchema = useMemo(
@@ -205,6 +213,46 @@ export function TransferSharesForm({
           <p className="text-sm text-muted-foreground">
             Please connect your wallet to proceed. You can only transfer shares
             from your connected wallet address.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show message if wallet is not linked
+  if (!balanceLoading && balanceError?.status === 404) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Transfer Shares</CardTitle>
+          <CardDescription>Wallet Not Linked</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Please link your wallet to your account first. You can link your wallet
+            using the wallet linking section above.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show warning if connected wallet doesn't match linked wallet
+  if (walletMismatch) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Transfer Shares</CardTitle>
+          <CardDescription>Wallet Mismatch</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-2">
+            Your connected wallet ({formatAddress(connectedAddress)}) does not match 
+            your linked wallet ({formatAddress(shareholderData?.address)}).
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Please connect the wallet linked to your account ({formatAddress(shareholderData?.address)}) 
+            to transfer shares.
           </p>
         </CardContent>
       </Card>

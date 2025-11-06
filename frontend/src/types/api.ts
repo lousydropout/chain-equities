@@ -156,3 +156,21 @@ export interface TransactionsQueryParams {
   toDate?: number;
 }
 
+/**
+ * Pending approval investor object
+ */
+export interface PendingApproval {
+  uid: string;
+  email: string;
+  displayName: string;
+  walletAddress: string;
+  isApproved: boolean;
+}
+
+/**
+ * Pending approvals response from GET /api/shareholders/pending
+ */
+export interface PendingApprovalsResponse {
+  pending: PendingApproval[];
+}
+

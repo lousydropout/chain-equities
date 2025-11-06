@@ -10,6 +10,8 @@ import {
   getCompanyStats,
   getShareholders,
   getShareholder,
+  getMyShareholder,
+  getPendingApprovals,
   getTransactions,
   getTransactionByHash,
   linkWallet,
@@ -30,6 +32,7 @@ import type {
   TransactionsResponse,
   TransactionsQueryParams,
   TransactionDetail,
+  PendingApprovalsResponse,
 } from '../types/api';
 
 // ============================================================================
@@ -137,6 +140,52 @@ export function useShareholder(
       return getShareholder(address);
     },
     enabled: enabled && !!address,
+    // Don't use stale data if address changes or query is disabled
+    staleTime: enabled && !!address ? 0 : Infinity,
+    gcTime: enabled && !!address ? 5 * 60 * 1000 : 0, // 5 minutes if enabled, 0 if disabled
+    retry: (failureCount, error) => {
+      // Don't retry on 404 (wallet has no balance yet, which is fine)
+      if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
+        return false;
+      }
+      // Retry other errors up to 1 time
+      return failureCount < 1;
+    },
+    retryOnMount: false, // Don't retry on mount if it failed before
+  });
+}
+
+/**
+ * React Query hook for current user's shareholder information
+ * GET /api/shareholders/me
+ * Queries by user ID (foundational), not wallet address
+ *
+ * @returns Query result with shareholder details for authenticated user's linked wallet
+ */
+export function useMyShareholder(): UseQueryResult<Shareholder, APIError> {
+  return useQuery<Shareholder, APIError>({
+    queryKey: ['shareholder', 'me'],
+    queryFn: () => getMyShareholder(),
+    retry: (failureCount, error) => {
+      // Don't retry on 404 (wallet not linked)
+      if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
+        return false;
+      }
+      return failureCount < 1;
+    },
+  });
+}
+
+/**
+ * React Query hook for pending wallet approvals
+ * GET /api/shareholders/pending
+ *
+ * @returns Query result with list of pending approvals
+ */
+export function usePendingApprovals(): UseQueryResult<PendingApprovalsResponse, APIError> {
+  return useQuery<PendingApprovalsResponse, APIError>({
+    queryKey: ['shareholders', 'pending'],
+    queryFn: () => getPendingApprovals(),
   });
 }
 
