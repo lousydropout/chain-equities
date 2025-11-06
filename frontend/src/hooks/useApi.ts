@@ -12,7 +12,13 @@ import {
   getShareholder,
   getTransactions,
   getTransactionByHash,
+  linkWallet,
+  unlinkWallet,
+  getWalletStatus,
+  getInvestorsWithWallets,
   type APIError,
+  type WalletStatus,
+  type InvestorWithWallet,
 } from '../lib/api';
 import type {
   CompanyInfo,
@@ -192,6 +198,36 @@ export function useTransaction(
       return getTransactionByHash(txHash);
     },
     enabled: enabled && !!txHash,
+  });
+}
+
+// ============================================================================
+// Wallet Hooks
+// ============================================================================
+
+/**
+ * React Query hook for wallet linking status
+ * GET /api/wallet/status
+ *
+ * @returns Query result with wallet status
+ */
+export function useWalletStatus(): UseQueryResult<WalletStatus, APIError> {
+  return useQuery<WalletStatus, APIError>({
+    queryKey: ['wallet', 'status'],
+    queryFn: () => getWalletStatus(),
+  });
+}
+
+/**
+ * React Query hook for investors with linked wallets
+ * GET /api/wallet/investors
+ *
+ * @returns Query result with list of investors
+ */
+export function useInvestorsWithWallets(): UseQueryResult<{ investors: InvestorWithWallet[] }, APIError> {
+  return useQuery<{ investors: InvestorWithWallet[] }, APIError>({
+    queryKey: ['wallet', 'investors'],
+    queryFn: () => getInvestorsWithWallets(),
   });
 }
 

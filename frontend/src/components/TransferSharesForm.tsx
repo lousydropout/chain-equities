@@ -1,6 +1,6 @@
 /**
- * @file Share Issue Form Component
- * @notice Form for issuers to mint tokens to approved wallets
+ * @file Share Transfer Form Component
+ * @notice Form for shareholders to transfer tokens to approved addresses
  */
 
 import { useForm } from 'react-hook-form';
@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
 import { parseUnits, isAddress } from 'viem';
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -27,64 +27,87 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Loader2, CheckCircle2, XCircle, Copy } from 'lucide-react';
 import { chainEquityToken } from '@/config/contracts';
-import { useAuth } from '@/hooks/useAuth';
-import { useInvestorsWithWallets } from '@/hooks/useApi';
-import { formatAddress } from '@/lib/utils';
+import { useShareholder } from '@/hooks/useApi';
+import { formatAddress, formatTokenAmount } from '@/lib/utils';
 import { useState } from 'react';
 
 /**
  * Form validation schema
  */
-const issueSchema = z.object({
-  investorUid: z.string().min(1, 'Please select an investor'),
-  amount: z
-    .string()
-    .refine((val) => {
-      const num = parseFloat(val);
-      return !isNaN(num) && num > 0;
-    }, 'Amount must be a positive number'),
-});
+const createTransferSchema = (userBalance: string | null) => {
+  return z.object({
+    to: z.string().refine((val) => isAddress(val), {
+      message: 'Invalid wallet address',
+    }),
+    amount: z
+      .string()
+      .refine((val) => {
+        const num = parseFloat(val);
+        return !isNaN(num) && num > 0;
+      }, 'Amount must be a positive number')
+      .refine(
+        (val) => {
+          if (!userBalance) return true; // Skip validation if balance not loaded yet
+          try {
+            const amountInWei = parseUnits(val, 18);
+            const balance = BigInt(userBalance);
+            return amountInWei <= balance;
+          } catch {
+            return false;
+          }
+        },
+        (val) => ({
+          message: `Amount exceeds your balance of ${userBalance ? formatTokenAmount(userBalance, 18) : '0'}`,
+        })
+      ),
+  });
+};
 
-type IssueFormValues = z.infer<typeof issueSchema>;
+type TransferFormValues = z.infer<ReturnType<typeof createTransferSchema>>;
 
 /**
- * IssueSharesForm component props
+ * TransferSharesForm component props
  */
-interface IssueSharesFormProps {
+interface TransferSharesFormProps {
   tokenAddress: string;
+  decimals?: number;
   onSuccess?: () => void;
 }
 
 /**
- * IssueSharesForm component
- * Allows issuers to mint tokens to approved wallets
+ * TransferSharesForm component
+ * Allows shareholders to transfer tokens to approved addresses
  */
-export function IssueSharesForm({
+export function TransferSharesForm({
   tokenAddress,
+  decimals = 18,
   onSuccess,
-}: IssueSharesFormProps) {
-  const { user } = useAuth();
-  const { isConnected } = useAccount();
+}: TransferSharesFormProps) {
+  const { address: connectedAddress, isConnected } = useAccount();
   const queryClient = useQueryClient();
   const [copiedHash, setCopiedHash] = useState(false);
-  
-  // Fetch investors with linked wallets
-  const { data: investorsData, isLoading: investorsLoading } = useInvestorsWithWallets();
-  const investors = investorsData?.investors || [];
 
-  const form = useForm({
-    resolver: zodResolver(issueSchema),
+  // Fetch user's balance
+  const {
+    data: shareholderData,
+    isLoading: balanceLoading,
+    error: balanceError,
+  } = useShareholder(connectedAddress, isConnected);
+
+  const userBalance = shareholderData?.balance ?? null;
+
+  // Create schema with user balance for validation
+  const transferSchema = useMemo(
+    () => createTransferSchema(userBalance),
+    [userBalance]
+  );
+
+  const form = useForm<TransferFormValues>({
+    resolver: zodResolver(transferSchema),
     defaultValues: {
-      investorUid: '',
+      to: '',
       amount: '',
     },
   });
@@ -127,21 +150,26 @@ export function IssueSharesForm({
     }
   }, [isSuccess, form, resetWrite]);
 
-  const onSubmit = async (data: IssueFormValues) => {
-    try {
-      // Find the selected investor's wallet address
-      const selectedInvestor = investors.find((inv) => inv.uid === data.investorUid);
-      if (!selectedInvestor || !selectedInvestor.walletAddress) {
-        throw new Error('Selected investor does not have a linked wallet');
-      }
+  // Revalidate form when balance changes
+  useEffect(() => {
+    if (userBalance !== null) {
+      form.trigger('amount');
+    }
+  }, [userBalance, form]);
 
-      const amountInWei = parseUnits(data.amount, 18);
-      const recipientAddress = selectedInvestor.walletAddress as `0x${string}`;
-      
+  const onSubmit = async (data: TransferFormValues) => {
+    if (!connectedAddress) {
+      return;
+    }
+
+    try {
+      const amountInWei = parseUnits(data.amount, decimals);
+      const recipientAddress = data.to as `0x${string}`;
+
       await writeContract({
         address: tokenAddress as `0x${string}`,
         abi: chainEquityToken.abi,
-        functionName: 'mint',
+        functionName: 'transfer',
         args: [recipientAddress, amountInWei],
       });
     } catch (err) {
@@ -161,44 +189,62 @@ export function IssueSharesForm({
     }
   };
 
-  // Check if user has issuer/admin role
-  const canIssue =
-    user?.role === 'issuer' || user?.role === 'admin';
-
   const isProcessing = isPending || confirming;
   const error = writeError || receiptError;
 
-  if (!canIssue) {
+  if (!isConnected) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Issue Shares</CardTitle>
+          <CardTitle>Transfer Shares</CardTitle>
           <CardDescription>
-            Only issuers and administrators can issue shares
+            Connect your wallet to transfer shares
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Your role ({user?.role}) does not have permission to issue shares.
+            Please connect your wallet to proceed. You can only transfer shares
+            from your connected wallet address.
           </p>
         </CardContent>
       </Card>
     );
   }
 
-  if (!isConnected) {
+  // Show loading state while fetching balance
+  if (balanceLoading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Issue Shares</CardTitle>
+          <CardTitle>Transfer Shares</CardTitle>
+          <CardDescription>Loading your balance...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm">Fetching your share balance...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Check if user has any balance
+  const hasBalance = userBalance && BigInt(userBalance) > 0n;
+
+  if (!hasBalance) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Transfer Shares</CardTitle>
           <CardDescription>
-            Connect your wallet to issue shares
+            You don't have any shares to transfer
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Please connect your wallet to proceed. The connected wallet must be
-            the contract owner (issuer).
+            Your connected wallet ({connectedAddress && formatAddress(connectedAddress)}) does
+            not hold any shares. You need shares to transfer them to other addresses.
           </p>
         </CardContent>
       </Card>
@@ -208,52 +254,43 @@ export function IssueSharesForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Issue Shares</CardTitle>
+        <CardTitle>Transfer Shares</CardTitle>
         <CardDescription>
-          Mint new tokens to an approved wallet address
+          Transfer tokens to an approved wallet address
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {/* Balance Display */}
+        <div className="mb-4 p-3 bg-muted/50 border border-border rounded-md">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Your Balance:</span>
+            <span className="text-sm font-mono">
+              {userBalance ? formatTokenAmount(userBalance, decimals) : '—'}
+            </span>
+          </div>
+          {connectedAddress && (
+            <p className="text-xs text-muted-foreground mt-1">
+              From: {formatAddress(connectedAddress)}
+            </p>
+          )}
+        </div>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="investorUid"
+              name="to"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Recipient</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={isProcessing || investorsLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select an investor" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {investors.length === 0 ? (
-                        <SelectItem value="none" disabled>
-                          {investorsLoading
-                            ? 'Loading investors...'
-                            : 'No investors with linked wallets'}
-                        </SelectItem>
-                      ) : (
-                        investors.map((investor) => (
-                          <SelectItem key={investor.uid} value={investor.uid}>
-                            {investor.displayName} ({formatAddress(investor.walletAddress)})
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Recipient Address</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="0x..."
+                      disabled={isProcessing}
+                      {...field}
+                    />
+                  </FormControl>
                   <FormMessage />
-                  {investors.length === 0 && !investorsLoading && (
-                    <p className="text-xs text-muted-foreground">
-                      Investors must link their wallets before you can issue shares to them.
-                    </p>
-                  )}
                 </FormItem>
               )}
             />
@@ -274,7 +311,7 @@ export function IssueSharesForm({
                   </FormControl>
                   <FormMessage />
                   <p className="text-xs text-muted-foreground">
-                    Amount will be converted to wei (18 decimals)
+                    Amount will be converted to wei ({decimals} decimals)
                   </p>
                 </FormItem>
               )}
@@ -282,7 +319,7 @@ export function IssueSharesForm({
 
             <Button
               type="submit"
-              disabled={isProcessing}
+              disabled={isProcessing || !hasBalance}
               className="w-full"
             >
               {isProcessing ? (
@@ -291,7 +328,7 @@ export function IssueSharesForm({
                   {isPending ? 'Submitting...' : 'Confirming...'}
                 </>
               ) : (
-                'Issue Shares'
+                'Transfer Shares'
               )}
             </Button>
           </form>
@@ -339,9 +376,9 @@ export function IssueSharesForm({
         {/* Info Message */}
         <div className="mt-4 p-3 bg-muted/50 border border-border rounded-md">
           <p className="text-xs text-muted-foreground">
-            <strong>Note:</strong> The recipient address must be approved (on the
-            allowlist) before minting. The transaction will revert if the address
-            is not approved.
+            <strong>Note:</strong> Both your address and the recipient address must be
+            approved (on the allowlist) if transfer restrictions are enabled. The
+            transaction will revert if either address is not approved.
           </p>
         </div>
       </CardContent>

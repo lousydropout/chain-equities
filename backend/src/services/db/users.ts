@@ -162,3 +162,46 @@ export function linkWallet(
 export function unlinkWallet(db: Database, uid: string): UserRecord | null {
   return updateUser(db, uid, { walletAddress: null });
 }
+
+/**
+ * Get all users with linked wallets
+ * @param db SQLite database instance
+ * @param role Optional role filter (e.g., 'investor' to get only investors)
+ * @returns Array of user records with linked wallets
+ */
+export function getUsersWithLinkedWallets(
+  db: Database,
+  role?: UserRole
+): UserRecord[] {
+  let query = "SELECT * FROM users WHERE wallet_address IS NOT NULL";
+  const params: unknown[] = [];
+  
+  if (role) {
+    query += " AND role = ?";
+    params.push(role);
+  }
+  
+  query += " ORDER BY email ASC";
+  
+  const stmt = db.prepare(query);
+  const results = stmt.all(...params) as unknown[];
+  
+  return results.map((row) => {
+    const r = row as {
+      uid: string;
+      email: string;
+      display_name: string | null;
+      wallet_address: string | null;
+      role: string;
+      created_at: string;
+    };
+    return {
+      uid: r.uid,
+      email: r.email,
+      displayName: r.display_name,
+      walletAddress: r.wallet_address ? String(r.wallet_address) : null,
+      role: r.role as UserRole,
+      createdAt: r.created_at,
+    };
+  });
+}

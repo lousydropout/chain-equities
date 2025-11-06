@@ -6,23 +6,76 @@
 
 ## Recent Work
 
-### Task 4.11: Share Issue Form ✅
+### Task 4.12: Share Transfer Form ✅
 
-- **Status**: Complete - Share issue form implemented with Wagmi contract interactions
+- **Status**: Complete - Share transfer form implemented with balance validation
+- **Location**: `frontend/src/components/TransferSharesForm.tsx`
+- **Integration**: Embedded in Dashboard under "Shareholder Actions" card section
+- **Key Features**:
+  - Form validation with react-hook-form + zod (recipient address, amount <= user's balance)
+  - Fetches user's balance using `useShareholder(connectedAddress)` hook
+  - Displays user's current balance in the form
+  - Wagmi integration: `useWriteContract` for transfer transaction, `useWaitForTransactionReceipt` for confirmation
+  - Available to all authenticated users (not role-restricted)
+  - Transaction state management (loading, success with hash, error handling)
+  - Automatic cache invalidation for shareholders and company stats after successful transfer
+  - Handles edge cases: wallet not connected, balance loading, no balance
+- **Files Created**:
+  - `frontend/src/components/TransferSharesForm.tsx` - Main transfer form component
+- **Files Modified**:
+  - `frontend/src/pages/Dashboard.tsx` - Added "Shareholder Actions" section with TransferSharesForm
+
+### Task 4.13: Wallet Linking UI ✅
+
+- **Status**: Complete - Wallet linking UI and backend API implemented
+- **Location**: `frontend/src/components/WalletLink.tsx`, `backend/src/routes/wallet.ts`
+- **Integration**: Embedded in Dashboard under "Wallet Management" section, Connect component added to Dashboard
+- **Key Features**:
+  - Link/unlink wallet functionality with backend API integration
+  - Shows current wallet linking status
+  - Displays connected wallet address
+  - Link/unlink buttons with loading states and error handling
+  - Graceful error handling (shows buttons even if status check fails)
+  - Connect component added to Dashboard for wallet connection
+- **Backend API Endpoints**:
+  - `POST /api/wallet/link` - Link wallet address to user account
+  - `POST /api/wallet/unlink` - Unlink wallet address from user account
+  - `GET /api/wallet/status` - Get wallet linking status
+  - `GET /api/wallet/investors` - Get list of investors with linked wallets (for dropdown)
+- **Files Created**:
+  - `backend/src/routes/wallet.ts` - Wallet linking routes
+  - `frontend/src/components/WalletLink.tsx` - Wallet linking UI component
+  - `frontend/src/components/ui/select.tsx` - shadcn/ui Select component
+- **Files Modified**:
+  - `backend/src/services/db/users.ts` - Added `getUsersWithLinkedWallets()` function
+  - `backend/src/index.ts` - Registered wallet routes
+  - `frontend/src/lib/api.ts` - Added wallet API functions
+  - `frontend/src/hooks/useApi.ts` - Added `useWalletStatus()` and `useInvestorsWithWallets()` hooks
+  - `frontend/src/pages/Dashboard.tsx` - Added Wallet Management section and Connect component
+
+### Task 4.11: Share Issue Form (Enhanced) ✅
+
+- **Status**: Complete - Share issue form enhanced with investor dropdown
 - **Location**: `frontend/src/components/IssueSharesForm.tsx`
 - **Integration**: Embedded in Dashboard under "Issuer Actions" card section
 - **Key Features**:
-  - Form validation with react-hook-form + zod (address validation via `viem.isAddress()`, positive amount)
+  - Form validation with react-hook-form + zod (investor selection, positive amount)
+  - **Investor dropdown**: Replaces manual address input with dropdown of investors with linked wallets
+  - Dropdown displays: investor displayName and wallet address (e.g., "alice@chainequity.com (0x1234...5678)")
+  - Maps selected investor UID to wallet address on form submission
   - Wagmi integration: `useWriteContract` for mint transaction, `useWaitForTransactionReceipt` for confirmation
   - Role-based access control (issuer/admin only)
   - Transaction state management (loading, success with hash, error handling)
   - Automatic cache invalidation for shareholders and company stats after successful mint
   - Wallet connection requirement with user-friendly messages
+  - Shows helpful message if no investors have linked wallets
 - **Files Created**:
   - `frontend/src/config/contracts.ts` - Contract configuration with ABI import
-  - `frontend/src/components/IssueSharesForm.tsx` - Main form component
+  - `frontend/src/components/IssueSharesForm.tsx` - Main form component (enhanced)
 - **Files Modified**:
   - `frontend/src/pages/Dashboard.tsx` - Added "Issuer Actions" section
+  - `frontend/src/lib/api.ts` - Added `getInvestorsWithWallets()` function
+  - `frontend/src/hooks/useApi.ts` - Added `useInvestorsWithWallets()` hook
   - `frontend/tsconfig.app.json` - Added `resolveJsonModule` for JSON imports
 
 ### Workspace Restructuring ✅
@@ -92,7 +145,7 @@
   - `scripts/verify-link.ts` - Basic token linkage verification
   - `scripts/verify-deployment.ts` - Comprehensive deployment verification (new)
   - `package.json` - `deploy:acme` and `deploy:anvil` scripts for one-command deployment
-- **Package Management**: 
+- **Package Management**:
   - **Important**: Contracts directory uses **npm** (not Bun) due to Hardhat Ignition module resolution compatibility
   - All scripts use `npx` instead of `bunx`
   - Install dependencies with: `npm install --no-workspaces --legacy-peer-deps`
@@ -202,7 +255,7 @@
      - `GET /api/shareholders` endpoint with pagination (limit/offset, max 100, min 1)
      - `GET /api/shareholders/:address` endpoint for individual shareholder details
      - Ownership percentage calculation using BigInt for two-decimal precision
-     - Effective balance calculation (balance * splitFactor / 10^18)
+     - Effective balance calculation (balance \* splitFactor / 10^18)
      - In-memory caching for totalSupply/splitFactor (5-second TTL) to reduce contract calls
      - Address validation using Viem's `isAddress` utility
      - Fastify schema validation for request/response types
@@ -283,9 +336,10 @@
      - Centralized fetch logic with automatic JSON parsing for both success and error responses
      - Created `APIError` class for typed error handling (status, message, data)
      - Token attachment via token getter function (`getAuthToken()` from `lib/auth.ts`)
-     - All API functions implemented: `getCompany()`, `getCompanyMetadata()`, `getShareholders()`, `getShareholder()`, `getTransactions()`, `getTransactionByHash()`
+     - All API functions implemented: `getCompany()`, `getCompanyMetadata()`, `getShareholders()`, `getShareholder()`, `getTransactions()`, `getTransactionByHash()`, `linkWallet()`, `unlinkWallet()`, `getWalletStatus()`, `getInvestorsWithWallets()`
      - Created React Query hooks in `frontend/src/hooks/useApi.ts` with proper typing: `UseQueryResult<T, APIError>`
      - Pagination ergonomics: Helper hooks (`useShareholdersData()`, `useTransactionsData()`) return composed objects
+     - Wallet hooks: `useWalletStatus()`, `useInvestorsWithWallets()` for wallet linking functionality
      - Created API test page (`/api-test`) for comprehensive endpoint testing
      - All files compile without errors, no linting errors
      - Environment variable support: `VITE_API_URL` (defaults to `http://localhost:4000`)
@@ -313,16 +367,41 @@
      - Refactored CapTable.tsx to use ShareholderTable component
      - Type-safe implementation using existing Shareholder type
      - Route: `/cap-table` accessible for testing
+   - Share Transfer Form complete (Task 4.12) ✅
+     - Created `TransferSharesForm.tsx` component for shareholders to transfer tokens
+     - Form validation with balance checking (amount <= user's balance)
+     - Fetches user's balance using `useShareholder(connectedAddress)` hook
+     - Displays user's current balance in the form
+     - Uses Wagmi's `useWriteContract` to call `transfer()` function
+     - Available to all authenticated users (not role-restricted)
+     - Handles edge cases: wallet not connected, balance loading, no balance
+     - Transaction state management and cache invalidation
+     - Integrated into Dashboard under "Shareholder Actions" section
+   - Wallet Linking UI complete (Task 4.13) ✅
+     - Created `WalletLink.tsx` component for linking/unlinking wallets
+     - Backend API endpoints: POST /api/wallet/link, POST /api/wallet/unlink, GET /api/wallet/status
+     - Backend API endpoint: GET /api/wallet/investors (for investor dropdown in Issue Shares form)
+     - Shows current wallet linking status and connected wallet address
+     - Link/unlink buttons with loading states and error handling
+     - Graceful error handling (shows buttons even if status check fails)
+     - Integrated into Dashboard under "Wallet Management" section
+     - Connect component added to Dashboard for wallet connection
+   - Issue Shares Form Enhanced ✅
+     - Enhanced with investor dropdown (replaces manual address input)
+     - Fetches investors with linked wallets via `useInvestorsWithWallets()` hook
+     - Dropdown displays investor displayName and wallet address
+     - Maps selected investor UID to wallet address on form submission
+     - Shows helpful message if no investors have linked wallets
 
 ### Planned Enhancements
 
 - **Orchestrator.sol** - Factory contract for creating new companies (future enhancement)
 - **Backend Indexer** - ✅ Real-time event processing and database sync (Task 2.5 - COMPLETE)
 - **Contract Exports** - ✅ `/contracts/exports/` directory for deployment artifacts (Task 1.3 - COMPLETE)
-- **Backend API** - REST endpoints for companies, shareholders, transactions
+- **Backend API** - ✅ REST endpoints for companies, shareholders, transactions, wallet linking
 - **Backend Authentication** - ✅ Firebase Auth + Unified Middleware documented (see `authentication.md`)
-- **Frontend Wallet Integration** - ✅ Wagmi v2 implementation documented (see `frontendWalletConnector.md`)
-- **Frontend UI** - Admin dashboard, shareholder dashboard (to be implemented)
+- **Frontend Wallet Integration** - ✅ Wagmi v2 implementation with Connect component, wallet linking UI
+- **Frontend UI** - ✅ Dashboard, cap table, share issue form (with investor dropdown), share transfer form, wallet management
 
 ## Next Steps
 
@@ -340,23 +419,27 @@
 10. ✅ Set up backend indexer with viem event watching (Task 2.5 - COMPLETE)
 11. ✅ Implement company info REST API endpoints (Task 2.6 - COMPLETE)
 12. ✅ Implement shareholders REST API endpoints (Task 2.7 - COMPLETE)
-13. ⏳ Implement remaining REST API endpoints (Tasks 2.8-2.9)
-14. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
-15. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
-16. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
-17. ✅ Frontend project scaffolding complete (Task 4.1) - React + Vite + TypeScript with Prettier/ESLint
-18. ✅ Frontend mock auth setup complete (Task 4.2) - React Context, localStorage persistence, demo UI
-19. ✅ Frontend Wagmi configuration complete (Task 4.3) - Wagmi v2 with Hardhat and Sepolia chains
-20. ✅ Frontend wallet connection UI complete (Task 4.4) - Connect component with MetaMask integration
-21. ✅ TailwindCSS + shadcn/ui integration complete (Task 4.4b) - All components migrated to TailwindCSS
-22. ✅ Login/Register pages complete (Task 4.5) - React Router, form validation, protected routes
-23. ✅ Protected route wrapper complete (Task 4.6) - Authentication checks and redirects
-24. ✅ Frontend API client setup complete (Task 4.7) - Composable API client, typed functions, React Query hooks
-25. ✅ Create frontend company dashboard page (Task 4.8) - Complete with stats endpoint, formatting, tooltips, navigation
-26. ✅ Create frontend cap table page (Task 4.9) - Desktop-only table with real data, formatting, navigation
-27. ✅ Create frontend shareholder table component (Task 4.10) - Reusable component with client-side sorting and progress bars
-28. ⏳ Create frontend admin dashboard UI
-29. ⏳ Create frontend shareholder dashboard UI
+13. ✅ Implement wallet linking REST API endpoints (Task 3.4 - COMPLETE, demo mode)
+14. ⏳ Implement remaining REST API endpoints (Tasks 2.8-2.9)
+15. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
+16. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
+17. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
+18. ✅ Frontend project scaffolding complete (Task 4.1) - React + Vite + TypeScript with Prettier/ESLint
+19. ✅ Frontend mock auth setup complete (Task 4.2) - React Context, localStorage persistence, demo UI
+20. ✅ Frontend Wagmi configuration complete (Task 4.3) - Wagmi v2 with Hardhat and Sepolia chains
+21. ✅ Frontend wallet connection UI complete (Task 4.4) - Connect component with MetaMask integration
+22. ✅ TailwindCSS + shadcn/ui integration complete (Task 4.4b) - All components migrated to TailwindCSS
+23. ✅ Login/Register pages complete (Task 4.5) - React Router, form validation, protected routes
+24. ✅ Protected route wrapper complete (Task 4.6) - Authentication checks and redirects
+25. ✅ Frontend API client setup complete (Task 4.7) - Composable API client, typed functions, React Query hooks, wallet API functions
+26. ✅ Create frontend company dashboard page (Task 4.8) - Complete with stats endpoint, formatting, tooltips, navigation, Connect component, Shareholder Actions, Wallet Management
+27. ✅ Create frontend cap table page (Task 4.9) - Desktop-only table with real data, formatting, navigation
+28. ✅ Create frontend shareholder table component (Task 4.10) - Reusable component with client-side sorting and progress bars
+29. ✅ Enhanced issue shares form (Task 4.11) - Investor dropdown replaces manual address input, uses GET /api/wallet/investors
+30. ✅ Create frontend share transfer form (Task 4.12) - Transfer form with balance validation
+31. ✅ Create frontend wallet linking UI (Task 4.13) - Wallet link/unlink with backend API
+32. ⏳ Create frontend admin dashboard UI
+33. ⏳ Create frontend shareholder dashboard UI
 
 ### Company Dashboard (Task 4.8) ✅
 
@@ -566,7 +649,7 @@
   - `backend/scripts/seed.ts` (new) - Seed orchestrator
   - `backend/scripts/reset-db.ts` (new) - Reset script
   - `backend/src/index.ts` (modified) - Database initialization
-  - `backend/package.json` (modified) - Added db:* scripts
+  - `backend/package.json` (modified) - Added db:\* scripts
   - `backend/.env.example` (modified) - Added database env vars
   - `backend/.gitignore` (modified) - Added database files
 - **Test Commands**:
@@ -584,6 +667,7 @@
 - Backend event indexer implementation (Task 2.5) ✅ COMPLETE
 - Backend REST API routes - Company Info (Task 2.6) ✅ COMPLETE
 - Backend REST API routes - Shareholders, Transactions, Corporate Actions (Tasks 2.7-2.9) ⏳ NEXT
+
 9. **Phase 3 - Authentication & Access Control (Demo Simplified)** ⏳ IN PROGRESS
    - Mock auth middleware complete (Task 3.2) ✅
      - Simplified `requireAuth()` returning hardcoded demo user with issuer role
@@ -598,6 +682,7 @@
    - Firebase Admin setup (Task 3.1) ⏸️ Deferred
    - Wallet linking endpoints (Task 3.4) ⏸️ Deferred
    - User management endpoints (Task 3.6) ⏸️ Deferred
+
 - Frontend admin dashboard for issuer operations
 - Frontend shareholder dashboard for investors
 - Integration testing across all layers

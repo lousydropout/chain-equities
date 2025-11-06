@@ -31,6 +31,10 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { IssueSharesForm } from '@/components/IssueSharesForm';
+import { TransferSharesForm } from '@/components/TransferSharesForm';
+import { WalletLink } from '@/components/WalletLink';
+import { Connect } from '@/components/Connect';
+import { useAccount } from 'wagmi';
 
 /**
  * Company Dashboard component
@@ -43,6 +47,7 @@ import { IssueSharesForm } from '@/components/IssueSharesForm';
 export function Dashboard() {
   const { data, isLoading, isError, error, refetch } = useCompanyStats();
   const { user, logout } = useAuth();
+  const { isConnected } = useAccount();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -175,6 +180,9 @@ export function Dashboard() {
         </p>
       )}
 
+      {/* Wallet Connection Section */}
+      <Connect />
+
       {/* Issuer Actions Section */}
       {(user?.role === 'issuer' || user?.role === 'admin') &&
         tokenAddress && (
@@ -187,6 +195,31 @@ export function Dashboard() {
             </CardContent>
           </Card>
         )}
+
+      {/* Shareholder Actions Section */}
+      {tokenAddress && isConnected && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Shareholder Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TransferSharesForm
+              tokenAddress={tokenAddress}
+              decimals={decimals}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Wallet Linking Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Wallet Management</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <WalletLink />
+        </CardContent>
+      </Card>
 
       {/* Navigation Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

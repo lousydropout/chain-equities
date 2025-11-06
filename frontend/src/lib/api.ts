@@ -257,3 +257,84 @@ export async function getTransactionByHash(txHash: string): Promise<TransactionD
   );
 }
 
+// ============================================================================
+// Wallet API Functions
+// ============================================================================
+
+/**
+ * Wallet status response
+ */
+export interface WalletStatus {
+  walletAddress: string | null;
+  isLinked: boolean;
+}
+
+/**
+ * Link wallet address to user account
+ * POST /api/wallet/link
+ *
+ * @param walletAddress - Ethereum wallet address to link
+ * @returns Success response with linked wallet address
+ * @throws APIError on error
+ */
+export async function linkWallet(walletAddress: string): Promise<{ success: boolean; message: string; walletAddress: string }> {
+  return api.apiRequest<{ success: boolean; message: string; walletAddress: string }>(
+    '/api/wallet/link',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ walletAddress }),
+    }
+  );
+}
+
+/**
+ * Unlink wallet address from user account
+ * POST /api/wallet/unlink
+ *
+ * @returns Success response
+ * @throws APIError on error
+ */
+export async function unlinkWallet(): Promise<{ success: boolean; message: string }> {
+  return api.apiRequest<{ success: boolean; message: string }>(
+    '/api/wallet/unlink',
+    {
+      method: 'POST',
+    }
+  );
+}
+
+/**
+ * Get wallet linking status for current user
+ * GET /api/wallet/status
+ *
+ * @returns Wallet status (address and linked status)
+ * @throws APIError on error
+ */
+export async function getWalletStatus(): Promise<WalletStatus> {
+  return api.apiRequest<WalletStatus>('/api/wallet/status');
+}
+
+/**
+ * Investor with linked wallet
+ */
+export interface InvestorWithWallet {
+  uid: string;
+  email: string;
+  displayName: string;
+  walletAddress: string;
+}
+
+/**
+ * Get list of investors with linked wallets
+ * GET /api/wallet/investors
+ *
+ * @returns List of investors with their linked wallet addresses
+ * @throws APIError on error
+ */
+export async function getInvestorsWithWallets(): Promise<{ investors: InvestorWithWallet[] }> {
+  return api.apiRequest<{ investors: InvestorWithWallet[] }>('/api/wallet/investors');
+}
+
