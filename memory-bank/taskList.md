@@ -856,7 +856,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~3 weeks
 
-**Status:** ⏳ In Progress (Task 4.1 complete)
+**Status:** ⏳ In Progress (Task 4.1, 4.2 complete)
 
 **Dependencies:** Phase 3 complete
 
@@ -897,13 +897,38 @@ This document provides a detailed breakdown of all implementation tasks organize
   - Build: `cd frontend && bun run build`
   - TypeScript: `cd frontend && bunx tsc --noEmit`
 
-### Task 4.2: Mock Auth Setup (Frontend, Demo Simplified)
+### Task 4.2: Mock Auth Setup (Frontend, Demo Simplified) ✅
 
-- [ ] Create mock auth context/hook (no Firebase SDK needed for demo)
-- [ ] Simulate login/logout
-- [ ] Return demo user (issuer role) for demo purposes
-- [ ] Skip: Real Firebase Auth integration (deferred)
-- **Deliverable:** Simulated auth UI for demo
+- [x] Create mock auth context/hook (no Firebase SDK needed for demo)
+- [x] Simulate login/logout
+- [x] Return demo user (issuer role) for demo purposes
+- [x] Skip: Real Firebase Auth integration (deferred)
+- **Deliverable:** Simulated auth UI for demo ✅
+- **Status:** Complete - Mock authentication system implemented with React Context, localStorage persistence, and demo UI
+- **Summary:**
+  - Created `frontend/src/types/auth.ts` with AuthContext interface and DEMO_USER constant matching backend
+  - Created `frontend/src/contexts/AuthContext.tsx` with AuthProvider managing auth state and localStorage persistence
+  - Created `frontend/src/hooks/useAuth.ts` hook for accessing auth context
+  - Created `frontend/src/lib/auth.ts` with token and user storage utilities
+  - Integrated AuthProvider in `main.tsx` wrapping the app
+  - Updated `App.tsx` with demo UI showing login/logout buttons, user info, and authentication state
+  - All files formatted with Prettier, TypeScript compilation verified, no linting errors
+- **Files Created/Modified:**
+  - `frontend/src/types/auth.ts` (new) - Auth types and DEMO_USER constant
+  - `frontend/src/contexts/AuthContext.tsx` (new) - Auth context provider with login/logout
+  - `frontend/src/hooks/useAuth.ts` (new) - useAuth hook
+  - `frontend/src/lib/auth.ts` (new) - Auth utilities for localStorage
+  - `frontend/src/main.tsx` (modified) - Added AuthProvider wrapper
+  - `frontend/src/App.tsx` (modified) - Added demo UI with login/logout
+  - `frontend/src/App.css` (modified) - Added container styling
+- **Features:**
+  - Mock authentication matching backend demo mode
+  - localStorage persistence across page refreshes
+  - Type-safe implementation with TypeScript
+  - Clean API: login() and logout() methods
+  - Demo user matches backend exactly: { uid: 'demo-user', email: 'demo@example.com', role: 'issuer' }
+  - No Firebase SDK integration (deferred to post-demo)
+
 
 ### Task 4.3: Wagmi Configuration
 
@@ -936,7 +961,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 - [ ] Create `frontend/src/pages/Register.tsx`
 - [ ] Implement simulated auth (no Firebase backend):
   - [ ] Simple login form (demo mode)
-  - [ ] Return demo user on "login"
+  - [x] Return demo user on "login"
   - [ ] Error handling
   - [ ] Loading states
 - [ ] Add form validation
@@ -1300,7 +1325,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~2 weeks
 
-**Status:** ⏳ In Progress (Task 4.1 complete)
+**Status:** ⏳ In Progress (Task 4.1, 4.2 complete)
 
 **Dependencies:** Phase 4 complete (moved up in demo track)
 
