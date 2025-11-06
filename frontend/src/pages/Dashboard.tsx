@@ -3,9 +3,10 @@
  * @notice Main dashboard displaying company information, stats, and navigation
  */
 
-import { Link, useNavigate } from 'react-router-dom';
-import { useCompanyStats } from '@/hooks/useApi';
+import { Link } from 'react-router-dom';
+import { useCompanyStats, useMyShareholder } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
+import type { Shareholder } from '@/types/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,7 @@ import {
   Coins,
   Link2,
   HelpCircle,
+  PieChart,
 } from 'lucide-react';
 import { formatAddress, formatTokenAmount, formatDate } from '@/lib/utils';
 import {
@@ -26,8 +28,7 @@ import {
 } from '@/components/ui/tooltip';
 import { IssueSharesForm } from '@/components/IssueSharesForm';
 import { TransferSharesForm } from '@/components/TransferSharesForm';
-import { WalletLink } from '@/components/WalletLink';
-import { Connect } from '@/components/Connect';
+import { ProfileMenu } from '@/components/ProfileMenu';
 import { useAccount } from 'wagmi';
 
 /**
@@ -40,14 +41,15 @@ import { useAccount } from 'wagmi';
  */
 export function Dashboard() {
   const { data, isLoading, isError, error, refetch } = useCompanyStats();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { isConnected } = useAccount();
-  const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  // Fetch investor holdings data (only for investors)
+  const {
+    data: shareholderData,
+    isLoading: isShareholderLoading,
+    error: shareholderError,
+  } = useMyShareholder();
 
   if (isLoading) {
     return <Skeletons />;
@@ -84,23 +86,22 @@ export function Dashboard() {
     totalOutstanding,
     totalShareholders,
     decimals = 18,
-    splitFactor,
   } = data || {};
+
+  // Determine dashboard title based on user role
+  const getDashboardTitle = () => {
+    if (user?.role === 'admin') return 'Admin Dashboard';
+    if (user?.role === 'investor') return 'Investor Dashboard';
+    if (user?.role === 'issuer') return 'Issuer Dashboard';
+    return 'Dashboard';
+  };
 
   return (
     <div className="mx-auto max-w-6xl p-4 md:p-6 space-y-6">
-      {/* Top Bar with Logout */}
-      <div className="flex justify-end">
-        {user && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleLogout}
-            aria-label="Logout"
-          >
-            Hi, {user.email.split('@')[0]}
-          </Button>
-        )}
+      {/* Top Bar with Title and Profile Menu */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{getDashboardTitle()}</h1>
+        <ProfileMenu />
       </div>
 
       {/* Header Card */}
@@ -136,7 +137,16 @@ export function Dashboard() {
       </Card>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Investor Holdings Card - only show for investors, appears first */}
+        {user?.role === 'investor' && (
+          <InvestorHoldingsCard
+            shareholderData={shareholderData}
+            isLoading={isShareholderLoading}
+            error={shareholderError}
+            decimals={decimals}
+          />
+        )}
         <StatCard
           title="Total Outstanding"
           description="Total shares currently issued and held by shareholders"
@@ -166,9 +176,6 @@ export function Dashboard() {
         />
       </div>
 
-      {/* Wallet Connection Section */}
-      <Connect />
-
       {/* Issuer Actions Section */}
       {(user?.role === 'issuer' || user?.role === 'admin') && tokenAddress && (
         <Card>
@@ -196,16 +203,6 @@ export function Dashboard() {
         </Card>
       )}
 
-      {/* Wallet Linking Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Wallet Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <WalletLink />
-        </CardContent>
-      </Card>
-
       {/* Navigation Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <NavCard
@@ -232,6 +229,83 @@ export function Dashboard() {
         />
       </div>
     </div>
+  );
+}
+
+/**
+ * Investor Holdings Card component
+ * Displays effective shares and ownership percentage for investors
+ */
+function InvestorHoldingsCard({
+  shareholderData,
+  isLoading,
+  error,
+  decimals,
+}: {
+  shareholderData?: Shareholder | null;
+  isLoading: boolean;
+  error: unknown;
+  decimals: number;
+}) {
+  // Determine what to display
+  const getDisplayValue = () => {
+    if (isLoading) return 'Loading...';
+    if (error) {
+      // Check if it's a 404 (wallet not linked)
+      const is404 =
+        error &&
+        typeof error === 'object' &&
+        'status' in error &&
+        error.status === 404;
+      return is404 ? 'Wallet not linked' : '—';
+    }
+    if (!shareholderData?.effectiveBalance) return '—';
+    return formatTokenAmount(shareholderData.effectiveBalance, decimals);
+  };
+
+  const getOwnershipPercentage = () => {
+    if (isLoading || error || !shareholderData?.ownershipPercentage)
+      return null;
+    return shareholderData.ownershipPercentage;
+  };
+
+  const ownershipPercentage = getOwnershipPercentage();
+  const displayValue = getDisplayValue();
+
+  return (
+    <Card data-testid="stat-investor-holdings">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium">Your Holdings</p>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs">
+                  Your effective shares and ownership percentage of the company
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <PieChart className="h-5 w-5" aria-hidden />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-semibold">{displayValue}</div>
+        {ownershipPercentage !== null && ownershipPercentage !== undefined && (
+          <p className="text-sm text-muted-foreground mt-1">
+            {ownershipPercentage.toFixed(2)}% ownership
+          </p>
+        )}
+        {!isLoading && !error && !shareholderData && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Link your wallet to see holdings
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -273,9 +347,9 @@ function StatCard({
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-semibold">{value ?? '—'}</div>
-        {description && (
+        {/* {description && (
           <p className="text-xs text-muted-foreground mt-2">{description}</p>
-        )}
+        )} */}
       </CardContent>
     </Card>
   );

@@ -429,6 +429,17 @@
      - Dropdown displays investor displayName and wallet address
      - Maps selected investor UID to wallet address on form submission
      - Shows helpful message if no investors have linked wallets
+   - Profile Menu and Dashboard UI Improvements ✅
+     - Created `ProfileMenu.tsx` component - consolidates wallet connection, linking, and logout in dropdown menu
+     - Profile icon button displays username next to icon
+     - Dropdown menu shows wallet connection status, address, link/unlink options, and logout
+     - Removed `Connect` and `WalletLink` card sections from Dashboard (moved to profile menu)
+     - Dashboard displays role-based title: "Admin Dashboard", "Investor Dashboard", or "Issuer Dashboard"
+     - Added investor holdings card as first card in stats grid (investors only)
+     - Investor holdings card displays effective shares and ownership percentage
+     - Updated stats grid layout: responsive 4x1 on desktop, 2x2 on medium screens, stacked on mobile
+     - Files created: `frontend/src/components/ProfileMenu.tsx`, `frontend/src/components/ui/dropdown-menu.tsx`
+     - Files modified: `frontend/src/pages/Dashboard.tsx`
 
 ### Recent Fixes and Improvements
 
@@ -450,9 +461,26 @@
   - Wallet automatically disconnects on login (fresh state)
   - Implemented in AuthContext using Wagmi's useDisconnect hook
 - **UI/UX Improvements** ✅
-  - Added user greeting in Dashboard: "Hi, <username>" button replaces logout icon
-  - Shows who is currently logged in
-  - Button still functions as logout when clicked
+  - **Profile Menu with Wallet Management** ✅
+    - Created `ProfileMenu.tsx` component consolidating wallet connection, linking, and logout
+    - Moved wallet connection and management from dashboard cards to profile icon dropdown menu
+    - Profile icon button shows username next to icon
+    - Dropdown menu structure:
+      - Shows "Connect wallet" if not connected
+      - If connected: displays address, disconnect button, link/unlink wallet options
+      - Logout button at bottom
+    - Removed `Connect` and `WalletLink` components from Dashboard (still available for other pages)
+    - Installed shadcn/ui dropdown-menu component
+  - **Dashboard Title by Role** ✅
+    - Dashboard displays role-specific title: "Admin Dashboard", "Investor Dashboard", or "Issuer Dashboard"
+    - Title positioned to the left of profile menu in top bar
+  - **Investor Holdings Card** ✅
+    - Added investor holdings card as first card in stats grid (only visible for investors)
+    - Displays effective shares (formatted) and ownership percentage
+    - Uses `useMyShareholder()` hook to fetch investor data
+    - Handles loading states, wallet not linked (404), and other errors gracefully
+    - Responsive grid layout: 4x1 on desktop (lg), 2x2 on medium screens (md), stacked on mobile
+    - Grid updated from `md:grid-cols-3` to `md:grid-cols-2 lg:grid-cols-4`
 
 ### Planned Enhancements
 
@@ -462,7 +490,7 @@
 - **Backend API** - ✅ REST endpoints for companies, shareholders, transactions, wallet linking
 - **Backend Authentication** - ✅ Firebase Auth + Unified Middleware documented (see `authentication.md`)
 - **Frontend Wallet Integration** - ✅ Wagmi v2 implementation with Connect component, wallet linking UI
-- **Frontend UI** - ✅ Dashboard, cap table, share issue form (with investor dropdown), share transfer form, wallet management
+- **Frontend UI** - ✅ Dashboard with role-based titles, cap table, share issue form (with investor dropdown), share transfer form, profile menu with wallet management, investor holdings card
 
 ## Next Steps
 
