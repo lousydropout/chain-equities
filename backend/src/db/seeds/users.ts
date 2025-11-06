@@ -17,19 +17,19 @@ export const SEED_USERS = [
   {
     uid: "alice-user",
     email: "alice@chainequity.com",
-    displayName: "Alice Investor",
+    displayName: "Alice",
     role: "investor" as const,
   },
   {
     uid: "bob-user",
     email: "bob@chainequity.com",
-    displayName: "Bob Investor",
+    displayName: "Bob",
     role: "investor" as const,
   },
   {
     uid: "charlie-user",
     email: "charlie@chainequity.com",
-    displayName: "Charlie Investor",
+    displayName: "Charlie",
     role: "investor" as const,
   },
 ];

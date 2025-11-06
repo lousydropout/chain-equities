@@ -292,6 +292,7 @@ function ApprovalRow({
   queryClient: ReturnType<typeof useQueryClient>;
 }) {
   const [copiedHash, setCopiedHash] = useState(false);
+  const [copiedAddress, setCopiedAddress] = useState(false);
 
   const {
     data: txHash,
@@ -352,6 +353,16 @@ function ApprovalRow({
     }
   };
 
+  const handleCopyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(approval.walletAddress);
+      setCopiedAddress(true);
+      setTimeout(() => setCopiedAddress(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy wallet address:', err);
+    }
+  };
+
   const isProcessing = isPending || confirming;
   const error = writeError || receiptError;
   const canApprove = isConnected && !!tokenAddress && !isProcessing && !isSuccess && isCorrectNetwork && !isSwitching;
@@ -360,7 +371,21 @@ function ApprovalRow({
     <tr className="border-b hover:bg-muted/50">
       <td className="p-3">{approval.email}</td>
       <td className="p-3">{approval.displayName}</td>
-      <td className="p-3 font-mono text-sm">{formatAddress(approval.walletAddress)}</td>
+      <td className="p-3">
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-sm">{formatAddress(approval.walletAddress)}</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCopyAddress}
+            className="h-6 px-2"
+            title="Copy full address"
+          >
+            <Copy className="h-3 w-3" />
+            {copiedAddress && <span className="ml-1 text-xs">Copied!</span>}
+          </Button>
+        </div>
+      </td>
       <td className="p-3 text-right">
         {isSuccess ? (
           <div className="flex items-center justify-end gap-2">
@@ -439,6 +464,7 @@ function RevokeRow({
   queryClient: ReturnType<typeof useQueryClient>;
 }) {
   const [copiedHash, setCopiedHash] = useState(false);
+  const [copiedAddress, setCopiedAddress] = useState(false);
 
   const {
     data: txHash,
@@ -499,6 +525,16 @@ function RevokeRow({
     }
   };
 
+  const handleCopyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(user.walletAddress);
+      setCopiedAddress(true);
+      setTimeout(() => setCopiedAddress(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy wallet address:', err);
+    }
+  };
+
   const isProcessing = isPending || confirming;
   const error = writeError || receiptError;
   const canRevoke = isConnected && !!tokenAddress && !isProcessing && !isSuccess && isCorrectNetwork && !isSwitching;
@@ -507,7 +543,21 @@ function RevokeRow({
     <tr className="border-b hover:bg-muted/50">
       <td className="p-3">{user.email}</td>
       <td className="p-3">{user.displayName}</td>
-      <td className="p-3 font-mono text-sm">{formatAddress(user.walletAddress)}</td>
+      <td className="p-3">
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-sm">{formatAddress(user.walletAddress)}</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCopyAddress}
+            className="h-6 px-2"
+            title="Copy full address"
+          >
+            <Copy className="h-3 w-3" />
+            {copiedAddress && <span className="ml-1 text-xs">Copied!</span>}
+          </Button>
+        </div>
+      </td>
       <td className="p-3 text-right">
         {isSuccess ? (
           <div className="flex items-center justify-end gap-2">

@@ -1496,9 +1496,50 @@ This document provides a detailed breakdown of all implementation tasks organize
 - **Status:** Complete - All integration tests verified manually, full demo flow confirmed working
 - **Summary:**
   - All end-to-end flows verified: authentication, wallet linking, share issuance, transfers, and wallet disconnect
-  - Contract and backend alignment confirmed (addresses, ABIs, decimals)
-  - Error states and role-based access control verified working correctly
-  - Full demo flow validated and ready for demonstration
+
+### Task 4.16: Approved Users Management with Revoke Functionality ✅
+
+- [x] Add backend endpoint GET /api/shareholders/approved
+- [x] Add frontend API function and React Query hook for approved users
+- [x] Add approved users section to Approvals page
+- [x] Implement revoke functionality with revokeWallet() contract call
+- [x] Update page title and descriptions to reflect management functionality
+- [x] Fix route matching issue for /shareholders/approved endpoint
+- **Deliverable:** Complete wallet approval management system with approve and revoke capabilities ✅
+- **Status:** Complete - Approved users list with revoke functionality implemented
+- **Summary:**
+  - Added new backend endpoint GET /api/shareholders/approved to fetch approved users
+  - Created approved users section on Approvals page with revoke button
+  - Revoke button calls revokeWallet() function on ChainEquityToken contract
+  - Automatic list updates: approved users move to pending after revocation, pending users move to approved after approval
+  - Updated page title to "Wallet Approval Management" and Dashboard card to "Wallet Management"
+  - Fixed route matching by adding reserved words check in getShareholder() handler
+- **Files Created/Modified:**
+  - `backend/src/routes/shareholders.ts` (modified) - Added getApprovedUsers endpoint and route registration
+  - `frontend/src/types/api.ts` (modified) - Added ApprovedUsersResponse type
+  - `frontend/src/lib/api.ts` (modified) - Added getApprovedUsers function
+  - `frontend/src/hooks/useApi.ts` (modified) - Added useApprovedUsers hook
+  - `frontend/src/pages/Approvals.tsx` (modified) - Added approved users section with RevokeRow component
+  - `frontend/src/pages/Dashboard.tsx` (modified) - Updated navigation card title and description
+
+### Task 4.17: UI Improvements for Approvals Page ✅
+
+- [x] Update display names to remove "Investor" suffix
+- [x] Create script to update existing database records
+- [x] Add copy buttons next to truncated wallet addresses
+- [x] Add visual feedback for copy actions
+- **Deliverable:** Improved UX for Approvals page with cleaner display names and copy functionality ✅
+- **Status:** Complete - Display name cleanup and copy button functionality implemented
+- **Summary:**
+  - Updated seed data to remove "Investor" suffix from display names (Alice, Bob, Charlie)
+  - Created update script to fix existing database records
+  - Added copy buttons next to truncated wallet addresses in both pending and approved sections
+  - Copy button shows "Copied!" feedback for 2 seconds after clicking
+  - Full wallet address is copied to clipboard when button is clicked
+- **Files Created/Modified:**
+  - `backend/src/db/seeds/users.ts` (modified) - Updated display names to remove "Investor" suffix
+  - `backend/scripts/update-display-names.ts` (new) - Script to update existing database records
+  - `frontend/src/pages/Approvals.tsx` (modified) - Added copy buttons and handlers for wallet addresses
 
 ### Phase 4 Acceptance Criteria
 

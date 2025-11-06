@@ -6,6 +6,48 @@
 
 ## Recent Work
 
+### Task 4.17: UI Improvements for Approvals Page ✅
+
+- **Status**: Complete - Display name cleanup and copy button functionality added
+- **Location**: `frontend/src/pages/Approvals.tsx`, `backend/src/db/seeds/users.ts`
+- **Key Features**:
+  - **Display Name Cleanup**: 
+    - Updated seed data to remove "Investor" suffix from display names (Alice, Bob, Charlie instead of Alice Investor, etc.)
+    - Created update script to fix existing database records
+    - Display names now show clean names without role suffix
+  - **Copy Wallet Address Functionality**:
+    - Added copy buttons next to truncated wallet addresses in both pending and approved sections
+    - Copy button shows "Copied!" feedback for 2 seconds after clicking
+    - Uses same styling pattern as transaction hash copy buttons for consistency
+    - Full wallet address is copied to clipboard when button is clicked
+- **Files Modified**:
+  - `backend/src/db/seeds/users.ts` - Updated display names to remove "Investor" suffix
+  - `backend/scripts/update-display-names.ts` - Created script to update existing database records
+  - `frontend/src/pages/Approvals.tsx` - Added copy buttons and handlers for wallet addresses
+
+### Task 4.16: Approved Users Management with Revoke Functionality ✅
+
+- **Status**: Complete - Approved users list with revoke functionality added to Approvals page
+- **Location**: `frontend/src/pages/Approvals.tsx`, `backend/src/routes/shareholders.ts`
+- **Key Features**:
+  - **New Backend Endpoint**: GET /api/shareholders/approved - Returns list of investors with linked wallets that are approved on contract
+  - **New Frontend API**: `getApprovedUsers()` function and `useApprovedUsers()` React Query hook
+  - **Approved Users Section**: New card on Approvals page displaying approved users in a table
+  - **Revoke Functionality**: Revoke button calls `revokeWallet()` function on ChainEquityToken contract via Wagmi
+  - **Automatic List Updates**: After approval, users move from pending to approved list; after revocation, they move back to pending
+  - **UI Improvements**: 
+    - Page title updated to "Wallet Approval Management" with descriptive subtitle
+    - Dashboard navigation card updated to "Wallet Management" with description "Approve or revoke investor wallets"
+    - Revoke button uses destructive variant styling for visual distinction
+  - **Route Matching Fix**: Added reserved words check in `getShareholder()` to prevent `/shareholders/approved` from being matched by `/shareholders/:address` route
+- **Files Modified**:
+  - `backend/src/routes/shareholders.ts` - Added `getApprovedUsers()` endpoint and route registration
+  - `frontend/src/types/api.ts` - Added `ApprovedUsersResponse` type
+  - `frontend/src/lib/api.ts` - Added `getApprovedUsers()` function
+  - `frontend/src/hooks/useApi.ts` - Added `useApprovedUsers()` hook
+  - `frontend/src/pages/Approvals.tsx` - Added approved users section with `RevokeRow` component
+  - `frontend/src/pages/Dashboard.tsx` - Updated navigation card title and description
+
 ### Task 4.15: Integration Testing ✅
 
 - **Status**: Complete - All integration tests verified manually, full demo flow confirmed working
@@ -416,13 +458,25 @@
      - Auto-creates users in database if they don't exist (demo mode)
      - Wallet disconnection on logout/login for security
    - Investor Wallet Approval Flow complete (Task 4.14) ✅
-     - Created Approvals page for issuer/admin to approve investor wallets
-     - Backend endpoint: GET /api/shareholders/pending - Returns investors with linked wallets not approved on contract
-     - Frontend displays table of pending approvals with investor details
-     - Approve button calls approveWallet() function on ChainEquityToken contract via Wagmi
-     - Real-time status updates via React Query cache invalidation
+     - Created Approvals page for issuer/admin to approve and manage investor wallets
+     - **Pending Approvals Section**: 
+       - Backend endpoint: GET /api/shareholders/pending - Returns investors with linked wallets not approved on contract
+       - Frontend displays table of pending approvals with investor details (email, displayName, wallet address)
+       - Approve button calls approveWallet() function on ChainEquityToken contract via Wagmi
+       - After approval, users automatically move from pending to approved list
+     - **Approved Users Section** (NEW):
+       - Backend endpoint: GET /api/shareholders/approved - Returns investors with linked wallets that are approved on contract
+       - Frontend displays table of approved users with same details
+       - Revoke button calls revokeWallet() function on ChainEquityToken contract via Wagmi
+       - After revocation, users move back to pending list
+       - Revoke button uses destructive variant styling
+     - Real-time status updates via React Query cache invalidation (both lists refresh automatically)
      - Role-based access control (only issuer/admin can access)
-     - Integrated into Dashboard with navigation card
+     - Page title updated to "Wallet Approval Management" with description
+     - Dashboard navigation card updated to "Wallet Management" with description "Approve or revoke investor wallets"
+     - Route matching fix: Added reserved words check in getShareholder() to prevent /shareholders/approved from matching /shareholders/:address
+     - Copy buttons added next to truncated wallet addresses for easy copying of full addresses
+     - Display names cleaned up (removed "Investor" suffix) for better UX
    - Issue Shares Form Enhanced ✅
      - Enhanced with investor dropdown (replaces manual address input)
      - Fetches investors with linked wallets via `useInvestorsWithWallets()` hook
