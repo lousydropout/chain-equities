@@ -191,7 +191,17 @@
      - In-memory SQLite database testing (16 tests passing)
      - Database column aliasing for consistent camelCase JSON responses
      - Helper function `asShareholderResponse()` for unified data transformation
-9. **Frontend** (React + wagmi) - Admin & Shareholder dashboards ⏳ TODO
+9. **Frontend** (React + wagmi + Vite) - Admin & Shareholder dashboards ⏳ IN PROGRESS
+   - Frontend project scaffolding complete (Task 4.1) ✅
+     - React + Vite + TypeScript project structure set up
+     - All dependencies installed: @tanstack/react-query, firebase, react-router-dom, prettier, eslint plugins
+     - Prettier configured with standard React + TypeScript settings (.prettierrc)
+     - ESLint integrated with Prettier using flat config format
+     - Format scripts added to package.json (format, format:check)
+     - All scripts updated to use Bun
+     - TypeScript configuration verified and working
+     - All tests passing: TypeScript compiles, Prettier formatting works, ESLint integration verified, build succeeds
+     - Dev server tested and working (Vite running on port 5173)
 
 ### Planned Enhancements
 
@@ -220,13 +230,14 @@
 11. ✅ Implement company info REST API endpoints (Task 2.6 - COMPLETE)
 12. ✅ Implement shareholders REST API endpoints (Task 2.7 - COMPLETE)
 13. ⏳ Implement remaining REST API endpoints (Tasks 2.8-2.9)
-12. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
-13. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
-14. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
-15. ⏳ Implement frontend wallet connector components (`config.ts`, `provider.tsx`, `Connect.tsx`)
-16. ⏳ Integrate Firebase Auth in frontend
-17. ⏳ Create frontend admin dashboard UI
-18. ⏳ Create frontend shareholder dashboard UI
+14. ✅ Backend authentication architecture documented (Firebase Auth + Unified Middleware)
+15. ✅ Frontend wallet integration blueprint documented (Wagmi v2 + React Query)
+16. ✅ Implement backend unified auth middleware (`middleware/auth.ts`) - Task 1.4 COMPLETE
+17. ✅ Frontend project scaffolding complete (Task 4.1) - React + Vite + TypeScript with Prettier/ESLint
+18. ⏳ Implement frontend wallet connector components (`config.ts`, `provider.tsx`, `Connect.tsx`)
+19. ⏳ Integrate Firebase Auth in frontend (or mock auth for demo)
+20. ⏳ Create frontend admin dashboard UI
+21. ⏳ Create frontend shareholder dashboard UI
 
 ### Role System ✅
 

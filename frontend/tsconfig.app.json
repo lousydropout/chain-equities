@@ -16,6 +16,11 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Paths */
+    "paths": {
+      "@chain-equity/contracts/*": ["../contracts/*"]
+    },
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
