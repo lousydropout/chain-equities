@@ -152,7 +152,7 @@ export function Dashboard() {
           description="Total shares currently issued and held by shareholders"
           value={
             totalOutstanding
-              ? formatTokenAmount(totalOutstanding, decimals)
+              ? formatTokenAmount(totalOutstanding, decimals, { compact: false, maxFraction: 20 })
               : '—'
           }
           icon={<Coins className="h-5 w-5" aria-hidden />}
@@ -169,7 +169,7 @@ export function Dashboard() {
           title="Authorized"
           description="Maximum number of shares that can be issued (set at token creation)"
           value={
-            totalAuthorized ? formatTokenAmount(totalAuthorized, decimals) : '—'
+            totalAuthorized ? formatTokenAmount(totalAuthorized, decimals, { compact: false, maxFraction: 20 }) : '—'
           }
           icon={<Link2 className="h-5 w-5" aria-hidden />}
           testId="stat-total-authorized"
