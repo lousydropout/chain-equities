@@ -6,6 +6,25 @@
 
 ## Recent Work
 
+### Task 4.11: Share Issue Form ✅
+
+- **Status**: Complete - Share issue form implemented with Wagmi contract interactions
+- **Location**: `frontend/src/components/IssueSharesForm.tsx`
+- **Integration**: Embedded in Dashboard under "Issuer Actions" card section
+- **Key Features**:
+  - Form validation with react-hook-form + zod (address validation via `viem.isAddress()`, positive amount)
+  - Wagmi integration: `useWriteContract` for mint transaction, `useWaitForTransactionReceipt` for confirmation
+  - Role-based access control (issuer/admin only)
+  - Transaction state management (loading, success with hash, error handling)
+  - Automatic cache invalidation for shareholders and company stats after successful mint
+  - Wallet connection requirement with user-friendly messages
+- **Files Created**:
+  - `frontend/src/config/contracts.ts` - Contract configuration with ABI import
+  - `frontend/src/components/IssueSharesForm.tsx` - Main form component
+- **Files Modified**:
+  - `frontend/src/pages/Dashboard.tsx` - Added "Issuer Actions" section
+  - `frontend/tsconfig.app.json` - Added `resolveJsonModule` for JSON imports
+
 ### Workspace Restructuring ✅
 
 - Monorepo structure established with three workspaces:

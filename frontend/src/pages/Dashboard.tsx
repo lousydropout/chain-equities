@@ -30,6 +30,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { IssueSharesForm } from '@/components/IssueSharesForm';
 
 /**
  * Company Dashboard component
@@ -173,6 +174,19 @@ export function Dashboard() {
           to current factor.
         </p>
       )}
+
+      {/* Issuer Actions Section */}
+      {(user?.role === 'issuer' || user?.role === 'admin') &&
+        tokenAddress && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Issuer Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <IssueSharesForm tokenAddress={tokenAddress} />
+            </CardContent>
+          </Card>
+        )}
 
       {/* Navigation Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

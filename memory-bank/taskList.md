@@ -856,7 +856,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~3 weeks
 
-**Status:** ⏳ In Progress (Task 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10 complete)
+**Status:** ⏳ In Progress (Task 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10, 4.11 complete)
 
 **Dependencies:** Phase 3 complete
 
@@ -1325,16 +1325,41 @@ This document provides a detailed breakdown of all implementation tasks organize
   - Consistent styling with existing design system
   - Type-safe implementation
 
-### Task 4.11: Share Issue Form
+### Task 4.11: Share Issue Form ✅
 
-- [ ] Create `frontend/src/components/IssueSharesForm.tsx`
-- [ ] Implement form:
-  - [ ] Recipient address input
-  - [ ] Amount input
-  - [ ] Validation and transaction handling (Wagmi)
-  - [ ] Wallet signature requirement
-- [ ] Style form
-- **Deliverable:** Share issue form for issuer
+- [x] Create `frontend/src/components/IssueSharesForm.tsx`
+- [x] Implement form:
+  - [x] Recipient address input
+  - [x] Amount input
+  - [x] Validation and transaction handling (Wagmi)
+  - [x] Wallet signature requirement
+- [x] Style form
+- **Deliverable:** Share issue form for issuer ✅
+- **Status:** Complete - Share issue form implemented with Wagmi contract interactions, embedded in Dashboard
+- **Summary:**
+  - Created `frontend/src/components/IssueSharesForm.tsx` with react-hook-form + zod validation
+  - Form fields: recipient address (validated with `viem.isAddress()`), amount (positive number, converted to wei)
+  - Wagmi integration: `useWriteContract` for mint transaction, `useWaitForTransactionReceipt` for confirmation
+  - Role-based access: checks user role (issuer/admin) via `useAuth()`, shows appropriate messages for unauthorized users
+  - Transaction states: loading (`Loader2` icon), success (`CheckCircle2` with transaction hash), error (`XCircle` with error message)
+  - Cache invalidation: automatically invalidates `['shareholders']` and `['company-stats']` queries on success
+  - UI: shadcn/ui components (Card, Form, Input, Button), transaction hash displayed with copy button
+  - Wallet connection requirement: checks `useAccount().isConnected` and shows message if not connected
+  - Embedded in Dashboard under "Issuer Actions" card section, conditionally rendered for issuer/admin users
+- **Files Created/Modified:**
+  - `frontend/src/config/contracts.ts` (new) - Contract configuration with ABI import
+  - `frontend/src/components/IssueSharesForm.tsx` (new) - Main form component
+  - `frontend/src/pages/Dashboard.tsx` (modified) - Added "Issuer Actions" section with form
+  - `frontend/tsconfig.app.json` (modified) - Added `resolveJsonModule` for JSON imports
+- **Key Features:**
+  - Form validation with clear error messages (invalid address, non-positive amounts)
+  - Transaction state management (pending, success, error)
+  - Role-based access control (issuer/admin only)
+  - Wallet connection requirement with user-friendly messages
+  - Automatic cache invalidation after successful mint
+  - Copy transaction hash functionality
+  - Info message about allowlist requirements
+  - Responsive design matching existing design system
 
 ### Task 4.12: Share Transfer Form
 
@@ -1371,15 +1396,15 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 ### Task 4.15: Integration Testing
 
-- [ ] Test full user flows:
-  - [ ] Register → Login → View company dashboard
-  - [ ] Link wallet → Issue shares
-  - [ ] Transfer shares
-  - [ ] View updated cap table
-- [ ] Test error scenarios
-- [ ] Test wallet disconnection
-- [ ] Test role-based access
-- **Deliverable:** End-to-end flows working (single company)
+- [ ] Verify full demo flow works end-to-end:
+  - [ ] Register → Login → Dashboard
+  - [ ] Link wallet → (Admin) Approve wallet
+  - [ ] Issue shares → Cap Table updates
+  - [ ] Transfer shares → Balances update
+  - [ ] Wallet disconnect → access revoked
+- [ ] Validate contract + backend alignment (ABI, decimals)
+- [ ] Check error states and role gating
+- **Deliverable:** Confirmed working demo of single-company ChainEquity flow
 
 ### Phase 4 Acceptance Criteria
 
