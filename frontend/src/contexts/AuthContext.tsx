@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useDisconnect, useAccount } from 'wagmi';
+import { useQueryClient } from '@tanstack/react-query';
 import type { AuthContext as AuthContextType } from '../types/auth';
 import { getDemoUser } from '../types/auth';
 import {
@@ -54,6 +55,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const { disconnect } = useDisconnect();
   const { isConnected } = useAccount();
+  const queryClient = useQueryClient();
 
   /**
    * Load auth state from localStorage on mount
@@ -78,6 +80,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     loadAuthState();
   }, []);
+
+  /**
+   * Invalidate user-specific queries when user changes
+   * This ensures fresh data is fetched when switching users
+   */
+  useEffect(() => {
+    if (user) {
+      // Invalidate user-specific queries when user is set/changes
+      queryClient.invalidateQueries({ queryKey: ['wallet', 'status'] });
+      queryClient.invalidateQueries({ queryKey: ['shareholder', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['wallet', 'investors'] });
+      queryClient.invalidateQueries({ queryKey: ['shareholders', 'pending'] });
+    }
+  }, [user?.uid, queryClient]); // Only depend on user.uid to detect user changes
 
   /**
    * Simulate login - sets demo user based on email or username
@@ -113,6 +129,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setAuthUser(JSON.stringify(user));
       // Set a mock token for API calls
       setAuthToken('demo-token');
+
+      // Invalidate user-specific queries to fetch fresh data for new user
+      queryClient.invalidateQueries({ queryKey: ['wallet', 'status'] });
+      queryClient.invalidateQueries({ queryKey: ['shareholder', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['wallet', 'investors'] });
+      queryClient.invalidateQueries({ queryKey: ['shareholders', 'pending'] });
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
@@ -135,6 +157,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(null);
     removeAuthUser();
     removeAuthToken();
+
+    // Clear all user-specific queries from cache
+    queryClient.removeQueries({ queryKey: ['wallet', 'status'] });
+    queryClient.removeQueries({ queryKey: ['shareholder', 'me'] });
+    queryClient.removeQueries({ queryKey: ['wallet', 'investors'] });
+    queryClient.removeQueries({ queryKey: ['shareholders', 'pending'] });
+    queryClient.removeQueries({ queryKey: ['shareholders'] });
+    queryClient.removeQueries({ queryKey: ['transactions'] });
   };
 
   const value: AuthContextValue = {

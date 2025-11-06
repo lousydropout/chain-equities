@@ -6,12 +6,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useCompanyStats } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -38,7 +33,7 @@ import { useAccount } from 'wagmi';
 /**
  * Company Dashboard component
  * Displays company information, statistics, and navigation to other sections
- * 
+ *
  * @note This dashboard is accessible to all authenticated users (admin, issuer, investor).
  * It provides read-only company information and statistics. Role-specific dashboards
  * (admin dashboard, issuer dashboard, investor dashboard) are planned for Task 7.1.
@@ -114,12 +109,11 @@ export function Dashboard() {
           <div className="flex-1">
             <CardTitle className="text-2xl">
               {name ?? 'Company'}{' '}
-              <span className="text-muted-foreground">
-                ({symbol ?? '—'})
-              </span>
+              <span className="text-muted-foreground">({symbol ?? '—'})</span>
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Founded on {formatDate(createdAt)} • Issuer {formatAddress(issuer)}
+              Founded on {formatDate(createdAt)} • Issuer{' '}
+              {formatAddress(issuer)}
             </p>
             {user && (
               <p className="text-xs text-muted-foreground mt-1">
@@ -172,29 +166,20 @@ export function Dashboard() {
         />
       </div>
 
-      {/* Split Factor Note */}
-      {splitFactor && (
-        <p className="text-xs text-muted-foreground">
-          Post-split display. Split factor: {splitFactor}. Values are normalized
-          to current factor.
-        </p>
-      )}
-
       {/* Wallet Connection Section */}
       <Connect />
 
       {/* Issuer Actions Section */}
-      {(user?.role === 'issuer' || user?.role === 'admin') &&
-        tokenAddress && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Issuer Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <IssueSharesForm tokenAddress={tokenAddress} />
-            </CardContent>
-          </Card>
-        )}
+      {(user?.role === 'issuer' || user?.role === 'admin') && tokenAddress && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Issuer Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <IssueSharesForm tokenAddress={tokenAddress} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Shareholder Actions Section */}
       {tokenAddress && isConnected && (
@@ -240,7 +225,11 @@ export function Dashboard() {
             description="Approve investor wallets"
           />
         )}
-        <NavCard to="/api-test" title="API Test" description="Debug endpoints" />
+        <NavCard
+          to="/api-test"
+          title="API Test"
+          description="Debug endpoints"
+        />
       </div>
     </div>
   );
@@ -368,4 +357,3 @@ function Skeletons() {
     </div>
   );
 }
-

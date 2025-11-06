@@ -6,6 +6,8 @@
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useNetworkAutoSwitch } from '@/hooks/useNetworkAutoSwitch';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 /**
  * Formats an Ethereum address for display
@@ -25,6 +27,7 @@ export function Connect() {
   const { address, isConnected, isConnecting, isReconnecting } = useAccount();
   const { connect, connectors, error: connectError, isPending } = useConnect();
   const { disconnect } = useDisconnect();
+  const { isCorrectNetwork, isSwitching, switchError, manualSwitch } = useNetworkAutoSwitch();
 
   // Get the injected connector (MetaMask)
   // Ensure connectors are available before accessing
@@ -44,6 +47,9 @@ export function Connect() {
 
   // Determine connection status message
   const getStatusMessage = (): string => {
+    if (isSwitching) {
+      return 'Switching to Localnet…';
+    }
     if (isConnecting || isPending) {
       return 'Connecting…';
     }
@@ -51,6 +57,9 @@ export function Connect() {
       return 'Reconnecting…';
     }
     if (isConnected && address) {
+      if (isCorrectNetwork) {
+        return 'Connected to Localnet';
+      }
       return 'Connected';
     }
     if (connectError) {
@@ -86,6 +95,64 @@ export function Connect() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Network switching status */}
+        {isConnected && isSwitching && (
+          <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
+            <div className="flex items-center gap-2 text-blue-600">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-sm font-medium">
+                Adding Localnet to MetaMask and switching... Please confirm in MetaMask
+              </span>
+            </div>
+            <p className="text-xs text-blue-500/80 mt-1">
+              You may see two MetaMask popups: one to add the network, one to switch to it.
+            </p>
+          </div>
+        )}
+
+        {/* Network switch error */}
+        {isConnected && switchError && (
+          <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+            <div className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-4 w-4" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">Failed to switch network</p>
+                <p className="text-xs mt-1">
+                  {switchError.message || 'Please manually switch to Localnet (chainId 31337)'}
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={manualSwitch}
+              disabled={isSwitching}
+              variant="outline"
+              size="sm"
+              className="mt-2 w-full"
+            >
+              {isSwitching ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Switching...
+                </>
+              ) : (
+                'Try Switch to Localnet Again'
+              )}
+            </Button>
+          </div>
+        )}
+
+        {/* Wrong network warning */}
+        {isConnected && !isCorrectNetwork && !isSwitching && !switchError && (
+          <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
+            <div className="flex items-center gap-2 text-yellow-600">
+              <AlertCircle className="h-4 w-4" />
+              <p className="text-sm">
+                Please switch to Localnet to interact with contracts
+              </p>
+            </div>
+          </div>
+        )}
+
         {isConnected && address ? (
           <>
             <div className="flex items-center gap-2 p-3 bg-muted rounded-md font-mono text-sm">
@@ -98,6 +165,7 @@ export function Connect() {
               onClick={handleDisconnect}
               variant="destructive"
               className="w-full"
+              disabled={isSwitching}
             >
               Disconnect
             </Button>
@@ -105,7 +173,7 @@ export function Connect() {
         ) : (
           <>
             <p className="text-sm text-muted-foreground">
-              Connect your MetaMask wallet to interact with the blockchain.
+              Connect your MetaMask wallet to interact with the blockchain. We'll automatically switch you to Localnet (chainId 31337) when you connect.
             </p>
             <Button
               onClick={handleConnect}

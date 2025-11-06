@@ -874,7 +874,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~3 weeks
 
-**Status:** ⏳ In Progress (Task 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10, 4.11, 4.12, 4.13 complete)
+**Status:** ⏳ In Progress (Task 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10, 4.11, 4.12, 4.13, 4.14, 4.15 complete)
 
 **Dependencies:** Phase 3 complete
 
@@ -1482,17 +1482,23 @@ This document provides a detailed breakdown of all implementation tasks organize
   - `frontend/src/App.tsx` (modified) - Added /approvals route
   - `frontend/src/pages/Dashboard.tsx` (modified) - Added navigation card for Approvals page
 
-### Task 4.15: Integration Testing
+### Task 4.15: Integration Testing ✅
 
-- [ ] Verify full demo flow works end-to-end:
-  - [ ] Register → Login → Dashboard
-  - [ ] Link wallet → (Admin) Approve wallet
-  - [ ] Issue shares → Cap Table updates
-  - [ ] Transfer shares → Balances update
-  - [ ] Wallet disconnect → access revoked
-- [ ] Validate contract + backend alignment (ABI, decimals)
-- [ ] Check error states and role gating
-- **Deliverable:** Confirmed working demo of single-company ChainEquity flow
+- [x] Verify full demo flow works end-to-end:
+  - [x] Register → Login → Dashboard
+  - [x] Link wallet → (Admin) Approve wallet
+  - [x] Issue shares → Cap Table updates
+  - [x] Transfer shares → Balances update
+  - [x] Wallet disconnect → access revoked
+- [x] Validate contract + backend alignment (ABI, decimals)
+- [x] Check error states and role gating
+- **Deliverable:** Confirmed working demo of single-company ChainEquity flow ✅
+- **Status:** Complete - All integration tests verified manually, full demo flow confirmed working
+- **Summary:**
+  - All end-to-end flows verified: authentication, wallet linking, share issuance, transfers, and wallet disconnect
+  - Contract and backend alignment confirmed (addresses, ABIs, decimals)
+  - Error states and role-based access control verified working correctly
+  - Full demo flow validated and ready for demonstration
 
 ### Phase 4 Acceptance Criteria
 

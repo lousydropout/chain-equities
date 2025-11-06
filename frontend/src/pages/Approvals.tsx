@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { useNetworkAutoSwitch } from '@/hooks/useNetworkAutoSwitch';
 import {
   Card,
   CardContent,
@@ -17,7 +18,7 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, CheckCircle2, XCircle, Copy } from 'lucide-react';
+import { ArrowLeft, Loader2, CheckCircle2, XCircle, Copy, AlertCircle } from 'lucide-react';
 import { chainEquityToken } from '@/config/contracts';
 import { formatAddress } from '@/lib/utils';
 
@@ -29,6 +30,7 @@ export function Approvals() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isConnected } = useAccount();
+  const { isCorrectNetwork, isSwitching, switchError } = useNetworkAutoSwitch();
   const { data: stats } = useCompanyStats();
   const { data, isLoading, isError, error, refetch } = usePendingApprovals();
   const queryClient = useQueryClient();
@@ -119,6 +121,19 @@ export function Approvals() {
             </div>
           )}
 
+          {/* Network validation warning */}
+          {isConnected && !isCorrectNetwork && !isSwitching && (
+            <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
+              <div className="flex items-center gap-2 text-yellow-600">
+                <AlertCircle className="h-4 w-4" />
+                <p className="text-sm">
+                  Please switch to Localnet to interact with contracts
+                  {switchError && `: ${switchError.message}`}
+                </p>
+              </div>
+            </div>
+          )}
+
           {!tokenAddress && (
             <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
               <p className="text-sm text-yellow-600">
@@ -151,6 +166,8 @@ export function Approvals() {
                       approval={approval}
                       tokenAddress={tokenAddress}
                       isConnected={isConnected}
+                      isCorrectNetwork={isCorrectNetwork}
+                      isSwitching={isSwitching}
                       queryClient={queryClient}
                     />
                   ))}
@@ -171,6 +188,8 @@ function ApprovalRow({
   approval,
   tokenAddress,
   isConnected,
+  isCorrectNetwork,
+  isSwitching,
   queryClient,
 }: {
   approval: {
@@ -182,6 +201,8 @@ function ApprovalRow({
   };
   tokenAddress: string | null | undefined;
   isConnected: boolean;
+  isCorrectNetwork: boolean;
+  isSwitching: boolean;
   queryClient: ReturnType<typeof useQueryClient>;
 }) {
   const [copiedHash, setCopiedHash] = useState(false);
@@ -246,7 +267,7 @@ function ApprovalRow({
 
   const isProcessing = isPending || confirming;
   const error = writeError || receiptError;
-  const canApprove = isConnected && !!tokenAddress && !isProcessing && !isSuccess;
+  const canApprove = isConnected && !!tokenAddress && !isProcessing && !isSuccess && isCorrectNetwork && !isSwitching;
 
   return (
     <tr className="border-b hover:bg-muted/50">
