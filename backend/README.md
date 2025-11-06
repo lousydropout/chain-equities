@@ -59,6 +59,56 @@ bun run start
 
 The server will start on `http://localhost:4000` (or the port specified in `PORT` environment variable).
 
+## Database Management
+
+### Reset Database After Fresh Contract Deployment
+
+When deploying fresh contracts (or redeploying), you must reset the database to clear stale data from previous deployments. This ensures the indexer starts from the current contract state.
+
+**Steps:**
+
+1. **Reset the database** (clears all data and re-runs migrations):
+
+   ```bash
+   bun run db:reset --yes
+   ```
+
+2. **Optional: Set starting block** (if you know the deployment block number):
+
+   ```bash
+   # Set START_BLOCK environment variable to skip scanning from block 0
+   export START_BLOCK=<deployment_block_number>
+   ```
+
+   Or add to `.env`:
+
+   ```
+   START_BLOCK=12345
+   ```
+
+3. **Restart the backend server** (if running):
+   ```bash
+   # Stop the server (Ctrl+C), then restart
+   bun run dev
+   ```
+
+The indexer will automatically:
+
+- Start from `START_BLOCK` (or block 0 if not set)
+- Scan historical events from the deployment block to current block
+- Begin watching for new events in real-time
+
+**Note:** After resetting, the database will be empty. The indexer will populate it as it processes events from the blockchain.
+
+### Database Scripts
+
+- `bun run db:migrate` - Run database migrations
+- `bun run db:reset --yes` - Reset database (development only, requires `--yes` flag)
+- `bun run db:seed` - Seed database with test data (users only, no blockchain data)
+- `bun run db:setup` - Run migrations and seed in one command
+
+**Note on seeding:** The seed script only populates the `users` table (off-chain auth data). Blockchain-related tables (`shareholders`, `transactions`, `events`, `corporate_actions`) are **not seeded** and must be populated by the event indexer from on-chain data. Seeding blockchain data would conflict with fresh contract deployments.
+
 ## Health Check
 
 Verify the server is running:
@@ -78,16 +128,20 @@ The backend uses Viem for blockchain connectivity. The client service (`src/serv
 
 ### Supported Networks
 
-| Network | Chain ID | Default RPC URL |
-|---------|----------|-----------------|
-| Hardhat (Local) | 31337 | `http://127.0.0.1:8545` |
+| Network           | Chain ID | Default RPC URL         |
+| ----------------- | -------- | ----------------------- |
+| Hardhat (Local)   | 31337    | `http://127.0.0.1:8545` |
 | Sepolia (Testnet) | 11155111 | Configure via `RPC_URL` |
-| Mainnet | 1 | Configure via `RPC_URL` |
+| Mainnet           | 1        | Configure via `RPC_URL` |
 
 ### Usage
 
 ```typescript
-import { getPublicClient, getWalletClient, testConnection } from './services/chain/client';
+import {
+  getPublicClient,
+  getWalletClient,
+  testConnection,
+} from "./services/chain/client";
 
 // Test connection
 const isConnected = await testConnection();
@@ -117,30 +171,37 @@ If the Hardhat node is not running, you'll see a friendly error message.
 The test suite is organized into separate scripts to avoid mock interference:
 
 **Main test suite** (excludes client tests to avoid mock interference):
+
 ```bash
 bun run test
 # or
 npm run test
 ```
+
 Runs route and middleware tests (42 tests: 17 auth + 16 shareholders + 9 company routes)
 
 **Client configuration tests** (run separately):
+
 ```bash
 bun run test:client
 # or
 npm run test:client
 ```
+
 Runs client configuration tests in isolation (20 tests)
 
 **All tests** (includes tests that may fail due to mock interference):
+
 ```bash
 bun run test:all
 # or
 npm run test:all
 ```
+
 Runs all tests together (62 tests total, 5 client tests may fail when run with route tests)
 
 **Run specific test files:**
+
 ```bash
 # Shareholders route tests
 bun test src/routes/__tests__/shareholders.test.ts
@@ -156,6 +217,7 @@ bun test src/services/chain/__tests__/client.test.ts
 ```
 
 **Manual client connection test** (requires Hardhat node running):
+
 ```bash
 bun run test:client:manual
 ```

@@ -9,6 +9,7 @@ import { useAuth } from './hooks/useAuth';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
+import { CapTable } from './pages/CapTable';
 import { Admin } from './pages/Admin';
 import { Investor } from './pages/Investor';
 import { WalletRequired } from './pages/WalletRequired';
@@ -92,6 +93,15 @@ function App() {
         element={
           <ProtectedRoute requireWallet={true}>
             <WalletRequired />
+          </ProtectedRoute>
+        }
+      />
+      {/* Cap Table route - displays all shareholders */}
+      <Route
+        path="/cap-table"
+        element={
+          <ProtectedRoute>
+            <CapTable />
           </ProtectedRoute>
         }
       />

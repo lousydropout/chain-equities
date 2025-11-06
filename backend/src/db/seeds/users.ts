@@ -9,21 +9,27 @@ import { queryOne, asUserRecord } from "../index";
 
 export const SEED_USERS = [
   {
-    uid: "admin-uid-123",
+    uid: "admin-user",
     email: "admin@chainequity.com",
     displayName: "Admin User",
     role: "admin" as const,
   },
   {
-    uid: "issuer-uid-456",
-    email: "issuer@chainequity.com",
-    displayName: "Issuer User",
-    role: "issuer" as const,
+    uid: "alice-user",
+    email: "alice@chainequity.com",
+    displayName: "Alice Investor",
+    role: "investor" as const,
   },
   {
-    uid: "investor-uid-789",
-    email: "investor@chainequity.com",
-    displayName: "Investor User",
+    uid: "bob-user",
+    email: "bob@chainequity.com",
+    displayName: "Bob Investor",
+    role: "investor" as const,
+  },
+  {
+    uid: "charlie-user",
+    email: "charlie@chainequity.com",
+    displayName: "Charlie Investor",
     role: "investor" as const,
   },
 ];

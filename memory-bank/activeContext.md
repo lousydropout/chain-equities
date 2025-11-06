@@ -270,6 +270,18 @@
      - Created API test page (`/api-test`) for comprehensive endpoint testing
      - All files compile without errors, no linting errors
      - Environment variable support: `VITE_API_URL` (defaults to `http://localhost:4000`)
+   - Cap Table Page complete (Task 4.9) ✅
+     - Created `frontend/src/pages/CapTable.tsx` with desktop-only table layout
+     - Uses `useShareholdersData({ limit: 100 })` to fetch all shareholders (demo version, no pagination)
+     - Uses `useCompanyStats()` for company name, symbol, and decimals
+     - Table displays: Address (formatted), Balance, Effective Balance (with tooltip), Ownership %, Last Block
+     - Desktop-only layout with zebra striping and monospace fonts
+     - Header with "Back to Dashboard" button and company name/symbol
+     - Loading skeleton, error state with retry, empty state handling
+     - Tooltip on "Effective Balance" column explaining share splits
+     - Route: `/cap-table` added to App.tsx with ProtectedRoute wrapper
+     - Real-time data from API (no hardcoded values)
+     - Proper ownership percentage calculation using API data or fallback
 
 ### Planned Enhancements
 
@@ -310,8 +322,9 @@
 23. ✅ Protected route wrapper complete (Task 4.6) - Authentication checks and redirects
 24. ✅ Frontend API client setup complete (Task 4.7) - Composable API client, typed functions, React Query hooks
 25. ✅ Create frontend company dashboard page (Task 4.8) - Complete with stats endpoint, formatting, tooltips, navigation
-26. ⏳ Create frontend admin dashboard UI
-27. ⏳ Create frontend shareholder dashboard UI
+26. ✅ Create frontend cap table page (Task 4.9) - Desktop-only table with real data, formatting, navigation
+27. ⏳ Create frontend admin dashboard UI
+28. ⏳ Create frontend shareholder dashboard UI
 
 ### Company Dashboard (Task 4.8) ✅
 
@@ -497,9 +510,13 @@
   - `migrate()` - Version-aware migration runner
   - Schema version tracking in meta table
 - **Seed Scripts**: `backend/src/db/seeds/` with separated seed functions
-  - `users.ts` - Seed test users (admin, issuer, investor)
-  - `shareholders.ts` - Placeholder for shareholder seeding
+  - `users.ts` - Seed test users (admin, alice, bob, charlie) matching frontend DEMO_USERS
+  - `shareholders.ts` - Placeholder for shareholder seeding (not seeded, populated by indexer)
   - `seed.ts` - Main orchestrator script
+- **Database Reset Instructions**: Added to backend README
+  - Must reset database after fresh contract deployments to avoid stale data conflicts
+  - Steps: `bun run db:reset --yes`, optionally set `START_BLOCK`, restart server
+  - Seed script only populates users table (off-chain auth), blockchain data comes from indexer
 - **Scripts**:
   - `db:migrate` - Run migrations
   - `db:seed` - Seed test data

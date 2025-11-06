@@ -856,7 +856,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 **Duration:** ~3 weeks
 
-**Status:** ⏳ In Progress (Task 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8 complete)
+**Status:** ⏳ In Progress (Task 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9 complete)
 
 **Dependencies:** Phase 3 complete
 
@@ -1255,14 +1255,38 @@ This document provides a detailed breakdown of all implementation tasks organize
   - `lucide-react` - Icons (LogOut, Copy, ArrowRight, Users, Coins, Link2, HelpCircle)
   - `@radix-ui/react-tooltip` - Tooltip component primitives
 
-### Task 4.9: Cap Table Page
+### Task 4.9: Cap Table Page ✅
 
-- [ ] Create `frontend/src/pages/CapTable.tsx`
-- [ ] Fetch shareholders from API (`GET /api/shareholders`)
-- [ ] Display shareholder table with all holdings
-- [ ] Add navigation back to dashboard
-- [ ] Style page
-- **Deliverable:** Cap table page (single company)
+- [x] Create `frontend/src/pages/CapTable.tsx`
+- [x] Fetch shareholders from API (`GET /api/shareholders`)
+- [x] Display shareholder table with all holdings
+- [x] Add navigation back to dashboard
+- [x] Style page
+- **Deliverable:** Cap table page (single company) ✅
+- **Status:** Complete - Desktop-only cap table page implemented with real data from API
+- **Summary:**
+  - Created `frontend/src/pages/CapTable.tsx` with desktop-only table layout
+  - Uses `useShareholdersData({ limit: 100 })` to fetch all shareholders (no pagination for demo)
+  - Uses `useCompanyStats()` for company name, symbol, and decimals
+  - Table columns: Address (formatted), Balance (formatted), Effective Balance (with tooltip), Ownership %, Last Block
+  - Desktop-only layout with zebra striping, monospace fonts for addresses/balances
+  - Header with "Back to Dashboard" button (top-left) and company name/symbol (top-right)
+  - Loading skeleton component with animated pulse
+  - Error state with retry button
+  - Empty state message when no shareholders found
+  - Tooltip on "Effective Balance" column explaining share splits
+  - All shareholders displayed at once (no pagination for demo simplicity)
+  - Route added to App.tsx: `/cap-table` with ProtectedRoute wrapper
+- **Files Created/Modified:**
+  - `frontend/src/pages/CapTable.tsx` (new) - Main cap table page component
+  - `frontend/src/App.tsx` (modified) - Added `/cap-table` route
+- **Key Features:**
+  - Single-page table displaying all shareholders
+  - Real-time data from API (no hardcoded values)
+  - Clean, legible formatting for addresses and token amounts
+  - Proper ownership percentage calculation (from API or fallback calculation)
+  - Responsive error handling and loading states
+- **Note:** Database must be reset after fresh contract deployments to avoid stale data conflicts (see backend README)
 
 ### Task 4.10: Shareholder Table Component
 
@@ -1592,80 +1616,7 @@ This document provides a detailed breakdown of all implementation tasks organize
 - [ ] Style dashboards
 - **Deliverable:** Role-based dashboards
 
-### Task 7.2: Email Invites System
-
-- [ ] Integrate Firebase Auth email invites
-- [ ] Create invite flow:
-  - [ ] Generate invite link
-  - [ ] Send email
-  - [ ] Handle invite acceptance
-  - [ ] Assign roles
-- [ ] Add invite management UI
-- [ ] Test invite flow
-- **Deliverable:** Email invite system
-
-### Task 7.3: Password Reset Flow
-
-- [ ] Use Firebase Auth password reset
-- [ ] Create reset password page
-- [ ] Add "Forgot Password" link
-- [ ] Style reset flow
-- [ ] Test reset functionality
-- **Deliverable:** Password reset working
-
-### Task 7.4: Enhanced Charts and Visualizations
-
-- [ ] Install charting library (recharts, chart.js)
-- [ ] Create cap table visualization
-- [ ] Add ownership pie chart
-- [ ] Add transaction history chart
-- [ ] Add corporate action timeline
-- [ ] Style charts
-- **Deliverable:** Enhanced visualizations
-
-### Task 7.5: Improved Tables
-
-- [ ] Enhance shareholder table:
-  - [ ] Better sorting
-  - [ ] Column filtering
-  - [ ] Export functionality
-  - [ ] Responsive design
-- [ ] Improve transaction table
-- [ ] Add table tooltips
-- [ ] Style tables
-- **Deliverable:** Professional tables
-
-### Task 7.6: Status Indicators
-
-- [ ] Add status badges:
-  - [ ] Company status
-  - [ ] Shareholder status
-  - [ ] Transaction status
-- [ ] Add loading indicators
-- [ ] Add success/error indicators
-- [ ] Style indicators
-- **Deliverable:** Clear status indicators
-
-### Task 7.7: Branding and Design
-
-- [ ] Create logo/favicon
-- [ ] Design color scheme
-- [ ] Choose typography
-- [ ] Create design system
-- [ ] Apply branding consistently
-- [ ] Add meta tags
-- **Deliverable:** Branded application
-
-### Task 7.8: Responsive Design
-
-- [ ] Test on mobile devices
-- [ ] Fix mobile layout issues
-- [ ] Optimize touch interactions
-- [ ] Test on tablets
-- [ ] Document responsive breakpoints
-- **Deliverable:** Responsive application
-
-### Task 7.9: Demo Script & Walkthrough
+### Task 7.2: Demo Script & Walkthrough
 
 - [ ] Create demo script
 - [ ] Record demo video (optional)
@@ -1678,9 +1629,6 @@ This document provides a detailed breakdown of all implementation tasks organize
 
 - ✅ Professional-looking UI
 - ✅ Role-based dashboards working
-- ✅ Email invites functional
-- ✅ Enhanced visualizations
-- ✅ Responsive design
 - ✅ Demo-ready application
 
 ---
