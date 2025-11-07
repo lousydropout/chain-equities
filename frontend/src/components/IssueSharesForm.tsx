@@ -151,7 +151,7 @@ export function IssueSharesForm({
       const amountInWei = parseUnits(data.amount, 18);
       const recipientAddress = selectedInvestor.walletAddress as `0x${string}`;
 
-      await writeContract({
+      writeContract({
         address: tokenAddress as `0x${string}`,
         abi: chainEquityToken.abi,
         functionName: 'mint',

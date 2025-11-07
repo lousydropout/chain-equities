@@ -13,6 +13,7 @@ import {
   getMyShareholder,
   getPendingApprovals,
   getApprovedUsers,
+  getBlocksWithTransactions,
   getTransactions,
   getTransactionByHash,
   linkWallet,
@@ -107,7 +108,7 @@ export function useShareholders(
  * Eliminates need to destructure `data.data` and `data.pagination`
  *
  * @param params - Query parameters (limit, offset, blockNumber)
- * @returns Composed object with shareholders, pagination, supply info, and block metadata
+ * @returns Composed object with shareholders, pagination, and supply info
  */
 export function useShareholdersData(params?: ShareholdersQueryParams) {
   const query = useShareholders(params);
@@ -119,12 +120,6 @@ export function useShareholdersData(params?: ShareholdersQueryParams) {
     totalSupply: query.data?.totalSupply,
     totalEffectiveSupply: query.data?.totalEffectiveSupply,
     blockNumber: query.data?.blockNumber,
-    latestBlock: query.data?.latestBlock,
-    firstBlock: query.data?.firstBlock,
-    nextBlock: query.data?.nextBlock,
-    prevBlock: query.data?.prevBlock,
-    transactionBlocks: query.data?.transactionBlocks ?? [],
-    warning: query.data?.warning,
   };
 }
 
@@ -208,6 +203,20 @@ export function useApprovedUsers(): UseQueryResult<ApprovedUsersResponse, APIErr
   return useQuery<ApprovedUsersResponse, APIError>({
     queryKey: ['shareholders', 'approved'],
     queryFn: () => getApprovedUsers(),
+  });
+}
+
+/**
+ * React Query hook for blocks with transactions
+ * GET /api/shareholders/blocks
+ *
+ * @returns Query result with list of block numbers that have transactions
+ */
+export function useBlocksWithTransactions(): UseQueryResult<{ blocks: number[] }, APIError> {
+  return useQuery<{ blocks: number[] }, APIError>({
+    queryKey: ['shareholders', 'blocks'],
+    queryFn: () => getBlocksWithTransactions(),
+    staleTime: 5 * 60 * 1000, // 5 minutes - blocks list doesn't change often
   });
 }
 

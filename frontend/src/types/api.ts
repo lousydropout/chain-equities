@@ -74,13 +74,7 @@ export interface ShareholdersResponse {
   pagination: Pagination;
   totalSupply: string;
   totalEffectiveSupply: string;
-  blockNumber?: number;
-  latestBlock?: number;
-  firstBlock?: number;
-  nextBlock?: number | null;
-  prevBlock?: number | null;
-  transactionBlocks?: number[];
-  warning?: string;
+  blockNumber: number;
 }
 
 /**

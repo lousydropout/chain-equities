@@ -253,6 +253,17 @@ export async function getApprovedUsers(): Promise<ApprovedUsersResponse> {
   return api.apiRequest<ApprovedUsersResponse>('/api/shareholders/approved');
 }
 
+/**
+ * Get list of blocks with transactions
+ * GET /api/shareholders/blocks
+ *
+ * @returns List of distinct block numbers that have transactions
+ * @throws APIError on error
+ */
+export async function getBlocksWithTransactions(): Promise<{ blocks: number[] }> {
+  return api.apiRequest<{ blocks: number[] }>('/api/shareholders/blocks');
+}
+
 // ============================================================================
 // Transactions API Functions
 // ============================================================================

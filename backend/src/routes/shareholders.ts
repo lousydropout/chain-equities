@@ -42,15 +42,47 @@ export function resetCache(): void {
  * Get cached totalSupply and splitFactor from contract
  * Refreshes cache if it's older than CACHE_TTL
  */
-async function getCachedSupply(): Promise<{
+async function getCachedSupply(blockTag?: number): Promise<{
   supply: bigint;
   splitFactor: bigint;
   totalEffectiveSupply: bigint;
 }> {
-  const now = Date.now();
   const publicClient = getPublicClient();
   const { address, abi } = CONTRACTS.token;
 
+  // If blockTag is provided, always query at that block (no caching)
+  if (blockTag !== undefined) {
+    const supply = await safeRead<bigint>(publicClient, {
+      address,
+      abi,
+      functionName: "totalSupply",
+      blockNumber: BigInt(blockTag),
+    });
+
+    const factor = await safeRead<bigint>(publicClient, {
+      address,
+      abi,
+      functionName: "splitFactor",
+      blockNumber: BigInt(blockTag),
+    });
+
+    if (supply === null || factor === null) {
+      throw new Error("Failed to read totalSupply or splitFactor from contract");
+    }
+
+    // Calculate total effective supply: totalSupply * splitFactor / 1e18
+    const totalEffectiveSupply =
+      (supply * factor) / BigInt(10 ** 18);
+
+    return {
+      supply,
+      splitFactor: factor,
+      totalEffectiveSupply,
+    };
+  }
+
+  // Otherwise use cache for latest block
+  const now = Date.now();
   if (!cachedSupply || !cachedSplitFactor || now - lastFetch > CACHE_TTL) {
     const supply = await safeRead<bigint>(publicClient, {
       address,
@@ -138,197 +170,6 @@ function asShareholderResponse(
 }
 
 /**
- * Get first indexed block number from transactions table
- */
-function getFirstIndexedBlock(): number | null {
-  const result = queryOne<{ minBlock: number }>(
-    "SELECT MIN(block_number) as minBlock FROM transactions"
-  );
-  return result?.minBlock ?? null;
-}
-
-/**
- * Get last indexed block number from meta table
- */
-function getLastIndexedBlock(): number | null {
-  const meta = queryOne<MetaRecord>(
-    "SELECT * FROM meta WHERE key = ?",
-    ["last_indexed_block"]
-  );
-  if (!meta) {
-    return null;
-  }
-  return Number(meta.value);
-}
-
-/**
- * Get the next block number with a transaction after the given block
- * Returns null if there are no more transaction blocks
- */
-function getNextTransactionBlock(blockNumber: number): number | null {
-  const result = queryOne<{ nextBlock: number }>(
-    "SELECT MIN(block_number) as nextBlock FROM transactions WHERE block_number > ?",
-    [blockNumber]
-  );
-  return result?.nextBlock ?? null;
-}
-
-/**
- * Get the previous block number with a transaction before the given block
- * Returns null if there are no previous transaction blocks
- */
-function getPreviousTransactionBlock(blockNumber: number): number | null {
-  const result = queryOne<{ prevBlock: number }>(
-    "SELECT MAX(block_number) as prevBlock FROM transactions WHERE block_number < ?",
-    [blockNumber]
-  );
-  return result?.prevBlock ?? null;
-}
-
-/**
- * Get all unique block numbers that have transactions, ordered ascending
- */
-function getAllTransactionBlocks(): number[] {
-  const results = query<{ block_number: number }>(
-    "SELECT DISTINCT block_number FROM transactions ORDER BY block_number ASC"
-  );
-  return results.map((row) => row.block_number);
-}
-
-/**
- * Clamp block number to valid range [firstBlock, lastBlock]
- * Returns clamped value and warning message if clamping occurred
- */
-function clampBlockNumber(
-  blockNumber: number
-): { blockNumber: number; warning: string | null } {
-  const firstBlock = getFirstIndexedBlock();
-  const lastBlock = getLastIndexedBlock();
-
-  if (firstBlock === null || lastBlock === null) {
-    // No transactions indexed yet, return as-is with warning
-    return {
-      blockNumber,
-      warning: "No transactions indexed yet",
-    };
-  }
-
-  if (blockNumber < firstBlock) {
-    return {
-      blockNumber: firstBlock,
-      warning: `Block number clamped to first indexed block: ${firstBlock}`,
-    };
-  }
-
-  if (blockNumber > lastBlock) {
-    return {
-      blockNumber: lastBlock,
-      warning: `Block number clamped to last indexed block: ${lastBlock}`,
-    };
-  }
-
-  return { blockNumber, warning: null };
-}
-
-/**
- * Zero address constant
- */
-const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
-
-/**
- * Historical balance info including balance and last updated block
- */
-interface HistoricalBalanceInfo {
-  balance: bigint;
-  lastUpdatedBlock: number;
-}
-
-/**
- * Get historical balances at a specific block number
- * Correctly handles TRANSFER events (decrement from, increment to) and ISSUED events
- * Returns both balance and the last block where each address had a transaction
- */
-function getHistoricalBalances(
-  blockNumber: number
-): Map<string, HistoricalBalanceInfo> {
-  // Query all transactions up to the specified block
-  const transactions = query<{
-    from_address: string | null;
-    to_address: string | null;
-    amount: string;
-    event_type: "ISSUED" | "TRANSFER";
-    block_number: number;
-  }>(
-    `SELECT 
-      from_address,
-      to_address,
-      amount,
-      event_type,
-      block_number
-    FROM transactions
-    WHERE block_number <= ?
-    ORDER BY block_number ASC, log_index ASC`,
-    [blockNumber]
-  );
-
-  // Process transactions using BigInt arithmetic
-  const balances = new Map<string, HistoricalBalanceInfo>();
-
-  for (const tx of transactions) {
-    if (tx.event_type === "ISSUED") {
-      // ISSUED events: only increment to to_address (never to zero address)
-      if (tx.to_address && tx.to_address.toLowerCase() !== ZERO_ADDRESS) {
-        const address = tx.to_address.toLowerCase();
-        const current = balances.get(address) || {
-          balance: 0n,
-          lastUpdatedBlock: 0,
-        };
-        balances.set(address, {
-          balance: current.balance + BigInt(tx.amount),
-          lastUpdatedBlock: Math.max(current.lastUpdatedBlock, tx.block_number),
-        });
-      }
-    } else if (tx.event_type === "TRANSFER") {
-      // TRANSFER events: decrement from from_address, increment to to_address
-      if (
-        tx.from_address &&
-        tx.from_address.toLowerCase() !== ZERO_ADDRESS
-      ) {
-        const address = tx.from_address.toLowerCase();
-        const current = balances.get(address) || {
-          balance: 0n,
-          lastUpdatedBlock: 0,
-        };
-        balances.set(address, {
-          balance: current.balance - BigInt(tx.amount),
-          lastUpdatedBlock: Math.max(current.lastUpdatedBlock, tx.block_number),
-        });
-      }
-      if (tx.to_address && tx.to_address.toLowerCase() !== ZERO_ADDRESS) {
-        const address = tx.to_address.toLowerCase();
-        const current = balances.get(address) || {
-          balance: 0n,
-          lastUpdatedBlock: 0,
-        };
-        balances.set(address, {
-          balance: current.balance + BigInt(tx.amount),
-          lastUpdatedBlock: Math.max(current.lastUpdatedBlock, tx.block_number),
-        });
-      }
-    }
-  }
-
-  // Remove zero balances
-  for (const [address, info] of balances.entries()) {
-    if (info.balance === 0n) {
-      balances.delete(address);
-    }
-  }
-
-  return balances;
-}
-
-/**
  * GET /api/shareholders
  * Returns paginated list of all shareholders (cap table)
  * Supports optional blockNumber parameter for historical snapshots
@@ -351,31 +192,31 @@ async function getShareholders(
     );
     const offset = Math.max(0, parseInt(request.query.offset || "0", 10));
 
-    // Get block range info
-    const firstBlock = getFirstIndexedBlock();
-    const lastBlock = getLastIndexedBlock();
-
-    // Parse and validate blockNumber if provided
-    let blockNumber: number | null = null;
-    let warning: string | null = null;
-    const hasBlockNumberParam = request.query.blockNumber !== undefined;
-
-    if (hasBlockNumberParam) {
-      const parsedBlock = parseInt(request.query.blockNumber, 10);
-      if (isNaN(parsedBlock) || parsedBlock < 0) {
-        // Invalid format, clamp to valid range
-        const clamped = clampBlockNumber(0);
-        blockNumber = clamped.blockNumber;
-        warning = clamped.warning || "Invalid block number format, using latest";
-      } else {
-        const clamped = clampBlockNumber(parsedBlock);
-        blockNumber = clamped.blockNumber;
-        warning = clamped.warning;
-      }
-    }
-
     const publicClient = getPublicClient();
     const { address: tokenAddress, abi } = CONTRACTS.token;
+    let blockNumber: number | undefined = undefined;
+    
+    // Get current block number (always needed for response)
+    const currentBlockNumber = await publicClient.getBlockNumber();
+    let responseBlockNumber: number = Number(currentBlockNumber);
+
+    // Handle block number parameter
+    if (request.query.blockNumber) {
+      const requestedBlock = parseInt(request.query.blockNumber, 10);
+      
+      if (isNaN(requestedBlock) || requestedBlock < 0) {
+        // Invalid block number, fall back to latest
+        request.log.warn(`Invalid block number: ${request.query.blockNumber}, falling back to latest`);
+      } else {
+        if (requestedBlock > Number(currentBlockNumber)) {
+          // Future block, fall back to latest
+          request.log.warn(`Requested block ${requestedBlock} is in the future (current: ${currentBlockNumber}), falling back to latest`);
+        } else {
+          blockNumber = requestedBlock;
+          responseBlockNumber = requestedBlock;
+        }
+      }
+    }
 
     let shareholders: Array<{
       address: string;
@@ -386,65 +227,97 @@ async function getShareholders(
     }>;
     let total: number;
     let supply: bigint;
-    let splitFactor: bigint;
     let totalEffectiveSupply: bigint;
 
-    if (blockNumber !== null) {
-      // Historical snapshot mode: compute balances from transactions
-      const historicalBalances = getHistoricalBalances(blockNumber);
+    if (blockNumber !== undefined) {
+      // Historical snapshot: query contract at specific block
+      // Get all unique addresses from transactions up to this block
+      const addressRows = query<{ address: string }>(
+        `SELECT DISTINCT to_address AS address
+         FROM transactions
+         WHERE block_number <= ?
+         UNION
+         SELECT DISTINCT from_address AS address
+         FROM transactions
+         WHERE block_number <= ? AND from_address IS NOT NULL`,
+        [blockNumber, blockNumber]
+      );
 
-      // Get splitFactor at the specified block
-      const factorAtBlock = await safeRead<bigint>(publicClient, {
-        address: tokenAddress,
-        abi,
-        functionName: "splitFactor",
-        blockNumber: BigInt(blockNumber),
+      const addresses = addressRows
+        .map((row) => row.address)
+        .filter((addr): addr is string => addr !== null && addr !== "");
+
+      // Query balances at the specified block
+      const balancePromises = addresses.map(async (address) => {
+        const [balance, effectiveBalance] = await Promise.all([
+          safeRead<bigint>(publicClient, {
+            address: tokenAddress,
+            abi,
+            functionName: "balanceOf",
+            args: [address.toLowerCase() as Address],
+            blockNumber: BigInt(blockNumber),
+          }),
+          safeRead<bigint>(publicClient, {
+            address: tokenAddress,
+            abi,
+            functionName: "effectiveBalanceOf",
+            args: [address.toLowerCase() as Address],
+            blockNumber: BigInt(blockNumber),
+          }),
+        ]);
+
+        return {
+          address: address.toLowerCase(),
+          balance,
+          effectiveBalance,
+        };
       });
 
-      splitFactor = factorAtBlock || 1n * BigInt(10 ** 18); // Default to 1e18 if null
+      const balanceResults = await Promise.all(balancePromises);
 
-      // Calculate total supply at block
-      const totalSupplyAtBlock = Array.from(historicalBalances.values()).reduce(
-        (sum, info) => sum + info.balance,
-        0n
-      );
+      // Filter out addresses with zero balance
+      const shareholdersWithBalances = balanceResults
+        .filter((result) => result.balance !== null && result.effectiveBalance !== null && result.balance > 0n)
+        .map((result) => ({
+          address: result.address,
+          balance: result.balance!.toString(),
+          effectiveBalance: result.effectiveBalance!.toString(),
+        }));
 
-      supply = totalSupplyAtBlock;
-      totalEffectiveSupply =
-        (totalSupplyAtBlock * splitFactor) / BigInt(10 ** 18);
+      // Get supply data at this block
+      const supplyData = await getCachedSupply(blockNumber);
+      supply = supplyData.supply;
+      totalEffectiveSupply = supplyData.totalEffectiveSupply;
 
-      // Convert Map to array and sort by effective balance
-      const shareholdersArray = Array.from(historicalBalances.entries())
-        .map(([address, info]) => {
-          const effectiveBalance =
-            (info.balance * splitFactor) / BigInt(10 ** 18);
-          return {
-            address,
-            balance: info.balance.toString(),
-            effectiveBalance: effectiveBalance.toString(),
-            lastUpdatedBlock: info.lastUpdatedBlock, // Use actual last transaction block
-          };
-        })
-        .sort((a, b) => {
-          const aEff = BigInt(a.effectiveBalance);
-          const bEff = BigInt(b.effectiveBalance);
-          return aEff > bEff ? -1 : aEff < bEff ? 1 : 0;
-        });
+      // Calculate ownership percentages
+      shareholders = shareholdersWithBalances.map((sh) => {
+        const effectiveBalance = BigInt(sh.effectiveBalance);
+        const ownership = calculateOwnershipPercentage(
+          effectiveBalance,
+          totalEffectiveSupply
+        );
+        return {
+          address: sh.address,
+          balance: sh.balance,
+          effectiveBalance: sh.effectiveBalance,
+          ownershipPercentage: ownership,
+          lastUpdatedBlock: blockNumber,
+        };
+      });
 
-      total = shareholdersArray.length;
+      // Sort by effective balance DESC
+      shareholders.sort((a, b) => {
+        const aBal = BigInt(a.effectiveBalance);
+        const bBal = BigInt(b.effectiveBalance);
+        return aBal > bBal ? -1 : aBal < bBal ? 1 : 0;
+      });
+
+      total = shareholders.length;
 
       // Apply pagination
-      const paginatedShareholders = shareholdersArray.slice(
-        offset,
-        offset + limit
-      );
-
-      // Transform to response format
-      shareholders = paginatedShareholders.map((row) =>
-        asShareholderResponse(row, totalEffectiveSupply)
-      );
+      shareholders = shareholders.slice(offset, offset + limit);
     } else {
-      // Current state mode: use existing logic
+      // Latest snapshot: use database
       // Get total count
       const totalResult = queryOne<{ count: number }>(
         "SELECT COUNT(*) as count FROM shareholders"
@@ -470,11 +343,9 @@ async function getShareholders(
       );
 
       // Get cached supply data
-      const { supply: cachedSupply, splitFactor: cachedFactor, totalEffectiveSupply: cachedTotalEff } =
-        await getCachedSupply();
-      supply = cachedSupply;
-      splitFactor = cachedFactor;
-      totalEffectiveSupply = cachedTotalEff;
+      const supplyData = await getCachedSupply();
+      supply = supplyData.supply;
+      totalEffectiveSupply = supplyData.totalEffectiveSupply;
 
       // Transform rows to response format
       shareholders = rows.map((row) =>
@@ -482,27 +353,8 @@ async function getShareholders(
       );
     }
 
-    // Get all transaction blocks for navigation
-    const transactionBlocks = getAllTransactionBlocks();
-
     // Build response
-    const response: {
-      shareholders: typeof shareholders;
-      pagination: {
-        limit: number;
-        offset: number;
-        total: number;
-      };
-      totalSupply: string;
-      totalEffectiveSupply: string;
-      blockNumber?: number;
-      latestBlock?: number;
-      firstBlock?: number;
-      nextBlock?: number | null;
-      prevBlock?: number | null;
-      transactionBlocks?: number[];
-      warning?: string;
-    } = {
+    const response = {
       shareholders,
       pagination: {
         limit,
@@ -511,37 +363,8 @@ async function getShareholders(
       },
       totalSupply: supply.toString(),
       totalEffectiveSupply: totalEffectiveSupply.toString(),
-      transactionBlocks, // Always include the list of transaction blocks
+      blockNumber: responseBlockNumber,
     };
-
-    // Always include latestBlock and firstBlock for navigation (if available)
-    if (lastBlock !== null) {
-      response.latestBlock = lastBlock;
-    }
-    if (firstBlock !== null) {
-      response.firstBlock = firstBlock;
-    }
-
-    // Add block metadata if blockNumber was provided in query (even if null after clamping)
-    if (hasBlockNumberParam && blockNumber !== null) {
-      response.blockNumber = blockNumber;
-      
-      // Find next and previous transaction blocks for smart navigation
-      const nextBlock = getNextTransactionBlock(blockNumber);
-      const prevBlock = getPreviousTransactionBlock(blockNumber);
-      response.nextBlock = nextBlock;
-      response.prevBlock = prevBlock;
-      
-      if (warning) {
-        response.warning = warning;
-      }
-    } else if (lastBlock !== null) {
-      // When viewing latest, provide previous transaction block for navigation
-      const prevBlock = getPreviousTransactionBlock(lastBlock);
-      response.prevBlock = prevBlock;
-      // nextBlock is null when at latest
-      response.nextBlock = null;
-    }
 
     reply.send(response);
   } catch (error) {
@@ -878,6 +701,34 @@ async function getApprovedUsers(
 }
 
 /**
+ * GET /api/shareholders/blocks
+ * Returns list of distinct block numbers that have transactions
+ * Used for navigation between blocks with activity
+ */
+async function getBlocksWithTransactions(
+  request: FastifyRequest,
+  reply: FastifyReply
+): Promise<void> {
+  try {
+    const blocks = query<{ blockNumber: number }>(
+      `SELECT DISTINCT block_number AS blockNumber
+       FROM transactions
+       ORDER BY block_number ASC`
+    );
+
+    reply.send({
+      blocks: blocks.map((row) => row.blockNumber),
+    });
+  } catch (error) {
+    request.log.error(error, "Error fetching blocks with transactions");
+    reply.code(500).send({
+      error: "Internal server error",
+      message: "Failed to fetch blocks with transactions",
+    });
+  }
+}
+
+/**
  * Register shareholders routes with Fastify instance
  */
 export async function shareholdersRoutes(
@@ -917,16 +768,7 @@ export async function shareholdersRoutes(
           },
           totalSupply: { type: "string" },
           totalEffectiveSupply: { type: "string" },
-          blockNumber: { type: ["integer", "null"] },
-          latestBlock: { type: ["integer", "null"] },
-          firstBlock: { type: ["integer", "null"] },
-          nextBlock: { type: ["integer", "null"] },
-          prevBlock: { type: ["integer", "null"] },
-          transactionBlocks: { 
-            type: "array",
-            items: { type: "integer" }
-          },
-          warning: { type: ["string", "null"] },
+          blockNumber: { type: "integer" },
         },
         required: [
           "shareholders",
@@ -1039,9 +881,37 @@ export async function shareholdersRoutes(
     },
   };
 
+  // Response schema for GET /api/shareholders/blocks
+  const blocksSchema = {
+    response: {
+      200: {
+        type: "object",
+        properties: {
+          blocks: {
+            type: "array",
+            items: { type: "integer" },
+          },
+        },
+        required: ["blocks"],
+      },
+      500: {
+        type: "object",
+        properties: {
+          error: { type: "string" },
+          message: { type: "string" },
+        },
+      },
+    },
+  };
+
   // Register specific routes before parameterized routes to avoid conflicts
   // Fastify matches routes in registration order, so /me must come before /:address
   fastify.get("/shareholders", { schema: shareholdersListSchema }, getShareholders);
+  fastify.get(
+    "/shareholders/blocks",
+    { schema: blocksSchema },
+    getBlocksWithTransactions
+  );
   fastify.get(
     "/shareholders/pending",
     { schema: pendingApprovalsSchema },
