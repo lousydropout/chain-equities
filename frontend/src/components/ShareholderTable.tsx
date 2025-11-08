@@ -53,8 +53,23 @@ export function ShareholderTable({
 
       switch (sortField) {
         case 'address':
-          aValue = a.address.toLowerCase();
-          bValue = b.address.toLowerCase();
+          // Sort by displayName/email first, then by address
+          const aUser = a.displayName || a.email || '';
+          const bUser = b.displayName || b.email || '';
+          if (aUser && bUser) {
+            aValue = aUser.toLowerCase();
+            bValue = bUser.toLowerCase();
+          } else if (aUser) {
+            // a has user info, b doesn't - a comes first in desc, last in asc
+            return sortDirection === 'asc' ? 1 : -1;
+          } else if (bUser) {
+            // b has user info, a doesn't - b comes first in desc, last in asc
+            return sortDirection === 'asc' ? -1 : 1;
+          } else {
+            // Neither has user info, sort by address
+            aValue = a.address.toLowerCase();
+            bValue = b.address.toLowerCase();
+          }
           break;
         case 'balance':
           aValue = BigInt(a.balance ?? 0);
@@ -207,7 +222,14 @@ export function ShareholderTable({
                 className={i % 2 === 0 ? 'bg-muted/20' : ''}
               >
                 <td className="py-2 px-4 font-mono">
-                  {formatAddress(shareholder.address)}
+                  {shareholder.displayName || shareholder.email ? (
+                    <div>
+                      <p className='font-semibold'>{shareholder.displayName} ({shareholder.email})</p> 
+                      <p>{shareholder.address}</p>
+                    </div>
+                  ) : (
+                    <span>—</span>
+                  )}
                 </td>
                 <td className="py-2 px-4 text-right font-mono">
                   {formatTokenAmount(balance, decimals, {

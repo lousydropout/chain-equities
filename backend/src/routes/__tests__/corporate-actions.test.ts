@@ -19,6 +19,9 @@ mock.module("../../db/index", () => ({
 // Mock the chain client module
 const mockGetPublicClient = mock();
 const mockSafeRead = mock();
+const mockPublicClient = {
+  // Mock public client object
+};
 
 mock.module("../../services/chain/client", () => ({
   getPublicClient: mockGetPublicClient,
@@ -26,6 +29,16 @@ mock.module("../../services/chain/client", () => ({
 
 mock.module("../../services/chain/utils", () => ({
   safeRead: mockSafeRead,
+}));
+
+// Mock the contracts config
+mock.module("../../config/contracts", () => ({
+  CONTRACTS: {
+    token: {
+      address: "0x2222222222222222222222222222222222222222" as `0x${string}`,
+      abi: [],
+    },
+  },
 }));
 
 describe("Corporate Actions Routes", () => {
@@ -45,6 +58,8 @@ describe("Corporate Actions Routes", () => {
     mockQueryOne.mockReset();
     mockGetPublicClient.mockReset();
     mockSafeRead.mockReset();
+    // Default mock for getPublicClient to return a mock client
+    mockGetPublicClient.mockReturnValue(mockPublicClient);
   });
 
   describe("GET /api/corporate-actions", () => {
@@ -319,12 +334,7 @@ describe("Corporate Actions Routes", () => {
         { address: "0x2222222222222222222222222222222222222222" },
       ];
 
-      const mockPublicClient = {
-        // Mock public client object
-      };
-
       mockQuery.mockReturnValueOnce(mockShareholders);
-      mockGetPublicClient.mockReturnValueOnce(mockPublicClient);
       mockSafeRead
         .mockResolvedValueOnce(BigInt("1000000000000000000"))
         .mockResolvedValueOnce(BigInt("2000000000000000000"));
@@ -409,10 +419,7 @@ describe("Corporate Actions Routes", () => {
         { address: "0x1111111111111111111111111111111111111111" },
       ];
 
-      const mockPublicClient = {};
-
       mockQuery.mockReturnValueOnce(mockShareholders);
-      mockGetPublicClient.mockReturnValueOnce(mockPublicClient);
       mockSafeRead.mockResolvedValueOnce(null); // safeRead returns null on failure
 
       const response = await app.inject({

@@ -145,6 +145,8 @@ function asShareholderResponse(
     balance: string;
     effectiveBalance: string;
     lastUpdatedBlock: number;
+    email?: string | null;
+    displayName?: string | null;
   },
   totalEffectiveSupply: bigint
 ): {
@@ -153,6 +155,8 @@ function asShareholderResponse(
   effectiveBalance: string;
   ownershipPercentage: number;
   lastUpdatedBlock: number;
+  email?: string | null;
+  displayName?: string | null;
 } {
   const effectiveBalance = BigInt(row.effectiveBalance);
   const ownership = calculateOwnershipPercentage(
@@ -166,6 +170,8 @@ function asShareholderResponse(
     effectiveBalance: row.effectiveBalance,
     ownershipPercentage: ownership,
     lastUpdatedBlock: row.lastUpdatedBlock,
+    email: row.email ?? null,
+    displayName: row.displayName ?? null,
   };
 }
 
@@ -224,6 +230,8 @@ async function getShareholders(
       effectiveBalance: string;
       ownershipPercentage: number;
       lastUpdatedBlock: number;
+      email?: string | null;
+      displayName?: string | null;
     }>;
     let total: number;
     let supply: bigint;
@@ -289,19 +297,53 @@ async function getShareholders(
       supply = supplyData.supply;
       totalEffectiveSupply = supplyData.totalEffectiveSupply;
 
-      // Calculate ownership percentages
+      // Get user data for all addresses (LEFT JOIN with users table)
+      const addressList = shareholdersWithBalances.map((sh) => sh.address);
+      const userMap = new Map<string, { email: string | null; displayName: string | null }>();
+      
+      if (addressList.length > 0) {
+        const placeholders = addressList.map(() => '?').join(',');
+        const userRows = query<{
+          walletAddress: string;
+          email: string | null;
+          displayName: string | null;
+        }>(
+          `SELECT 
+            wallet_address AS walletAddress,
+            email,
+            display_name AS displayName
+          FROM users
+          WHERE wallet_address IN (${placeholders})`,
+          addressList
+        );
+
+        // Create a map of address -> user data for quick lookup
+        for (const userRow of userRows) {
+          if (userRow.walletAddress) {
+            userMap.set(userRow.walletAddress.toLowerCase(), {
+              email: userRow.email,
+              displayName: userRow.displayName,
+            });
+          }
+        }
+      }
+
+      // Calculate ownership percentages and include user data
       shareholders = shareholdersWithBalances.map((sh) => {
         const effectiveBalance = BigInt(sh.effectiveBalance);
         const ownership = calculateOwnershipPercentage(
           effectiveBalance,
           totalEffectiveSupply
         );
+        const userData = userMap.get(sh.address) || { email: null, displayName: null };
         return {
           address: sh.address,
           balance: sh.balance,
           effectiveBalance: sh.effectiveBalance,
           ownershipPercentage: ownership,
           lastUpdatedBlock: blockNumber,
+          email: userData.email,
+          displayName: userData.displayName,
         };
       });
 
@@ -325,19 +367,25 @@ async function getShareholders(
       total = totalResult?.count || 0;
 
       // Query shareholders from database (ordered by effective balance DESC)
+      // LEFT JOIN with users to get email and displayName
       const rows = query<{
         address: string;
         balance: string;
         effectiveBalance: string;
         lastUpdatedBlock: number;
+        email: string | null;
+        displayName: string | null;
       }>(
         `SELECT 
-          address, 
-          balance, 
-          effective_balance AS effectiveBalance, 
-          last_updated_block AS lastUpdatedBlock
-        FROM shareholders
-        ORDER BY effective_balance DESC
+          s.address, 
+          s.balance, 
+          s.effective_balance AS effectiveBalance, 
+          s.last_updated_block AS lastUpdatedBlock,
+          u.email,
+          u.display_name AS displayName
+        FROM shareholders s
+        LEFT JOIN users u ON LOWER(s.address) = LOWER(u.wallet_address)
+        ORDER BY s.effective_balance DESC
         LIMIT ? OFFSET ?`,
         [limit, offset]
       );
@@ -442,8 +490,10 @@ async function getShareholder(
     // Get cached supply data for ownership percentage
     const { totalEffectiveSupply } = await getCachedSupply();
 
-    // Query database for last_updated_block (optional, may not exist if not indexed yet)
+    // Query database for last_updated_block and user data (optional, may not exist if not indexed yet)
     let lastUpdatedBlock: number | null = null;
+    let email: string | null = null;
+    let displayName: string | null = null;
     try {
       const dbRow = queryOne<{
         lastUpdatedBlock: number;
@@ -454,9 +504,24 @@ async function getShareholder(
         [normalizedAddress]
       );
       lastUpdatedBlock = dbRow?.lastUpdatedBlock || null;
+
+      // Query user data if available
+      const userRow = queryOne<{
+        email: string | null;
+        displayName: string | null;
+      }>(
+        `SELECT email, display_name AS displayName
+         FROM users
+         WHERE LOWER(wallet_address) = LOWER(?)`,
+        [normalizedAddress]
+      );
+      if (userRow) {
+        email = userRow.email;
+        displayName = userRow.displayName;
+      }
     } catch (dbError) {
-      // Database query is optional, continue without lastUpdatedBlock
-      request.log.warn(dbError, "Failed to query lastUpdatedBlock from database");
+      // Database query is optional, continue without lastUpdatedBlock/user data
+      request.log.warn(dbError, "Failed to query database");
     }
 
     // Calculate ownership percentage
@@ -471,6 +536,8 @@ async function getShareholder(
       effectiveBalance: (effectiveBalance || 0n).toString(),
       ownershipPercentage,
       lastUpdatedBlock,
+      email,
+      displayName,
     });
   } catch (error) {
     request.log.error(error, "Error fetching shareholder");
@@ -562,6 +629,8 @@ async function getMyShareholder(
       effectiveBalance: (effectiveBalance || 0n).toString(),
       ownershipPercentage,
       lastUpdatedBlock,
+      email: userRecord.email,
+      displayName: userRecord.displayName,
     });
   } catch (error) {
     request.log.error(error, "Error fetching my shareholder info");
@@ -743,6 +812,8 @@ export async function shareholdersRoutes(
       effectiveBalance: { type: "string" },
       ownershipPercentage: { type: "number" },
       lastUpdatedBlock: { type: ["integer", "null"] },
+      email: { type: ["string", "null"] },
+      displayName: { type: ["string", "null"] },
     },
     required: ["address", "balance", "effectiveBalance", "ownershipPercentage"],
   };

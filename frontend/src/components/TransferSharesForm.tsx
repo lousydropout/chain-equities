@@ -187,7 +187,8 @@ export function TransferSharesForm({
   useEffect(() => {
     if (isSuccess && txHash) {
       queryClient.invalidateQueries({ queryKey: ['shareholders'] });
-      queryClient.invalidateQueries({ queryKey: ['company-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['shareholder', 'me'] }); // Refresh user's balance
+      queryClient.invalidateQueries({ queryKey: ['company', 'stats'] }); // Fix query key format
       if (onSuccess) {
         onSuccess();
       }

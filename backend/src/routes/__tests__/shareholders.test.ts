@@ -10,8 +10,10 @@ import { migrate } from "../../db/migrations";
 
 // Mock the client module
 const mockReadContract = mock();
+const mockGetBlockNumber = mock();
 const mockPublicClient = {
   readContract: mockReadContract,
+  getBlockNumber: mockGetBlockNumber,
 };
 
 // Mock getPublicClient
@@ -123,6 +125,9 @@ describe("Shareholders Routes", () => {
 
     // Reset contract mock and clear cache
     mockReadContract.mockReset();
+    mockGetBlockNumber.mockReset();
+    // Default mock for getBlockNumber to return a valid block number
+    mockGetBlockNumber.mockResolvedValue(BigInt(12345));
     resetCache(); // Clear cache between tests
   });
 

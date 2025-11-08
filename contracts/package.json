@@ -7,6 +7,7 @@
     "console": "npx hardhat console --network localhost",
     "deploy:acme": "npx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network localhost && npm run export:addresses && npm run verify:deployment",
     "deploy:anvil": "npx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network anvil && npm run export:addresses && npm run verify:deployment",
+    "deploy:sepolia": "npx hardhat ignition deploy ignition/modules/AcmeCompany.ts --network sepolia && npx hardhat run scripts/export-addresses.ts --network sepolia && npx hardhat run scripts/verify-deployment.ts --network sepolia",
     "export:abis": "npx hardhat run scripts/export-abis.ts --network localhost",
     "export:addresses": "npx hardhat run scripts/export-addresses.ts --network localhost",
     "verify:deployment": "npx hardhat run scripts/verify-deployment.ts --network localhost",

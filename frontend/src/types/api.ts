@@ -64,6 +64,8 @@ export interface Shareholder {
   effectiveBalance: string;
   ownershipPercentage: number;
   lastUpdatedBlock: number | null;
+  email?: string | null;
+  displayName?: string | null;
 }
 
 /**

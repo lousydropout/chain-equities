@@ -36,6 +36,7 @@ export function CapTable() {
     limit: 100,
     blockNumber: blockNumber ?? undefined,
   });
+  console.log('shareholders', shareholders);
 
   // Fetch company stats for name, symbol, and total outstanding
   const { data: stats } = useCompanyStats();
