@@ -3,11 +3,11 @@
  * @notice Profile icon dropdown menu with wallet connection, linking, and logout functionality
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { User, LogOut, Link2, Unlink, Wallet, Loader2 } from 'lucide-react';
+import { User, LogOut, Link2, Unlink, Wallet, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNetworkAutoSwitch } from '@/hooks/useNetworkAutoSwitch';
 import { useWalletStatus } from '@/hooks/useApi';
@@ -37,6 +37,11 @@ export function ProfileMenu() {
   const { data: walletStatus } = useWalletStatus();
   const queryClient = useQueryClient();
   const [actionError, setActionError] = useState<string | null>(null);
+  const disconnectingRef = useRef(false); // Prevent infinite disconnect loops
+
+  // Extract wallet status values
+  const isLinked = walletStatus?.isLinked ?? false;
+  const linkedWalletAddress = walletStatus?.walletAddress;
 
   // Get the injected connector (MetaMask)
   const injectedConnector = connectors && connectors.length > 0 ? connectors[0] : null;
@@ -81,6 +86,36 @@ export function ProfileMenu() {
     },
   });
 
+  // Auto-disconnect if connected wallet doesn't match linked wallet
+  useEffect(() => {
+    // Skip if already disconnecting, not connected, or no linked wallet
+    if (disconnectingRef.current || !isConnected || !address || !isLinked || !linkedWalletAddress) {
+      return;
+    }
+
+    // Compare addresses (case-insensitive)
+    const connectedAddressLower = address.toLowerCase();
+    const linkedAddressLower = linkedWalletAddress.toLowerCase();
+
+    if (connectedAddressLower !== linkedAddressLower) {
+      // Connected wallet doesn't match linked wallet - auto-disconnect
+      disconnectingRef.current = true;
+      const errorMessage = `Connected wallet (${formatAddress(address)}) doesn't match your linked wallet (${formatAddress(linkedWalletAddress)}). Disconnecting...`;
+      setActionError(errorMessage);
+      
+      // Show alert popup
+      alert(errorMessage);
+      
+      disconnect();
+      
+      // Reset flag after a longer delay to ensure user sees the message
+      setTimeout(() => {
+        disconnectingRef.current = false;
+        setActionError(null);
+      }, 5000); // Increased from 2000 to 5000ms
+    }
+  }, [address, isConnected, isLinked, linkedWalletAddress, disconnect]);
+
   const handleConnect = () => {
     if (injectedConnector) {
       connect({ connector: injectedConnector });
@@ -110,8 +145,6 @@ export function ProfileMenu() {
     navigate('/login');
   };
 
-  const isLinked = walletStatus?.isLinked ?? false;
-  const linkedWalletAddress = walletStatus?.walletAddress;
   const isProcessing = linkMutation.isPending || unlinkMutation.isPending;
   const isConnectingWallet = isConnecting || isPending || isReconnecting;
 
@@ -156,7 +189,8 @@ export function ProfileMenu() {
               )}
             </DropdownMenuItem>
             {actionError && (
-              <DropdownMenuLabel className="text-xs text-destructive">
+              <DropdownMenuLabel className="text-xs text-destructive font-medium flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
                 {actionError}
               </DropdownMenuLabel>
             )}
@@ -187,6 +221,15 @@ export function ProfileMenu() {
             <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
               Connected: {formatAddress(address)}
             </DropdownMenuLabel>
+            {/* Show error if wallet mismatch (even when linked) */}
+            {isLinked && linkedWalletAddress && address && 
+             address.toLowerCase() !== linkedWalletAddress.toLowerCase() && 
+             actionError && (
+              <DropdownMenuLabel className="text-xs text-destructive font-medium flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {actionError}
+              </DropdownMenuLabel>
+            )}
             <DropdownMenuItem
               onClick={handleDisconnect}
               disabled={isSwitching}
