@@ -212,7 +212,7 @@ export function Dashboard() {
       )}
 
       {/* Navigation Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <NavCard
           to="/cap-table"
           title="Cap Table"
@@ -230,6 +230,11 @@ export function Dashboard() {
             description="Approve or revoke investor wallets"
           />
         )}
+        <NavCard
+          to="/instructions"
+          title="Setup Instructions"
+          description="Localnet setup guide"
+        />
       </div>
     </div>
   );

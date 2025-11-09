@@ -55,6 +55,8 @@ function App() {
           </AuthRedirect>
         }
       />
+      {/* Instructions route - public, no authentication required */}
+      <Route path="/instructions" element={<Instructions />} />
       <Route
         path="/"
         element={
@@ -126,8 +128,6 @@ function App() {
           </ProtectedRoute>
         }
       />
-      {/* Instructions route - public, no authentication required */}
-      <Route path="/instructions" element={<Instructions />} />
       {/* Catch-all redirect to home */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
