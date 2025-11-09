@@ -241,7 +241,7 @@ export async function testConnection(): Promise<boolean> {
       ) {
         throw new Error(
           `❌ Cannot connect to ${chainName} node at ${httpUrl}. ` +
-            `Make sure the Hardhat node is running (npx hardhat node) or the RPC URL is correct.`
+            `Make sure Anvil is running (anvil) or Hardhat node is running (npx hardhat node), or the RPC URL is correct.`
         );
       }
       throw new Error(

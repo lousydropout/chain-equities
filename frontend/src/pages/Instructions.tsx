@@ -167,7 +167,7 @@ export function Instructions() {
                   <span className="text-muted-foreground">$</span> cd contracts
                 </div>
                 <div>
-                  <span className="text-muted-foreground">$</span> bun run local:node
+                  <span className="text-muted-foreground">$</span> npm run local:node
                 </div>
               </div>
             </div>
@@ -206,13 +206,7 @@ export function Instructions() {
                     <span className="text-muted-foreground">$</span> cd contracts
                   </div>
                   <div>
-                    <span className="text-muted-foreground">$</span> bun run deploy:acme
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-2">
-                    # or use deploy:anvil for explicit anvil network
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">$</span> bun run deploy:anvil
+                    <span className="text-muted-foreground">$</span> npm run deploy:acme
                   </div>
                 </div>
               </div>
@@ -230,16 +224,16 @@ export function Instructions() {
                     <span className="text-muted-foreground">$</span> cd contracts
                   </div>
                   <div>
-                    <span className="text-muted-foreground">$</span> bunx hardhat ignition deploy
-                    ignition/modules/AcmeCompany.ts --network anvil
+                    <span className="text-muted-foreground">$</span> npx hardhat ignition deploy
+                    ignition/modules/AcmeCompany.ts --network localhost
                   </div>
                   <div>
-                    <span className="text-muted-foreground">$</span> bunx hardhat run
-                    scripts/export-addresses.ts --network anvil
+                    <span className="text-muted-foreground">$</span> npx hardhat run
+                    scripts/export-addresses.ts --network localhost
                   </div>
                   <div>
-                    <span className="text-muted-foreground">$</span> bunx hardhat run
-                    scripts/verify-deployment.ts --network anvil
+                    <span className="text-muted-foreground">$</span> npx hardhat run
+                    scripts/verify-deployment.ts --network localhost
                   </div>
                 </div>
               </div>
@@ -317,13 +311,23 @@ export function Instructions() {
               </p>
               <div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto">
                 <div>
-                  <span className="text-muted-foreground">$</span> bun run db:reset --yes
+                  <span className="text-muted-foreground">$</span> bun run db:reset
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                This clears all data and re-runs migrations. The indexer will populate the database
-                as it processes events from the blockchain.
+                This clears all data, re-runs migrations, and seeds the database with test users.
+                The indexer will populate blockchain-related tables as it processes events from the
+                blockchain.
               </p>
+              <div className="flex items-start gap-2 p-3 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900 rounded-lg mt-2">
+                <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-yellow-900 dark:text-yellow-100">
+                  <strong>Note:</strong> The backend uses Bun's built-in <code className="px-1 py-0.5 bg-background rounded">bun:sqlite</code> for the
+                  database. This means the backend <strong>must</strong> be run with Bun, not npm or
+                  Node.js. Simply switching to npm would not work because the SQLite implementation
+                  is specific to Bun's runtime.
+                </p>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -429,8 +433,8 @@ export function Instructions() {
               <h4 className="font-semibold text-sm mb-1">Database errors</h4>
               <p className="text-xs text-muted-foreground">
                 If you see database errors after deploying fresh contracts, run{' '}
-                <code>bun run db:reset --yes</code> in the backend directory to reset the
-                database.
+                <code>bun run db:reset</code> in the backend directory to reset the database. Note
+                that the backend requires Bun due to its use of <code>bun:sqlite</code>.
               </p>
             </div>
           </CardContent>

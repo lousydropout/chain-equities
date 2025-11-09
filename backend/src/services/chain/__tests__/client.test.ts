@@ -213,12 +213,12 @@ describe("Viem Client Configuration", () => {
 
   describe("Connection Testing", () => {
     it("should test connection successfully when node is running", async () => {
-      // This test will only pass if Hardhat node is actually running
+      // This test will only pass if Anvil/Hardhat node is actually running
       // Skip if node is not available
       try {
         // Add a timeout to prevent hanging
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("Connection test timed out")), 3000);
+          setTimeout(() => reject(new Error("Connection test timed out")), 5000);
         });
         
         const result = await Promise.race([
@@ -236,12 +236,12 @@ describe("Viem Client Configuration", () => {
            error.message.includes("getChainId is not a function") ||
            error.message.includes("timed out"))
         ) {
-          console.log("⏭️  Skipping connection test - Hardhat node not running or connection unavailable");
+          console.log("⏭️  Skipping connection test - Anvil/Hardhat node not running or connection unavailable");
           return;
         }
         throw error;
       }
-    }, 5000); // Set explicit timeout
+    }, 10000); // Increase timeout to 10 seconds
 
     it("should throw friendly error when node is not running", async () => {
       resetInstances();
@@ -284,7 +284,7 @@ describe("Viem Client Configuration", () => {
       resetInstances();
       // Set wrong chain ID
       process.env.CHAIN_ID = "1"; // Mainnet
-      process.env.RPC_URL = "http://127.0.0.1:8545"; // But pointing to local Hardhat
+      process.env.RPC_URL = "http://127.0.0.1:8545"; // But pointing to local Anvil/Hardhat
 
       // Re-import to get fresh client with new env vars
       const clientModule = await import("../client");

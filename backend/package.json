@@ -5,15 +5,9 @@
   "private": true,
   "scripts": {
     "dev": "bun run src/index.ts",
-    "start": "bun run src/index.ts",
-    "test": "bun test src/routes/__tests__/ src/__tests__/",
-    "test:client": "bun test src/services/chain/__tests__/client.test.ts",
-    "test:client:manual": "bun run scripts/test-client.ts",
-    "test:all": "bun test",
-    "db:migrate": "bun run scripts/migrate.ts",
-    "db:seed": "bun run scripts/seed.ts",
-    "db:reset": "bun run scripts/reset-db.ts --yes",
-    "db:setup": "bun run db:migrate && bun run db:seed"
+    "start": "bun run dev",
+    "test": "bun test",
+    "db:reset": "bun run scripts/reset-db.ts --yes"
   },
   "devDependencies": {
     "@types/bun": "latest",
