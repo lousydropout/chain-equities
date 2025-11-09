@@ -111,6 +111,7 @@ export function ProfileMenu() {
   };
 
   const isLinked = walletStatus?.isLinked ?? false;
+  const linkedWalletAddress = walletStatus?.walletAddress;
   const isProcessing = linkMutation.isPending || unlinkMutation.isPending;
   const isConnectingWallet = isConnecting || isPending || isReconnecting;
 
@@ -132,6 +133,38 @@ export function ProfileMenu() {
         )}
         <DropdownMenuSeparator />
 
+        {/* Show linked wallet address and unlink option if wallet is linked */}
+        {isLinked && linkedWalletAddress && (
+          <>
+            <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+              Linked wallet: {formatAddress(linkedWalletAddress)}
+            </DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={handleUnlink}
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Unlinking...
+                </>
+              ) : (
+                <>
+                  <Unlink className="mr-2 h-4 w-4" />
+                  Unlink wallet
+                </>
+              )}
+            </DropdownMenuItem>
+            {actionError && (
+              <DropdownMenuLabel className="text-xs text-destructive">
+                {actionError}
+              </DropdownMenuLabel>
+            )}
+            <DropdownMenuSeparator />
+          </>
+        )}
+
+        {/* Wallet connection section */}
         {!isConnected ? (
           <DropdownMenuItem
             onClick={handleConnect}
@@ -152,7 +185,7 @@ export function ProfileMenu() {
         ) : (
           <>
             <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-              Address: {formatAddress(address)}
+              Connected: {formatAddress(address)}
             </DropdownMenuLabel>
             <DropdownMenuItem
               onClick={handleDisconnect}
@@ -160,7 +193,7 @@ export function ProfileMenu() {
             >
               Disconnect
             </DropdownMenuItem>
-            {!isLinked ? (
+            {!isLinked && (
               <DropdownMenuItem
                 onClick={handleLink}
                 disabled={isProcessing || !address}
@@ -177,25 +210,8 @@ export function ProfileMenu() {
                   </>
                 )}
               </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem
-                onClick={handleUnlink}
-                disabled={isProcessing}
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Unlinking...
-                  </>
-                ) : (
-                  <>
-                    <Unlink className="mr-2 h-4 w-4" />
-                    Unlink wallet
-                  </>
-                )}
-              </DropdownMenuItem>
             )}
-            {actionError && (
+            {actionError && !isLinked && (
               <DropdownMenuLabel className="text-xs text-destructive">
                 {actionError}
               </DropdownMenuLabel>

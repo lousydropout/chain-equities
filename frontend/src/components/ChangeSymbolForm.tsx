@@ -1,0 +1,366 @@
+/**
+ * @file Change Symbol Form Component
+ * @notice Form for admins/issuers to change the token symbol
+ */
+
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import {
+  useWriteContract,
+  useWaitForTransactionReceipt,
+  useReadContract,
+} from 'wagmi';
+import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { useNetworkAutoSwitch } from '@/hooks/useNetworkAutoSwitch';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import {
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Copy,
+  AlertCircle,
+  Tag,
+} from 'lucide-react';
+import { chainEquityToken } from '@/config/contracts';
+import { useAccount } from 'wagmi';
+
+/**
+ * Form validation schema
+ */
+const symbolSchema = z.object({
+  newSymbol: z
+    .string()
+    .min(1, 'Symbol is required')
+    .max(10, 'Symbol must be 10 characters or less')
+    .regex(/^[A-Z0-9]+$/, 'Symbol must contain only uppercase letters and numbers'),
+});
+
+type SymbolFormValues = z.infer<typeof symbolSchema>;
+
+/**
+ * ChangeSymbolForm component props
+ */
+interface ChangeSymbolFormProps {
+  tokenAddress: string;
+  onSuccess?: () => void;
+}
+
+/**
+ * ChangeSymbolForm component
+ * Allows admins/issuers to change the token symbol
+ */
+export function ChangeSymbolForm({
+  tokenAddress,
+  onSuccess,
+}: ChangeSymbolFormProps) {
+  const { isConnected } = useAccount();
+  const { isCorrectNetwork, isSwitching, switchError } = useNetworkAutoSwitch();
+  const queryClient = useQueryClient();
+  const [copiedHash, setCopiedHash] = useState(false);
+
+  // Read current symbol
+  const { data: currentSymbol } = useReadContract({
+    address: tokenAddress as `0x${string}`,
+    abi: chainEquityToken.abi,
+    functionName: 'symbol',
+    query: {
+      enabled: !!tokenAddress && isConnected,
+    },
+  });
+
+  const form = useForm({
+    resolver: zodResolver(symbolSchema),
+    defaultValues: {
+      newSymbol: '',
+    },
+  });
+
+  const {
+    data: txHash,
+    writeContract,
+    isPending,
+    error: writeError,
+    reset: resetWrite,
+  } = useWriteContract();
+
+  const {
+    isLoading: confirming,
+    isSuccess,
+    error: receiptError,
+  } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
+
+  // Invalidate queries on success
+  useEffect(() => {
+    if (isSuccess && txHash) {
+      queryClient.invalidateQueries({ queryKey: ['company', 'stats'] });
+      queryClient.invalidateQueries({ queryKey: ['company'] });
+      if (onSuccess) {
+        onSuccess();
+      }
+    }
+  }, [isSuccess, txHash, queryClient, onSuccess]);
+
+  // Reset form on success
+  useEffect(() => {
+    if (isSuccess) {
+      form.reset();
+      setTimeout(() => {
+        resetWrite();
+      }, 3000);
+    }
+  }, [isSuccess, form, resetWrite]);
+
+  const onSubmit = async (data: SymbolFormValues) => {
+    try {
+      writeContract({
+        address: tokenAddress as `0x${string}`,
+        abi: chainEquityToken.abi,
+        functionName: 'changeSymbol',
+        args: [data.newSymbol.toUpperCase()],
+      });
+    } catch (err) {
+      console.error('Failed to write contract:', err);
+    }
+  };
+
+  const handleCopyHash = async () => {
+    if (!txHash) return;
+    try {
+      await navigator.clipboard.writeText(txHash);
+      setCopiedHash(true);
+      setTimeout(() => setCopiedHash(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy transaction hash:', err);
+    }
+  };
+
+  /**
+   * Recursively extract error messages from nested error structures
+   */
+  const extractErrorMessages = (
+    error: unknown,
+    visited = new Set(),
+  ): string[] => {
+    if (!error || visited.has(error)) return [];
+    visited.add(error);
+
+    const messages: string[] = [];
+    if (error instanceof Error) {
+      if (error.message) messages.push(error.message);
+      if (error.cause) {
+        messages.push(...extractErrorMessages(error.cause, visited));
+      }
+    }
+
+    if (typeof error === 'object' && error !== null) {
+      const err = error as Record<string, unknown>;
+      if (err.message) {
+        messages.push(...extractErrorMessages(err.message, visited));
+      }
+      if (err.data) {
+        messages.push(...extractErrorMessages(err.data, visited));
+      }
+      if (err.cause) {
+        messages.push(...extractErrorMessages(err.cause, visited));
+      }
+    }
+
+    return messages;
+  };
+
+  const errorMessages = writeError
+    ? extractErrorMessages(writeError)
+    : receiptError
+      ? extractErrorMessages(receiptError)
+      : switchError
+        ? extractErrorMessages(switchError)
+        : [];
+
+  const displayError = errorMessages[0] || null;
+
+  if (!isConnected) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Tag className="h-5 w-5" />
+            Change Token Symbol
+          </CardTitle>
+          <CardDescription>
+            Update the token symbol (for indexer tracking)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Please connect your wallet to change the symbol.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!isCorrectNetwork && !isSwitching) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Tag className="h-5 w-5" />
+            Change Token Symbol
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900 rounded-lg">
+            <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+            <p className="text-sm text-yellow-900 dark:text-yellow-100">
+              Please switch to the localnet network to change the symbol.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Tag className="h-5 w-5" />
+          Change Token Symbol
+        </CardTitle>
+        <CardDescription>
+          Update the token symbol. This emits an event for indexer tracking.
+          Note: The actual ERC20 symbol is immutable and would require contract
+          redeployment to change.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {typeof currentSymbol === 'string' && currentSymbol && (
+          <div className="mb-4 p-3 bg-muted rounded-lg">
+            <p className="text-sm font-medium mb-1">Current Symbol</p>
+            <p className="text-2xl font-bold">{currentSymbol}</p>
+          </div>
+        )}
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="newSymbol"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>New Symbol</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="ACME2"
+                      disabled={isPending || confirming || isSwitching}
+                      {...field}
+                      onChange={e => {
+                        // Auto-uppercase
+                        field.onChange(e.target.value.toUpperCase());
+                      }}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Enter the new symbol (uppercase letters and numbers only, max
+                    10 characters). This will emit a SymbolChanged event for
+                    indexer tracking.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {displayError && (
+              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                <div className="flex items-start gap-2">
+                  <XCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm text-destructive font-medium">
+                      Transaction Failed
+                    </p>
+                    <p className="text-xs text-destructive/80 mt-1">
+                      {displayError}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {isSuccess && txHash && (
+              <div className="p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-md">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm text-green-900 dark:text-green-100 font-medium">
+                      Symbol Changed Successfully
+                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <code className="text-xs bg-background px-2 py-1 rounded">
+                        {txHash.slice(0, 10)}...{txHash.slice(-8)}
+                      </code>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCopyHash}
+                        className="h-6 px-2"
+                      >
+                        {copiedHash ? (
+                          <CheckCircle2 className="h-3 w-3" />
+                        ) : (
+                          <Copy className="h-3 w-3" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isPending || confirming || isSwitching}
+            >
+              {isPending || confirming || isSwitching ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {isPending
+                    ? 'Confirm in wallet...'
+                    : confirming
+                      ? 'Confirming...'
+                      : 'Switching network...'}
+                </>
+              ) : (
+                'Change Symbol'
+              )}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
+}
+
