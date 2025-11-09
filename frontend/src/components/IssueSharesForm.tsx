@@ -11,7 +11,7 @@ import {
   useWaitForTransactionReceipt,
   useAccount,
 } from 'wagmi';
-import { parseUnits, isAddress } from 'viem';
+import { parseUnits } from 'viem';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useNetworkAutoSwitch } from '@/hooks/useNetworkAutoSwitch';

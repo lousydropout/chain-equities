@@ -1,13 +1,12 @@
 /**
  * @file Main App component with routing
- * @notice Routes for Login, Register, and protected Home page
+ * @notice Routes for Login and protected pages
  */
 
 import { type ReactNode } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { Login } from './pages/Login';
-import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { CapTable } from './pages/CapTable';
 import { Transactions } from './pages/Transactions';
@@ -16,6 +15,7 @@ import { Admin } from './pages/Admin';
 import { Investor } from './pages/Investor';
 import { WalletRequired } from './pages/WalletRequired';
 import { APITest } from './pages/APITest';
+import { Instructions } from './pages/Instructions';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 /**
@@ -52,14 +52,6 @@ function App() {
         element={
           <AuthRedirect>
             <Login />
-          </AuthRedirect>
-        }
-      />
-      <Route
-        path="/register"
-        element={
-          <AuthRedirect>
-            <Register />
           </AuthRedirect>
         }
       />
@@ -134,6 +126,8 @@ function App() {
           </ProtectedRoute>
         }
       />
+      {/* Instructions route - public, no authentication required */}
+      <Route path="/instructions" element={<Instructions />} />
       {/* Catch-all redirect to home */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -31,10 +31,10 @@ export function ProfileMenu() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { address, isConnected, isConnecting, isReconnecting } = useAccount();
-  const { connect, connectors, error: connectError, isPending } = useConnect();
+  const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
-  const { isCorrectNetwork, isSwitching } = useNetworkAutoSwitch();
-  const { data: walletStatus, isLoading: isWalletStatusLoading } = useWalletStatus();
+  const { isSwitching } = useNetworkAutoSwitch();
+  const { data: walletStatus } = useWalletStatus();
   const queryClient = useQueryClient();
   const [actionError, setActionError] = useState<string | null>(null);
 

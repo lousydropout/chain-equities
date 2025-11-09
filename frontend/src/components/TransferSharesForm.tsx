@@ -75,7 +75,7 @@ const createTransferSchema = (userBalance: string | null) => {
             return false;
           }
         },
-        val => ({
+        _val => ({
           message: `Amount exceeds your balance of ${userBalance ? formatTokenAmount(userBalance, 18) : '0'}`,
         }),
       ),

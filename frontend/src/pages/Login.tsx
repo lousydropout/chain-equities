@@ -84,6 +84,14 @@ export function Login() {
           <CardDescription className="text-center">
             Enter your credentials to access ChainEquity
           </CardDescription>
+          <div className="text-center pt-2">
+            <Link
+              to="/instructions"
+              className="text-xs text-muted-foreground hover:text-primary underline"
+            >
+              Need help setting up localnet?
+            </Link>
+          </div>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -137,13 +145,6 @@ export function Login() {
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Logging in...' : 'Login'}
               </Button>
-
-              <div className="text-center text-sm text-muted-foreground">
-                Don't have an account?{' '}
-                <Link to="/register" className="text-primary hover:underline">
-                  Register
-                </Link>
-              </div>
             </form>
           </Form>
           <div className="mt-4 p-3 bg-muted/50 border border-border rounded-md">

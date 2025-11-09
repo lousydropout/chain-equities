@@ -16,8 +16,6 @@ import {
   getBlocksWithTransactions,
   getTransactions,
   getTransactionByHash,
-  linkWallet,
-  unlinkWallet,
   getWalletStatus,
   getInvestorsWithWallets,
   type APIError,

@@ -5,7 +5,7 @@
 
 import { useState, useMemo } from 'react';
 import { ArrowUp, ArrowDown, Info } from 'lucide-react';
-import { formatAddress, formatTokenAmount } from '@/lib/utils';
+import { formatTokenAmount } from '@/lib/utils';
 import type { Shareholder } from '@/types/api';
 import {
   Tooltip,

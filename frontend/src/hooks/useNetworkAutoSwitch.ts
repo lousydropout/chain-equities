@@ -76,6 +76,39 @@ export function useNetworkAutoSwitch() {
   const isProcessing = isSwitching || isAdding;
   const error = switchError || addError;
 
+  // Monitor switchError to detect when chain needs to be added, and reset on success
+  useEffect(() => {
+    if (switchError && attemptingRef.current) {
+      const err = switchError as any;
+      // If switch fails with error code 4902, it means chain not added to wallet
+      // Error code 4902: "Unrecognized chain ID"
+      if (err?.code === 4902 || err?.cause?.code === 4902) {
+        // Add the chain using MetaMask's API directly
+        setIsAdding(true);
+        addLocalnetToMetaMask()
+          .then(() => {
+            // After adding, switch to it
+            switchChain({ chainId: LOCALNET_CHAIN_ID });
+          })
+          .catch((addErr) => {
+            console.error('Failed to add or switch to localnet:', addErr);
+            setAddError(addErr instanceof Error ? addErr : new Error(String(addErr)));
+            attemptingRef.current = false;
+          })
+          .finally(() => {
+            setIsAdding(false);
+          });
+      } else {
+        // Other switch errors
+        console.error('Failed to switch to localnet:', switchError);
+        attemptingRef.current = false;
+      }
+    } else if (!switchError && !isSwitching && isCorrectNetwork && attemptingRef.current) {
+      // Switch succeeded - we're on the correct network now
+      attemptingRef.current = false;
+    }
+  }, [switchError, switchChain, isSwitching, isCorrectNetwork]);
+
   // Automatically add and switch to localnet when wallet connects and is on wrong network
   useEffect(() => {
     if (isConnected && !isCorrectNetwork && !isProcessing && !attemptingRef.current) {
@@ -83,35 +116,8 @@ export function useNetworkAutoSwitch() {
       setAddError(null);
       
       // Try to switch first - if the chain is already added, this will work
-      switchChain({ chainId: LOCALNET_CHAIN_ID })
-        .catch((switchErr: any) => {
-          // If switch fails with error code 4902, it means chain not added to wallet
-          // Error code 4902: "Unrecognized chain ID"
-          if (switchErr?.code === 4902 || switchErr?.cause?.code === 4902) {
-            // Add the chain using MetaMask's API directly
-            setIsAdding(true);
-            addLocalnetToMetaMask()
-              .then(() => {
-                // After adding, switch to it
-                return switchChain({ chainId: LOCALNET_CHAIN_ID });
-              })
-              .catch((addErr) => {
-                console.error('Failed to add or switch to localnet:', addErr);
-                setAddError(addErr instanceof Error ? addErr : new Error(String(addErr)));
-              })
-              .finally(() => {
-                setIsAdding(false);
-                attemptingRef.current = false;
-              });
-          } else {
-            // Other switch errors
-            console.error('Failed to switch to localnet:', switchErr);
-            attemptingRef.current = false;
-          }
-        })
-        .then(() => {
-          attemptingRef.current = false;
-        });
+      // Errors will be handled via switchError in the effect above
+      switchChain({ chainId: LOCALNET_CHAIN_ID });
     } else if (isCorrectNetwork) {
       // Reset attempt flag when on correct network
       attemptingRef.current = false;
@@ -122,33 +128,16 @@ export function useNetworkAutoSwitch() {
   /**
    * Manual function to add and switch to localnet
    * Can be called by user if automatic switch fails
+   * Note: switchChain returns void, so errors are handled via switchError in the effect above
    */
   const manualSwitch = async () => {
     attemptingRef.current = true;
     setAddError(null);
-    try {
-      // Try to switch first
-      await switchChain({ chainId: LOCALNET_CHAIN_ID });
-    } catch (switchErr: any) {
-      // If switch fails with error code 4902, add chain first
-      if (switchErr?.code === 4902 || switchErr?.cause?.code === 4902) {
-        try {
-          setIsAdding(true);
-          await addLocalnetToMetaMask();
-          await switchChain({ chainId: LOCALNET_CHAIN_ID });
-        } catch (addErr) {
-          console.error('Failed to add or switch to localnet:', addErr);
-          setAddError(addErr instanceof Error ? addErr : new Error(String(addErr)));
-          throw addErr;
-        } finally {
-          setIsAdding(false);
-        }
-      } else {
-        throw switchErr;
-      }
-    } finally {
-      attemptingRef.current = false;
-    }
+    // Try to switch first - if the chain is not added, the effect above will handle it
+    switchChain({ chainId: LOCALNET_CHAIN_ID });
+    // Note: We don't await here because switchChain returns void.
+    // Errors will be handled by the useEffect that monitors switchError.
+    // If the chain needs to be added, the effect will handle it automatically.
   };
 
   return {
